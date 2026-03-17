@@ -150,17 +150,23 @@ Phase 4 — EXECUTION
 Phase 5 — STATUS UPDATE + ARTIFACT TRACKING + KNOWLEDGE SYNC
   5a. Update completed_steps / current_step in status.md
   5b. Set artifact sync status (created/modified) for written artifacts
-  5c. Publish the full content of all non-synced artifacts to resolved knowledge provider (catch-up)
-      Read each artifact file and publish its complete Markdown body — never summarize.
-      Resolve provider from aias-providers/knowledge-config.md.
-      Validate service_category, active_provider, provider enabled flag,
-      skill binding, and capability compatibility.
-      If config is missing/invalid/unresolvable: abort dependent sync
-      operation and request provider configuration correction.
-      Use provider navigation/update algorithm without duplicates.
-      Idempotent: re-publishing updates existing pages, never duplicates.
-      If provider is unavailable at runtime: abort dependent sync operation
-      and report provider unavailability.
+  5c. CONDITIONAL KNOWLEDGE SYNC (classification-gated)
+      Read classification from status.md.
+      IF classification is null (not yet assigned) OR classification is A:
+        SKIP knowledge sync. Artifacts remain "created"/"modified" locally.
+      IF classification is B or C:
+        Publish the full content of all non-synced artifacts to resolved knowledge provider.
+        Read each artifact file and publish its complete Markdown body — never summarize.
+        Resolve provider from aias-providers/knowledge-config.md.
+        Validate service_category, active_provider, provider enabled flag,
+        skill binding, and capability compatibility.
+        If config is missing/invalid/unresolvable: abort dependent sync
+        operation and request provider configuration correction.
+        Use provider navigation/update algorithm without duplicates.
+        Idempotent: re-publishing updates existing pages, never duplicates.
+        If provider is unavailable at runtime: abort dependent sync operation
+        and report provider unavailability.
+      /publish bypasses this gate — always executes full sync regardless of classification.
   5d. Completion check
 
 Phase 6 — TRACKER SYNC

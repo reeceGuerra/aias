@@ -612,21 +612,31 @@ artifacts:
 
 ---
 
-## Progressive Knowledge Sync
+## Progressive Knowledge Sync (Classification-Gated)
 
-Artifacts are **synced to the resolved knowledge provider progressively** after every command that writes to TASK_DIR. This is Phase 5c of the rho-aias loading protocol.
+Artifacts are synced to the resolved knowledge provider progressively, **gated by Plan Classification** in `status.md`. This is Phase 5c of the rho-aias loading protocol.
+
+**Classification gate:** Before attempting knowledge sync, every command reads `classification` from `status.md`:
+
+| Classification | Phase 5c behavior |
+|---|---|
+| `null` (not yet assigned) | **Skip** — artifacts remain `created`/`modified` locally |
+| `A` (low-risk) | **Skip** — Type A closure is via `/report` or `/brief` to tracker |
+| `B` (medium) | **Sync** — progressive publishing to knowledge provider |
+| `C` (critical) | **Sync** — progressive publishing to knowledge provider |
+
+**Practical effect:** All diagnostic commands (`/issue`, `/fix`, `/assessment`, `/trace`) run before `/blueprint` assigns classification — so they never trigger knowledge sync. Once `/blueprint` classifies the task as B or C, subsequent commands sync progressively. Type A tasks never sync to the knowledge provider automatically.
 
 **Publishing hierarchy:** provider-defined hierarchy under `<TASK_ID>`, resolved from `aias-providers/knowledge-config.md` and the active provider binding.
 
-- When a command writes an artifact, it marks it as `created` or `modified` in `status.md`.
-- The command then runs Phase 5c:
-  1. Resolve provider from `aias-providers/knowledge-config.md`.
-  2. Validate config, active provider, skill binding, and capability compatibility.
-  3. Publish non-synced artifacts through the resolved provider algorithm.
+When Phase 5c is **not skipped** (classification B or C):
+- The command resolves the knowledge provider from `aias-providers/knowledge-config.md`.
+- Validates config, active provider, skill binding, and capability compatibility.
+- Publishes non-synced artifacts through the resolved provider algorithm.
 - After successful sync, the artifact is marked `synced` in `status.md`.
 - On failure (missing/invalid config, unresolved mapping/binding, or runtime provider unavailability): abort dependent sync operation and request correction.
 
-**Implication:** You do not need to wait until the end of the task to publish. Each command that produces an artifact triggers a sync through the resolved provider. `/publish` exists as the **final step** to ensure everything is archived (safety net), generate Plan Delta, and mark the task as completed.
+**`/publish` bypasses the classification gate** — it always executes full knowledge sync regardless of classification. This makes it the explicit override for Type A tasks that the user wants to archive. `/publish` exists as the **final step** to ensure everything is archived (safety net), generate Plan Delta, and mark the task as completed.
 
 For the complete resilience model (local-first guarantees, failure scenarios, retry mechanisms), see `aias/.skills/rho-aias/reference.md` § Resilience Model.
 

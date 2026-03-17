@@ -383,11 +383,17 @@ TASK: /assessment
 └── delta.publish.md
 ```
 
-Provider-specific hierarchy derivation is owned by the resolved provider adapter (not by this protocol contract).
+Provider-specific hierarchy derivation is owned by the resolved provider adapter (not by this protocol contract). Artifact page titles MUST be **task-scoped** (e.g., prefixed with `<TASK_ID>`) to avoid namespace collisions at the provider level — the exact format is defined by the resolved provider adapter.
 
-### Progressive sync (Phase 5c)
+### Progressive sync (Phase 5c) — Classification-gated
+
+Phase 5c is **gated by Plan Classification** in `status.md`. Knowledge sync only fires when classification is B or C. Before classification is assigned (null) or for Type A tasks, artifacts remain local.
 
 After every command execution:
+
+0. **Classification gate:** Read `classification` from `status.md`.
+   - If `classification` is `null` (not yet assigned) or `A`: **skip knowledge sync**. Artifacts remain `created`/`modified` locally. Log: "Knowledge sync skipped (classification: \<value\>)." Proceed to step 5.
+   - If `classification` is `B` or `C`: proceed to step 1.
 1. Resolve knowledge provider from `aias-providers/knowledge-config.md`:
    - Validate active provider, skill binding, provider enablement, and capability compatibility.
    - If config is missing/invalid/unresolvable: abort dependent sync operation and request provider configuration correction.
@@ -402,9 +408,13 @@ After every command execution:
 5. Set artifact status to `synced` on success.
 6. On runtime provider failure: abort dependent sync operation, report provider unavailability, and keep status unchanged.
 
+**Practical effect:** All diagnostic commands (`/issue`, `/fix`, `/assessment`, `/trace`) run before `/blueprint` assigns classification — so they never trigger knowledge sync. Once `/blueprint` classifies the task as B or C, subsequent commands sync progressively. Type A tasks never sync to the knowledge provider automatically.
+
 ### `/publish` closure sync
 
-1. Safety net: re-run Phase 5c for all non-synced artifacts (idempotent).
+`/publish` **bypasses the classification gate** — it always executes full knowledge sync regardless of classification. This makes it the explicit override for Type A tasks that the user wants to archive.
+
+1. Safety net: re-run Phase 5c for all non-synced artifacts (idempotent, classification gate bypassed).
 2. Generate `delta.publish.md` and publish as child artifact/page.
 3. Update parent container/dashboard with a completion summary (this is the ONLY page that receives a summary — all artifact pages contain the full file content).
 4. Set `status: completed`, `completed: <date>`.

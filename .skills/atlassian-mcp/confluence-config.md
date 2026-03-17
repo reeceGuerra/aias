@@ -99,6 +99,23 @@ function findOrCreatePage(cloudId, spaceId, parentId, title, body):
      → Return the newly created page's pageId
 ```
 
+### Artifact Title Convention
+
+Confluence enforces title uniqueness at the **space** level, not per parent page. Two tasks publishing the same artifact filename (e.g., `feasibility.assessment.md`) under different parents will collide.
+
+To prevent this, artifact page titles are **task-scoped**:
+
+```
+<TASK_ID>: <artifact_filename>
+```
+
+Examples:
+- `MAX-12345: technical.plan.md`
+- `MAX-12853: feasibility.assessment.md`
+- `MAX-12345: delta.publish.md`
+
+Hierarchy-level pages (`<TECH>`, `<YEAR>`, `<QUARTER>`, `<TASK_ID>`) are NOT prefixed — their titles are inherently unique or low-collision.
+
 ### Full publishing flow
 
 The algorithm applies `findOrCreatePage` sequentially for each level:
@@ -113,13 +130,15 @@ yearPageId     = findOrCreatePage(cloudId, spaceId, techPageId,     "<YEAR>",   
 quarterPageId  = findOrCreatePage(cloudId, spaceId, yearPageId,     "<QUARTER>", "Artifacts for <TECH> — <YEAR> <QUARTER>")
 taskPageId     = findOrCreatePage(cloudId, spaceId, quarterPageId,  "<TASK_ID>", "<task summary from status.md>")
 
--- Then for each artifact:
+-- Then for each artifact (titles are task-scoped):
 FOR each artifact in status.md with sync status `created`:
-  findOrCreatePage(cloudId, spaceId, taskPageId, "<artifact filename>", "<full artifact file content>")
+  findOrCreatePage(cloudId, spaceId, taskPageId, "<TASK_ID>: <artifact filename>", "<full artifact file content>")
 
 FOR each artifact in status.md with sync status `modified`:
-  1. getConfluencePageDescendants(cloudId, taskPageId) → find existing page by title
-  2. updateConfluencePage(cloudId, existingPageId, body=<full artifact file content>, contentFormat="markdown")
+  1. getConfluencePageDescendants(cloudId, taskPageId)
+  2. Search for "<TASK_ID>: <artifact filename>" (canonical title)
+     IF NOT found, search for "<artifact filename>" (legacy fallback)
+  3. updateConfluencePage(cloudId, existingPageId, body=<full artifact file content>, contentFormat="markdown")
 ```
 
 ### Rules
@@ -127,9 +146,10 @@ FOR each artifact in status.md with sync status `modified`:
 - **Never call `createConfluencePage` without first checking descendants.** This is the single most important rule.
 - **Resolve `spaceId` at runtime** via `getConfluenceSpaces(cloudId, keys=["ECOMM"])` — never hardcode the numeric space ID.
 - **Always pass `contentFormat="markdown"`** in `createConfluencePage` and `updateConfluencePage` calls (artifacts are Markdown files).
+- **Artifact page titles are task-scoped:** always use `<TASK_ID>: <artifact filename>` for artifact pages. Hierarchy pages (`<TECH>`, `<YEAR>`, `<QUARTER>`, `<TASK_ID>`) keep plain titles.
 - **Title matching is case-sensitive and exact** — `iOS` ≠ `ios` ≠ `IOS`.
-- For artifacts with sync status `modified`, use `updateConfluencePage` directly (version is no longer required).
-- For artifacts with sync status `created`, use `findOrCreatePage`.
+- For artifacts with sync status `created`, use `findOrCreatePage` with the canonical title (`<TASK_ID>: <artifact filename>`).
+- For artifacts with sync status `modified`: search descendants for the canonical title first; if not found, search for the plain filename as legacy fallback. Update whichever page is found — do not force-rename legacy pages.
 - Artifacts with sync status `synced` are skipped (already up to date).
 - **Publish full artifact content** — never summarize, truncate, or abbreviate. The Confluence page must be a faithful copy of the local file.
 - If `getConfluencePageDescendants` fails (network error), follow offline graceful degradation: log warning, keep artifact sync status unchanged, do not block command execution. Next command will retry.
@@ -146,18 +166,18 @@ Requirements and Design (ID: 2373517314)
 │   └── 2026
 │       └── Q1
 │           └── MAX-12345
-│               ├── analysis.product.md
-│               ├── technical.plan.md
-│               ├── increments.plan.md
-│               ├── specs.design.md
-│               ├── feasibility.assessment.md
-│               └── delta.publish.md
+│               ├── MAX-12345: analysis.product.md
+│               ├── MAX-12345: technical.plan.md
+│               ├── MAX-12345: increments.plan.md
+│               ├── MAX-12345: specs.design.md
+│               ├── MAX-12345: feasibility.assessment.md
+│               └── MAX-12345: delta.publish.md
 ├── Android
 │   └── 2026
 │       └── Q1
 │           └── MAX-12346
-│               ├── analysis.product.md
-│               ├── technical.plan.md
+│               ├── MAX-12346: analysis.product.md
+│               ├── MAX-12346: technical.plan.md
 │               └── ...
 ├── Backend
 │   └── ...

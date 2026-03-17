@@ -55,7 +55,7 @@ TRACKER SYNC (Phase 6 — first increment only)
 
 STATUS UPDATE (Phase 5 — after each increment)
 - Update `status.md`: set `status: in_progress` (first increment), update `current_step` to `implement`.
-- Run Phase 5c: publish non-synced artifacts to resolved knowledge provider.
+- Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if A (see **rho-aias** skill § Phase 5c).
 
 Output is delivered in **phases**, each clearly communicated in chat:
 - Phase 1 (Read): Confirmation of plan loaded

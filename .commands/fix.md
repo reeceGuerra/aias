@@ -77,7 +77,7 @@ FILE OUTPUT CONTRACT (must follow)
 STATUS UPDATE (Phase 5)
 - Add `analysis.fix.md` to the `artifacts` map in `status.md` with status `created` or `modified`.
 - Add `analyze` to `completed_steps`, set `current_step` to `assess`.
-- Run Phase 5c: publish non-synced artifacts to resolved knowledge provider.
+- Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if null or A (see **rho-aias** skill § Phase 5c).
 
 END-OF-RESPONSE CONFIRMATION (must follow)
 - After writing the fix analysis file, you MUST print a final line in the chat response (not in the file) exactly in this format:

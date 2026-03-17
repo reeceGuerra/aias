@@ -81,7 +81,7 @@ FILE OUTPUT (when TASK_DIR is set):
 
 STATUS UPDATE (Phase 5, when TASK_DIR is set):
 - Add `instrumentation.trace.md` to the `artifacts` map with status `created` or `modified`.
-- Run Phase 5c: publish non-synced artifacts to resolved knowledge provider.
+- Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if null or A (see **rho-aias** skill § Phase 5c).
 
 END-OF-RESPONSE CONFIRMATION (when file is written):
   Saved trace to: <absolute_path>

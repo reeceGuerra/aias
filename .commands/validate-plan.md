@@ -83,7 +83,7 @@ Present validation result in chat:
 STATUS UPDATE (Phase 5)
 - When plan passes and gate confirmed: update `status.md` — set `status: ready`, add `validate` to `completed_steps`, set `current_step` to `implement`.
 - When gaps exist: no status change.
-- Run Phase 5c: publish non-synced artifacts to resolved knowledge provider.
+- Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if A (see **rho-aias** skill § Phase 5c).
 
 Rules:
 - Do NOT structure the rest of the chat output as a formatted document.

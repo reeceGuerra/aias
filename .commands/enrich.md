@@ -109,7 +109,7 @@ After writing `analysis.product.md`:
 1. Create TASK_DIR and `status.md` if they do not exist (profile: infer from context, default `feature`; if only enrichment is planned, use `enrichment`).
 2. Add `analysis.product.md` to `artifacts` map with status `created` or `modified`.
 3. Add `product-analysis` to `completed_steps`. Set `current_step` based on the profile: if `enrichment` → `closure`; otherwise → `blueprint`.
-4. Run Phase 5c: publish non-synced artifacts to resolved knowledge provider.
+4. Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if null or A (see **rho-aias** skill § Phase 5c).
 
 ---
 

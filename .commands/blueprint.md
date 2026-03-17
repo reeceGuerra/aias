@@ -45,7 +45,7 @@ This command may use **only** the following inputs:
 Context enrichment requirements:
 - If ticket data is not already in context and a ticket ID was provided, resolve tracker provider from `aias-providers/tracker-config.md`; if missing/invalid/unresolvable, abort and request provider configuration.
 - If design context is not already available and a design URL was provided, resolve design provider from `aias-providers/design-config.md`; if missing/invalid/unresolvable, abort and request provider configuration.
-- If knowledge provider config is missing/invalid/unresolvable, abort before Phase 5c.
+- If classification is B or C and knowledge provider config is missing/invalid/unresolvable, abort before Phase 5c.
 
 Rules:
 - All inputs must be explicit.
@@ -120,7 +120,7 @@ After writing artifacts:
 1. Update `status.md`: add each artifact to the `artifacts` map with status `created` (new) or `modified` (overwrite).
 2. **Assign Plan Classification**: set `classification` in `status.md` to `A`, `B`, or `C` based on scope, impact, and complexity. See `SKILL.md` Plan Classification for criteria.
 3. Add `blueprint` to `completed_steps`, set `current_step` to `validate`.
-4. Run Phase 5c: publish non-synced artifacts to resolved knowledge provider (see **rho-aias** skill).
+4. Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification is B or C. Skip if A (see **rho-aias** skill § Phase 5c). Note: classification was just assigned in step 2 — the gate reads the value set in this same execution.
 
 ---
 

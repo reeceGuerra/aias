@@ -4,7 +4,7 @@
 
 **Command Type:** Type B — Procedural / Execution
 
-You are **closing a task** by performing a safety-net sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is a **closure-only** command — progressive publishing happens automatically during every command execution (Phase 5c of the **rho-aias** skill loading protocol). `/publish` exists as the final step to ensure everything is archived and the task is formally closed.
+You are **closing a task** by performing a safety-net sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is a **closure-only** command — progressive publishing happens automatically during command execution for Type B/C tasks (Phase 5c of the **rho-aias** skill loading protocol, classification-gated). `/publish` exists as the final step to ensure everything is archived and the task is formally closed. **`/publish` bypasses the classification gate** — it always executes full knowledge sync regardless of classification, making it the explicit override for Type A tasks that the user wants to archive.
 
 **Skills referenced:** `rho-aias`.
 
@@ -19,7 +19,7 @@ Invocation:
 Usage notes:
 - This command is **mode-agnostic** — it can be invoked from any mode or chat session.
 - It is intended to be used **after** implementation, PR creation, and any review cycles are complete.
-- It is the closure step for Type B and Type C plans. Type A plans use `/report` or `/brief` instead.
+- It is the standard closure step for Type B and Type C plans. Type A plans typically use `/report` or `/brief` instead, but `/publish` can be used to force knowledge archiving for any classification.
 - Safe to run multiple times — all operations are idempotent.
 - Does NOT transition tracker status to DONE (that is Product's responsibility).
 
@@ -73,7 +73,9 @@ Present publish summary in chat:
 
 This command executes four sequential steps:
 
-### Step 1: Safety Net Sync
+### Step 1: Safety Net Sync (classification gate bypassed)
+
+This step always executes full knowledge sync **regardless of classification** — `/publish` is the explicit override that ensures all artifacts reach the knowledge provider even for Type A tasks.
 
 Resolve the knowledge provider from `aias-providers/knowledge-config.md`:
 - If config exists and is valid, use `active_provider` + `skill_binding` + provider parameters.
