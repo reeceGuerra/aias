@@ -383,7 +383,7 @@ TASK: /assessment
 └── delta.publish.md
 ```
 
-Provider-specific hierarchy derivation is owned by the resolved provider adapter (not by this protocol contract). Artifact page titles MUST be **task-scoped** (e.g., prefixed with `<TASK_ID>`) to avoid namespace collisions at the provider level — the exact format is defined by the resolved provider adapter.
+Provider-specific hierarchy derivation is owned by the resolved provider adapter (not by this protocol contract). Repeating hierarchy nodes and artifact pages MUST use provider-safe, scope-aware titles to avoid namespace collisions at the provider level (for example, task-scoped artifact titles prefixed with `<TASK_ID>`) — the exact format is defined by the resolved provider adapter.
 
 ### Progressive sync (Phase 5c) — Classification-gated
 

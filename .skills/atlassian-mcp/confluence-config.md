@@ -99,22 +99,28 @@ function findOrCreatePage(cloudId, spaceId, parentId, title, body):
      → Return the newly created page's pageId
 ```
 
-### Artifact Title Convention
+### Hierarchy and Artifact Title Convention
 
-Confluence enforces title uniqueness at the **space** level, not per parent page. Two tasks publishing the same artifact filename (e.g., `feasibility.assessment.md`) under different parents will collide.
+Confluence enforces title uniqueness at the **space** level, not per parent page. This affects both artifact pages and repeating hierarchy nodes. Titles such as `2026`, `Q1`, or `feasibility.assessment.md` can collide across different branches of the hierarchy.
 
-To prevent this, artifact page titles are **task-scoped**:
+To prevent this, repeating nodes must use **scope-aware** titles:
 
 ```
+<TECH>
+<TECH>: <YEAR>
+<TECH>: <YEAR>: <QUARTER>
+<TASK_ID>
 <TASK_ID>: <artifact_filename>
 ```
 
 Examples:
-- `MAX-12345: technical.plan.md`
+- `iOS`
+- `iOS: 2026`
+- `iOS: 2026: Q1`
+- `MAX-12853`
 - `MAX-12853: feasibility.assessment.md`
-- `MAX-12345: delta.publish.md`
 
-Hierarchy-level pages (`<TECH>`, `<YEAR>`, `<QUARTER>`, `<TASK_ID>`) are NOT prefixed — their titles are inherently unique or low-collision.
+`<TASK_ID>` remains plain because Jira ticket keys are expected to be globally unique within the publishing space. If that assumption changes in the future, task pages must also adopt a scoped title convention.
 
 ### Full publishing flow
 
@@ -125,9 +131,9 @@ The algorithm applies `findOrCreatePage` sequentially for each level:
 spaceId = getConfluenceSpaces(cloudId, keys=["ECOMM"]).results[0].id
 rootPageId = "2373517314"
 
-techPageId     = findOrCreatePage(cloudId, spaceId, rootPageId,     "<TECH>",    "Artifacts for <TECH>")
-yearPageId     = findOrCreatePage(cloudId, spaceId, techPageId,     "<YEAR>",    "Artifacts for <TECH> — <YEAR>")
-quarterPageId  = findOrCreatePage(cloudId, spaceId, yearPageId,     "<QUARTER>", "Artifacts for <TECH> — <YEAR> <QUARTER>")
+techPageId     = findOrCreatePage(cloudId, spaceId, rootPageId,     "<TECH>",                  "Artifacts for <TECH>")
+yearPageId     = findOrCreatePage(cloudId, spaceId, techPageId,     "<TECH>: <YEAR>",          "Artifacts for <TECH> — <YEAR>")
+quarterPageId  = findOrCreatePage(cloudId, spaceId, yearPageId,     "<TECH>: <YEAR>: <QUARTER>", "Artifacts for <TECH> — <YEAR> <QUARTER>")
 taskPageId     = findOrCreatePage(cloudId, spaceId, quarterPageId,  "<TASK_ID>", "<task summary from status.md>")
 
 -- Then for each artifact (titles are task-scoped):
@@ -146,8 +152,11 @@ FOR each artifact in status.md with sync status `modified`:
 - **Never call `createConfluencePage` without first checking descendants.** This is the single most important rule.
 - **Resolve `spaceId` at runtime** via `getConfluenceSpaces(cloudId, keys=["ECOMM"])` — never hardcode the numeric space ID.
 - **Always pass `contentFormat="markdown"`** in `createConfluencePage` and `updateConfluencePage` calls (artifacts are Markdown files).
-- **Artifact page titles are task-scoped:** always use `<TASK_ID>: <artifact filename>` for artifact pages. Hierarchy pages (`<TECH>`, `<YEAR>`, `<QUARTER>`, `<TASK_ID>`) keep plain titles.
+- **Hierarchy titles are scope-aware for repeating nodes:** use `<TECH>` for technology pages, `<TECH>: <YEAR>` for year pages, and `<TECH>: <YEAR>: <QUARTER>` for quarter pages.
+- **Task pages remain plain `<TASK_ID>`** because ticket keys are expected to be globally unique in the publishing space. Revisit this only if cross-project ticket collisions appear.
+- **Artifact page titles are task-scoped:** always use `<TASK_ID>: <artifact filename>` for artifact pages.
 - **Title matching is case-sensitive and exact** — `iOS` ≠ `ios` ≠ `IOS`.
+- For year and quarter pages, search descendants for the canonical scoped title first; if not found, search for the legacy plain title (`<YEAR>` or `<QUARTER>`) as fallback. Update whichever page is found — do not force-rename legacy pages.
 - For artifacts with sync status `created`, use `findOrCreatePage` with the canonical title (`<TASK_ID>: <artifact filename>`).
 - For artifacts with sync status `modified`: search descendants for the canonical title first; if not found, search for the plain filename as legacy fallback. Update whichever page is found — do not force-rename legacy pages.
 - Artifacts with sync status `synced` are skipped (already up to date).
@@ -163,8 +172,8 @@ Task `MAX-12345` (iOS, Q1 2026) and `MAX-12346` (Android, Q1 2026):
 ```
 Requirements and Design (ID: 2373517314)
 ├── iOS
-│   └── 2026
-│       └── Q1
+│   └── iOS: 2026
+│       └── iOS: 2026: Q1
 │           └── MAX-12345
 │               ├── MAX-12345: analysis.product.md
 │               ├── MAX-12345: technical.plan.md
@@ -173,8 +182,8 @@ Requirements and Design (ID: 2373517314)
 │               ├── MAX-12345: feasibility.assessment.md
 │               └── MAX-12345: delta.publish.md
 ├── Android
-│   └── 2026
-│       └── Q1
+│   └── Android: 2026
+│       └── Android: 2026: Q1
 │           └── MAX-12346
 │               ├── MAX-12346: analysis.product.md
 │               ├── MAX-12346: technical.plan.md
