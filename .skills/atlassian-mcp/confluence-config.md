@@ -45,6 +45,7 @@ Resolve `<TECH>` using the first source that yields a result:
 2. **Workspace `cursor.projectType`** (fallback):
    - `ios-app` → `iOS`
    - `android-app` → `Android`
+   - `rho-aias-workspace` → `Framework`
    - Unrecognized → fall through
 3. **User prompt** (last resort): ask the user explicitly. Do NOT guess.
 
@@ -54,6 +55,7 @@ Resolve `<TECH>` using the first source that yields a result:
 |------------|----------------|----------------------|
 | `iOS` | `maX iOS` (`10046`) | `ios-app`, `swift-package`, `swift-package-demo` |
 | `Android` | `maX Android` (`10047`) | `android-app` |
+| `Framework` | — | `rho-aias-workspace` |
 | `Backend` | `maX BE` (`10048`) | — |
 | `Web` | `maX Web` (`10045`) | — |
 
@@ -138,13 +140,13 @@ taskPageId     = findOrCreatePage(cloudId, spaceId, quarterPageId,  "<TASK_ID>",
 
 -- Then for each artifact (titles are task-scoped):
 FOR each artifact in status.md with sync status `created`:
-  findOrCreatePage(cloudId, spaceId, taskPageId, "<TASK_ID>: <artifact filename>", "<full artifact file content>")
+  findOrCreatePage(cloudId, spaceId, taskPageId, "<TASK_ID>: <artifact filename>", "<full publishable artifact body>")
 
 FOR each artifact in status.md with sync status `modified`:
   1. getConfluencePageDescendants(cloudId, taskPageId)
   2. Search for "<TASK_ID>: <artifact filename>" (canonical title)
      IF NOT found, search for "<artifact filename>" (legacy fallback)
-  3. updateConfluencePage(cloudId, existingPageId, body=<full artifact file content>, contentFormat="markdown")
+  3. updateConfluencePage(cloudId, existingPageId, body=<full publishable artifact body>, contentFormat="markdown")
 ```
 
 ### Rules
@@ -160,7 +162,9 @@ FOR each artifact in status.md with sync status `modified`:
 - For artifacts with sync status `created`, use `findOrCreatePage` with the canonical title (`<TASK_ID>: <artifact filename>`).
 - For artifacts with sync status `modified`: search descendants for the canonical title first; if not found, search for the plain filename as legacy fallback. Update whichever page is found — do not force-rename legacy pages.
 - Artifacts with sync status `synced` are skipped (already up to date).
-- **Publish full artifact content** — never summarize, truncate, or abbreviate. The Confluence page must be a faithful copy of the local file.
+- **Publish full publishable artifact content** — never summarize, truncate, or abbreviate.
+- For Cursor-first `*.plan.md` artifacts, strip only the initial YAML frontmatter block before sending the Markdown payload.
+- For non-plan artifacts, publish the full file content as-is.
 - If `getConfluencePageDescendants` fails (network error), follow offline graceful degradation: log warning, keep artifact sync status unchanged, do not block command execution. Next command will retry.
 
 ---
