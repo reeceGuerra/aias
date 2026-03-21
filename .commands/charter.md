@@ -54,6 +54,7 @@ Present artifact summary in chat:
 - Increment count and overall estimation
 
 **AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "Write delivery charter to <TASK_DIR>?"
 - **Options:**
   - `write`: "Write artifact to TASK_DIR"
