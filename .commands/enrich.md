@@ -1,11 +1,11 @@
-# Enrich (Tracker Ticket Enrichment) — v4
+# Enrich (Tracker-Backed Task Enrichment) — v4
 
 ## 1. Identity
 
 **Command Type:** Type B — Procedural / Execution
 
-You are **analyzing and enriching** a tracker ticket that lacks sufficient detail for autonomous development.
-This command reads the ticket via the resolved tracker provider, evaluates its completeness against a product and technical checklist, generates missing content, writes the product analysis to the task directory, and writes only structured fields to the resolved tracker provider. Full prose content stays local and syncs through the resolved knowledge provider via progressive publishing.
+You are **analyzing and enriching** a task that lacks sufficient detail for autonomous development.
+This command reads tracker data for the provided task id via the resolved tracker provider, evaluates its completeness against a product and technical checklist, generates missing content, writes the product analysis to the task directory, and writes only structured fields to the resolved tracker provider. Full prose content stays local and syncs through the resolved knowledge provider via progressive publishing.
 
 **Skills referenced:** `rho-aias`, `technical-writing`, `incremental-decomposition`.
 
@@ -15,11 +15,11 @@ This command reads the ticket via the resolved tracker provider, evaluates its c
 
 Invocation:
 
-- `/enrich <TICKET_ID>`
+- `/enrich <TASK_ID>`
 
 Usage notes:
 
-- `<TICKET_ID>` is required (e.g., `MAX-12761`). It also sets TASK_DIR to <resolved_tasks_dir>/<TICKET_ID>/. (Default: `~/.cursor/plans/`)
+- `<TASK_ID>` is required (e.g., `MAX-12761`). When the task id maps to a tracker ticket, the resolved tracker provider is used for enrichment. It also sets TASK_DIR to <resolved_tasks_dir>/<TASK_ID>/. (Default: `~/.cursor/plans/`)
 - The enriched output is always written to `analysis.product.md` in TASK_DIR.
 - Structured fields (AC, test steps, priority, components) are written to the resolved tracker provider after user confirmation.
 - A reference comment is posted in the resolved tracker provider linking to the local artifact.
@@ -42,8 +42,8 @@ This command may use **only** the following inputs:
 
 Rules:
 
-- `<TICKET_ID>` is mandatory. If not provided, ask for it before proceeding.
-- All inputs must be explicit. Do not infer ticket IDs from vague references.
+- `<TASK_ID>` is mandatory. If not provided, ask for it before proceeding.
+- All inputs must be explicit. Do not infer task ids or tracker ticket ids from vague references.
 - If tracker or knowledge service config is missing, invalid, or unresolvable, STOP and request provider configuration.
 - If resolved tracker provider cannot read the ticket, STOP and inform the user.
 
@@ -65,7 +65,7 @@ Write **only structured fields** to the resolved tracker provider:
 
 Provider-specific field keys must come from resolved tracker provider mapping.
 
-Post a **reference comment** on the resolved tracker provider: "Product analysis artifact available locally at <resolved_tasks_dir>/<TICKET_ID>/analysis.product.md. Full content published via the configured knowledge provider."
+Post a **reference comment** on the resolved tracker provider: "Product analysis artifact available locally at <resolved_tasks_dir>/<TASK_ID>/analysis.product.md. Full content published via the configured knowledge provider."
 
 Do NOT write prose content (description, user flow, architecture analysis) to the tracker ticket description. The full prose lives in `analysis.product.md` and syncs via the resolved knowledge provider.
 
@@ -77,13 +77,14 @@ Do NOT write prose content (description, user flow, architecture analysis) to th
 
 **Context output:**
 Present tracker write preview in chat:
-- Ticket ID
+- Task ID
 - Fields to update (list with summary of content per field)
 - Reference comment: yes
 - Status transition: none
 
 **AskQuestion:**
-- **Prompt:** "Write structured fields to <TICKET_ID> via tracker provider?"
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Write structured fields to <TASK_ID> via tracker provider?"
 - **Options:**
   - `write`: "Write fields and post reference comment"
   - `skip`: "Skip tracker write — keep local artifact only"
@@ -182,7 +183,7 @@ This command must **NOT**:
 - Implement code or modify repository files
 - Write prose content to the tracker ticket description (only structured fields)
 - Trigger any tracker status transition
-- Infer ticket IDs from vague references
+- Infer task ids or tracker ticket ids from vague references
 - Invent technical details not derivable from the ticket or project architecture
 - Proceed if resolved tracker provider cannot read the ticket (STOP and inform)
 - Execute any git, build, or deployment operations
