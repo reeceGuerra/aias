@@ -20,6 +20,7 @@ Usage notes:
 - It requires plan artifacts in TASK_DIR (`technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `dod.plan.md`, and `specs.design.md` when present). Optionally loads `analysis.product.md` for product context.
 - The command does NOT execute the entire plan autonomously. It executes **one increment at a time** and waits for user feedback before proceeding.
 - On the first increment, triggers canonical tracker transition `ready` -> `in_progress` (once per task).
+- `increments.plan.md` is the only plan artifact this command may update. It MUST NOT modify validation todos in `technical.plan.md`.
 
 ---
 
@@ -160,6 +161,7 @@ Present execution readiness in chat:
 - Effective governance for this execution (baseline / custom / legacy)
 
 **AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "Ready to start with Increment 1: <name>. Proceed?"
 - **Options:**
   - `proceed`: "Begin execution with Increment 1"
@@ -225,6 +227,9 @@ For each increment:
    ```
 
 4. **Update** the plan's frontmatter todo status from `pending` to `completed` for this increment (if the plan file is writable).
+   - Update only the matching increment todo in `increments.plan.md`.
+   - Do NOT create, remove, or modify validation todos in `technical.plan.md`.
+   - Do NOT mutate `dod.plan.md`, `dor.plan.md`, or `technical.plan.md` as part of execution tracking.
 
 5. **Verify** (conditional — requires `xcode-mcp`):
    - Resolve `tabIdentifier` via `XcodeListWindows` (once per execution session; reuse for subsequent increments).
@@ -259,6 +264,7 @@ For each increment:
 Report increment completion (changes, files, verification).
 
 **AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "Increment <N> done. Next: Increment <N+1>: <name>. Continue?"
 - **Options:**
   - `continue`: "Continue to next increment"
@@ -275,7 +281,7 @@ Report increment completion (changes, files, verification).
 
 #### Gate: Verification Failure (conditional)
 
-**Type:** Verification
+**Type:** Decision
 **Fires:** After step 5 (Verify), only when build or tests fail.
 **Skippable:** No (when fired).
 
@@ -286,6 +292,7 @@ Report verification result:
 - Error details (file, line, message — from build log or test results)
 
 **AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "Verification failed after Increment <N>. <error summary>."
 - **Options:**
   - `fix`: "Fix the issues" (agent applies corrections, then re-runs verification)
@@ -313,7 +320,7 @@ When receiving corrections or feedback between or during increments:
 **New scope** (work not covered by any existing increment):
 - Pause execution and present options:
   - **(A) Inline now** — Execute immediately within the current increment. Use for small, self-contained additions that do not require formal planning.
-  - **(B) Defer** — Register as a gap in the `.plan.md` file under a `## Gaps` section at the end (same pattern as `/validate-plan`). Do not execute now. The user will take gaps to `@planning` for proper planning when ready.
+  - **(B) Defer** — Do not mutate other plan artifacts. Stop or pause execution and instruct the user to take the new scope back to planning (`/blueprint`, `/validate-plan`, or `/consolidate-plan`) so it can be captured outside `/implement`.
 - MUST wait for user choice before proceeding.
 
 **Systemic feedback** (reveals a pattern that should persist beyond this plan):
@@ -334,7 +341,8 @@ IMPLEMENTATION SUMMARY:
 
   Next steps:
   - /commit to commit changes (align messages with increment names)
-  - @review for code review
+  - @review + /self-review for local review
+  - @review + /peer-review when reviewing a PR / third-party change
   - /pr for pull request description
   - /publish to archive artifacts via knowledge provider (when ready)
 ```
