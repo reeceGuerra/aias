@@ -345,7 +345,7 @@ This cross-reference can be automated without adding complexity to the commit ta
 
 ## Structured Prompt — Artifact Reference Fields
 
-The Structured Prompt supports file-reference fields that tell the agent to load specific artifacts as primary context. These are in addition to the standard fields (`MODE`, `REPO`, `TICKET`, `TASK_DIR`, `PROFILE`, `PLAN`, `FIGMA`, `CONTEXT`, `TASK`).
+The Structured Prompt supports file-reference fields that tell the agent to load specific artifacts as primary context. These are in addition to the standard fields (`MODE`, `REPO`, `TASK ID`, `TASK DIR`, `PROFILE`, `PLAN`, `FIGMA`, `CONTEXT`, `TASK`). `DIR` is an allowed alias for `TASK DIR`. `TICKET` remains a legacy alias for `TASK ID` when older prompts are used.
 
 | Field | Artifact referenced | Use case |
 |-------|--------------------|---------| 
@@ -359,7 +359,7 @@ These fields resolve relative to TASK_DIR. Example:
 
 ```
 MODE: @dev
-TASK_DIR: MAX-12850
+TASK DIR: MAX-12850
 FIX: analysis.fix.md
 ISSUE: report.issue.md
 TASK: /assessment
@@ -402,9 +402,11 @@ After every command execution:
 4. For each artifact with status `created` or `modified`:
    - Read the artifact file from TASK_DIR.
    - Use provider navigation/update algorithm to traverse hierarchy without creating duplicates.
-   - For `created` artifacts: create or locate target artifact/page under `<TASK_ID>` and publish the **full Markdown content** of the file.
-   - For `modified` artifacts: locate existing artifact/page and update with the **full Markdown content** of the file.
-   - **Never summarize, truncate, or abbreviate** artifact content when publishing. The knowledge provider page must be a faithful copy of the local file.
+   - For `created` artifacts: create or locate target artifact/page under `<TASK_ID>` and publish the **full publishable Markdown body** of the file.
+   - For `modified` artifacts: locate existing artifact/page and update with the **full publishable Markdown body** of the file.
+   - For Cursor-first `*.plan.md` artifacts, the publishable body excludes only the initial YAML frontmatter block when present.
+   - For non-plan artifacts, publish the full file content.
+   - **Never summarize, truncate, or abbreviate** artifact content when publishing. The knowledge provider page must contain the full human-readable document body.
 5. Set artifact status to `synced` on success.
 6. On runtime provider failure: abort dependent sync operation, report provider unavailability, and keep status unchanged.
 
