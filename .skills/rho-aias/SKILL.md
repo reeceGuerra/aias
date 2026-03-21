@@ -155,8 +155,10 @@ Phase 5 — STATUS UPDATE + ARTIFACT TRACKING + KNOWLEDGE SYNC
       IF classification is null (not yet assigned) OR classification is A:
         SKIP knowledge sync. Artifacts remain "created"/"modified" locally.
       IF classification is B or C:
-        Publish the full content of all non-synced artifacts to resolved knowledge provider.
-        Read each artifact file and publish its complete Markdown body — never summarize.
+        Publish the full publishable content of all non-synced artifacts to resolved knowledge provider.
+        Read each artifact file and publish its complete publishable Markdown body — never summarize.
+        For Cursor-first `*.plan.md` artifacts, strip only the initial YAML frontmatter block before publishing.
+        For non-plan artifacts, publish the full file content.
         Resolve provider from aias-providers/knowledge-config.md.
         Validate service_category, active_provider, provider enabled flag,
         skill binding, and capability compatibility.
