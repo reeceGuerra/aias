@@ -82,6 +82,72 @@ All content artifacts follow the pattern:
 - Old paths (`~/.cursor/issues/`, `~/.cursor/fixes/`, `~/.cursor/charters/`) are **deprecated**
 - Never write artifacts outside TASK_DIR
 
+### Cursor-First `.plan.md` Profile
+
+Rho AIAS adopts a **Cursor-first** profile for `*.plan.md` artifacts. This is a framework-owned convention aligned with how Cursor appears to treat plan files, but it is **not** treated as a public Cursor API guarantee.
+
+This profile applies to:
+
+- `technical.plan.md`
+- `increments.plan.md`
+- `dor.plan.md`
+- `dod.plan.md`
+- any other artifact in the closed catalog whose suffix is `.plan.md`
+
+#### Local artifact layers
+
+For `*.plan.md`, the local artifact may contain two layers:
+
+1. **Tooling metadata layer** — YAML frontmatter at the top of the file
+2. **Document body layer** — Markdown content after the frontmatter
+
+The tooling metadata layer is part of the local artifact used by the framework/runtime. The document body layer is the human-readable plan content.
+
+#### Frontmatter fields
+
+When a `*.plan.md` artifact uses the Cursor-first profile, the canonical frontmatter fields are:
+
+- `name`
+- `overview`
+- `todos`
+- `isProject`
+
+The `todos` list is framework-owned. Cursor may render or ignore it depending on runtime context; Rho AIAS does not assume a public product contract beyond local compatibility.
+
+#### Todo status enum
+
+When `todos` is present in a `*.plan.md` artifact, each item status MUST use this closed enum:
+
+- `pending`
+- `completed`
+
+Other values such as `done`, `finished`, `resolved`, or `in_progress` are not permitted in plan artifact frontmatter.
+
+#### Todo ownership by artifact
+
+Rho AIAS uses `todos` differently depending on the plan artifact:
+
+- `increments.plan.md` — execution todos, produced by `/blueprint`, consumed and updated by `/implement`
+- `technical.plan.md` — validation todos, produced by `/validate-plan`, consumed and updated by `/consolidate-plan`
+- Other `*.plan.md` artifacts — may use the Cursor-first profile for local compatibility, but MUST NOT invent new todo semantics unless explicitly defined by command and contract updates
+
+`/implement` MUST modify only `increments.plan.md` todos. Validation todos live in `technical.plan.md` and are outside `/implement` scope.
+
+#### Structured Prompt naming
+
+For contract, artifact, and schema documentation, the canonical names remain:
+
+- `TASK_ID`
+- `TASK_DIR`
+
+For the human-written Structured Prompt, ergonomic aliases without underscores may be accepted:
+
+- `TASK ID`
+- `TASK DIR`
+- `DIR` (alias for `TASK DIR`)
+
+`TICKET` may remain as a legacy input alias, but it is not the canonical framework term.
+
 ### Catalog Rules
 
 - The artifact catalog is **closed** — no new types may be invented by agents or commands
