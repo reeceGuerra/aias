@@ -21,6 +21,7 @@ Usage notes:
 - It analyzes the plan artifacts in TASK_DIR to identify missing elements.
 - The output is raw, unstructured data listing gaps by category.
 - When the plan is complete ("Plan ready for implementation"), triggers canonical tracker transition `pending_dor` -> `ready`.
+- Validation gaps MUST be persisted centrally in `technical.plan.md`; chat is only the reporting surface.
 
 ---
 
@@ -46,6 +47,22 @@ CHAT OUTPUT (must follow)
 - **Executive summary at the start:** If the plan is **ready for implementation**, put **"Plan ready for implementation"** in a **separate paragraph and in bold**. If there are gaps, list them by dimension.
 - Output must be presented directly in the chat response as raw, unstructured text. List gaps grouped by the five completeness dimensions.
 
+ARTIFACT UPDATE (validation backlog)
+- `technical.plan.md` is the **single source of truth** for validation todos.
+- When gaps exist, update `technical.plan.md` to use the Cursor-first `.plan.md` profile:
+  - frontmatter `name`
+  - frontmatter `overview`
+  - frontmatter `todos`
+  - frontmatter `isProject: false`
+- Each validation todo MUST represent exactly one unresolved gap and MUST include:
+  - `id`
+  - `content`
+  - `status: pending`
+  - `artifact`
+  - `dimension`
+- The Markdown body of `technical.plan.md` remains the human-readable technical plan. Validation todos live only in frontmatter.
+- When no gaps exist, `technical.plan.md` MUST NOT retain stale pending validation todos. The validation backlog should be empty or fully completed.
+
 TRACKER SYNC (Phase 6 — when plan is ready)
 - When verdict = "Plan ready for implementation" AND `task_id` in `status.md` is valid for the resolved tracker provider:
   - Resolve tracker provider from `aias-providers/tracker-config.md`.
@@ -68,6 +85,7 @@ Present validation result in chat:
 - Status update that will be applied
 
 **AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "Plan validated — mark as ready and transition tracker to `ready`?"
 - **Options:**
   - `confirm`: "Mark ready and sync tracker"
@@ -82,7 +100,7 @@ Present validation result in chat:
 
 STATUS UPDATE (Phase 5)
 - When plan passes and gate confirmed: update `status.md` — set `status: ready`, add `validate` to `completed_steps`, set `current_step` to `implement`.
-- When gaps exist: no status change.
+- When gaps exist: no workflow status change, but `technical.plan.md` MUST be marked `modified` in `status.md` if validation todos were written or refreshed.
 - Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if A (see **rho-aias** skill § Phase 5c).
 
 Rules:
@@ -99,6 +117,7 @@ Rules:
 - If a dimension has no gaps, explicitly state that it is complete.
 - Be specific about what is missing (reference plan sections, specific requirements, etc.).
 - Do **NOT** suggest solutions or improvements; only identify gaps.
+- Validation todo ids SHOULD be stable and deterministic when possible (for example, based on dimension + artifact + short slug).
 
 ---
 
@@ -143,6 +162,11 @@ The output must be raw text that identifies gaps across five completeness dimens
 For each dimension:
 - If complete: State "No gaps identified" or "Complete".
 - If gaps exist: List each gap as a specific, actionable item.
+
+Persistence rule:
+- After identifying gaps, persist the unresolved set as validation todos in `technical.plan.md`.
+- Each todo MUST reference the affected artifact (`technical.plan.md`, `dor.plan.md`, `dod.plan.md`, `specs.design.md`, etc.) and the validation dimension.
+- `/validate-plan` owns creation and refresh of this backlog; `/implement` does not modify it.
 
 ---
 
