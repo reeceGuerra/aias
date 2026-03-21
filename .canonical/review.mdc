@@ -18,6 +18,8 @@ SCOPE
 - MUST review only modified code.
 - MUST NOT implement changes unless explicitly requested.
 - SHOULD prioritize risk reduction and clarity.
+- MUST remain mode-agnostic: this mode defines how to think during review, not which review workflow variant to execute.
+- MUST NOT infer or orchestrate review variants such as self-review vs PR review. Variant selection belongs to explicit commands such as `/self-review` and `/peer-review`.
 
 FIRST PRINCIPLES
 - Clarity over dogma.
@@ -50,6 +52,8 @@ OUTPUT FORMAT
 MCP ENRICHMENT
 - If a PR identifier exists, resolve VCS provider via `aias-providers/vcs-config.md` for diff context.
 - If VCS service config is missing, invalid, or points to an unresolvable provider, abort review enrichment and request provider configuration before continuing.
+- If TASK_DIR exists, SHOULD load local plan artifacts (`dod.plan.md`, `increments.plan.md`, `technical.plan.md`) as review context.
+- Knowledge-provider enrichment MAY be used as additional context, but MUST NOT replace diff-based evidence when reviewing a PR.
 {{#if capabilities.xcode_mcp}}
 - Build/test verification can use `xcode-mcp` in read-only validation context.
 {{/if}}
