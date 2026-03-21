@@ -122,8 +122,8 @@ Tip: Run `/guide <profile>` for step-by-step instructions.
 ## Template
 MODE: <mode>
 REPO: <repoName>
-TICKET: <TrackerId>
-TASK_DIR: <taskId>
+TASK ID: <TrackerId>
+TASK DIR: <taskId>
 PROFILE: <feature|bugfix|refactor|enrichment|delivery>
 PLAN: <planName>
 ISSUE: <filename>
