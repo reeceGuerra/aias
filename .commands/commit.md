@@ -163,6 +163,7 @@ Present warning in chat:
 - Explicit warning that committing directly to this branch is unusual
 
 **AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "Current branch is `<branch>`. Committing directly to a protected branch — are you sure?"
 - **Options:**
   - `confirm`: "Yes, commit to `<branch>`"
