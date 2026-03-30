@@ -48,28 +48,28 @@ Use this when you need maximum control over the reasoning step before committing
 
 ```mermaid
 flowchart TD
-    Start[Task enters framework]
+    Start["Task enters framework"]
 
-    Start --> Feature{Feature or Bugfix?}
+    Start --> Entry{"Feature or Bugfix?"}
 
-    Feature -->|Feature| Product[@product<br/>optional /enrich]
-    Product --> Planning[@planning<br/>/blueprint]
-    Planning --> Validate[/validate-plan/]
-    Validate --> Dev[@dev<br/>/implement]
-    Dev --> Commit[/commit/]
-    Commit --> PR[/pr/]
-    PR --> Publish[/publish/]
-    Publish --> Done[Task archived]
+    Entry -->|Feature| Product["@product<br/>optional /enrich"]
+    Product --> Planning["@planning<br/>/blueprint"]
+    Planning --> Validate["/validate-plan/"]
+    Validate --> Dev["@dev<br/>/implement"]
+    Dev --> Commit["/commit/"]
+    Commit --> PR["/pr/"]
+    PR --> Publish["/publish/"]
+    Publish --> Done["Task archived"]
 
-    Feature -->|Bugfix| QA[@qa<br/>/issue]
-    QA --> Trace{Need more evidence?}
-    Trace -->|Yes| TracePlan[@qa or @debug<br/>/trace]
-    TracePlan --> TraceImpl[@dev<br/>implement trace]
+    Entry -->|Bugfix| QA["@qa<br/>/issue"]
+    QA --> Trace{"Need more evidence?"}
+    Trace -->|Yes| TracePlan["@qa or @debug<br/>/trace"]
+    TracePlan --> TraceImpl["@dev<br/>implement trace"]
     TraceImpl --> QA
-    Trace -->|No| Debug[@debug<br/>/fix]
+    Trace -->|No| Debug["@debug<br/>/fix"]
     QA --> Debug
-    Debug --> Assessment{Need feasibility gate?}
-    Assessment -->|Yes| Feasibility[/assessment/]
+    Debug --> Assessment{"Need feasibility gate?"}
+    Assessment -->|Yes| Feasibility["/assessment/"]
     Feasibility --> Planning
     Assessment -->|No| Planning
 ```
