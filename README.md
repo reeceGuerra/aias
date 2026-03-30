@@ -28,6 +28,31 @@ Rho AIAS treats this as an architectural problem. Instead of chasing better prom
 
 Each layer shields the development process from a specific class of failure. Context prevents hallucination. Rules prevent behavioral drift. Modes prevent reasoning misalignment. Commands prevent output inconsistency. Skills prevent knowledge fragmentation. Contracts prevent structural decay. Artifacts prevent decision loss.
 
+## Architecture at a Glance
+
+```mermaid
+flowchart LR
+    U[User / Team] --> SP[Structured Prompt]
+    SP --> Ctx[Project Context<br/>AGENTS.md + RHOAIAS.md]
+    Ctx --> M[Modes]
+    M --> Cmd[Commands]
+    Cmd --> Skill[Skills]
+    Cmd --> Art[Artifacts in TASK_DIR]
+    Skill --> Tracker[Tracker Provider<br/>Jira / equivalent]
+    Skill --> Design[Design Provider<br/>Figma / equivalent]
+    Skill --> Knowledge[Knowledge Provider<br/>Confluence / equivalent]
+    Skill --> VCS[VCS Provider<br/>GitHub / equivalent]
+    Skill --> Tooling[Tooling Provider<br/>Xcode / external tooling]
+    Art --> Handoff[Cross-chat handoff<br/>between modes]
+    Handoff --> M
+    Contract[Contracts + Rules] -.govern behavior.-> M
+    Contract -.govern behavior.-> Cmd
+    Contract -.govern behavior.-> Skill
+    Contract -.govern behavior.-> Art
+```
+
+The framework keeps the reasoning layer, execution layer, and provider integrations separate. Modes define how to think, commands define how to execute, skills mediate provider-specific operations, and artifacts preserve state across chats.
+
 ## Quick Start
 
 ```bash
