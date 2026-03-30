@@ -148,6 +148,66 @@ Contract: `aias/contracts/readme-artifact.md`. Runtime details: `aias/.skills/rh
 
 The framework operates on a four-stage pipeline: **Structured Prompt -> Mode -> Command -> Artifact**.
 
+### Detailed Interaction Map
+
+```mermaid
+flowchart LR
+    U[User] --> SP[Structured Prompt]
+    SP --> Mode[Mode]
+    SP --> TaskDir[TASK_DIR]
+
+    subgraph Governance["Framework Governance"]
+        Context[AGENTS.md / RHOAIAS.md]
+        Rules[Base Rules]
+        Contracts[Contracts]
+    end
+
+    subgraph Execution["Execution Layer"]
+        Command[Command]
+        Skill[Skill]
+        Status[status.md]
+        Artifacts[Artifacts<br/>*.plan.md, *.issue.md, *.fix.md, ...]
+    end
+
+    subgraph Providers["Resolved Providers"]
+        Tracker[Tracker Provider]
+        Knowledge[Knowledge Provider]
+        Design[Design Provider]
+        VCS[VCS Provider]
+        Xcode[Xcode / Tooling Provider]
+    end
+
+    Context --> Mode
+    Rules --> Mode
+    Rules --> Command
+    Contracts --> Command
+    Contracts --> Skill
+    Contracts --> Artifacts
+
+    Mode --> Command
+    TaskDir --> Command
+    Command --> Skill
+    Command --> Artifacts
+    Command --> Status
+
+    Skill --> Tracker
+    Skill --> Knowledge
+    Skill --> Design
+    Skill --> VCS
+    Skill --> Xcode
+
+    Artifacts --> TaskDir
+    Status --> TaskDir
+    Artifacts --> Mode
+```
+
+This view separates the framework into four concerns:
+
+- **Input and reasoning**: the user frames work through the Structured Prompt and the active mode.
+- **Governance**: context, rules, and contracts constrain what the agent is allowed to do.
+- **Execution**: commands write artifacts and call skills; `status.md` tracks lifecycle and sync state.
+- **Providers**: external systems are reached only through skills, never as free-form direct integrations.
+
 ### Structured Prompt
 
 The Structured Prompt is the primary input format. It declares the operating context for a chat session:
@@ -203,6 +263,32 @@ Since each mode operates in its own chat session, handoffs between modes happen 
 4. A new chat in `@review` loads the implementation artifacts for `/self-review` or PR context for `/peer-review`
 
 The task directory is the shared state. `status.md` tracks which phase the task is in.
+
+### Provider-Mediated Execution Sequence
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Mode
+    participant Command
+    participant Skill
+    participant TaskDir as TASK_DIR
+    participant Status as status.md
+    participant Provider as Resolved Provider
+
+    User->>Mode: Provide Structured Prompt
+    Mode->>Command: Invoke command with governed context
+    Command->>TaskDir: Load existing artifacts
+    Command->>Skill: Resolve provider and required runtime data
+    Skill->>Provider: Read / write provider-specific data
+    Provider-->>Skill: Return data or operation result
+    Skill-->>Command: Provider-agnostic result
+    Command->>TaskDir: Write or update artifacts
+    Command->>Status: Update lifecycle and sync state
+    TaskDir-->>Mode: Make artifacts available for next chat
+```
+
+This sequence captures the core invariant of Rho AIAS: provider-specific operations are mediated by skills, while commands remain structured and artifacts remain the durable handoff layer between chats.
 
 ---
 
