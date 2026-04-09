@@ -1,4 +1,4 @@
-# Peer Review (PR / Third-Party Review) — v1
+# Peer Review (PR / Third-Party Review) — v2
 
 ## 1. Identity
 
@@ -47,21 +47,19 @@ Rules:
 
 ## 4. Output Contract (Format)
 
-Return findings directly in chat, prioritized by severity:
-
-1. Blocking issues
-2. Major risks
-3. Minor improvements
-4. Open questions / assumptions
-5. Overall recommendation
-
-When auxiliary context was used, state the source mix explicitly:
-
-- VCS provider diff / PR metadata
-- Local TASK_DIR artifacts
-- Knowledge-provider enrichment
-
-If no findings exist, say so explicitly and state any residual context gaps.
+- Return rendered Markdown in chat.
+- Output MUST contain three layers in this order:
+  1. findings prioritized by severity
+  2. VCS-ready review comment snippets
+  3. one general review comment for the PR as a whole
+- For each VCS-ready snippet:
+  - `File` and `Applies to diff` MUST be rendered as normal text
+  - only `Suggested review comment` MUST be wrapped in a fenced code block
+- When auxiliary context was used, state the source mix explicitly:
+  - VCS provider diff / PR metadata
+  - Local TASK_DIR artifacts
+  - Knowledge-provider enrichment
+- If no findings exist, say so explicitly, keep the general review comment, and omit per-finding VCS snippets.
 
 ---
 
@@ -73,17 +71,53 @@ If no findings exist, say so explicitly and state any residual context gaps.
 - MUST distinguish blocking issues from optional improvements.
 - MUST report drift when PR changes conflict with local or remote planning artifacts.
 - MUST use provider-agnostic language in the command contract: say **VCS provider** and **knowledge provider**, not brand names.
+- VCS-ready comments MUST be professional, impact-first, and safe for third-party developer review.
+- VCS-ready comments MUST NOT be sarcastic, aggressive, or condescending.
+- The general review comment MUST summarize the PR-level posture, not repeat every finding verbatim.
 
 ---
 
-## 6. Review Procedure
+## 6. Output Structure (Template)
 
-1. Resolve the PR diff and metadata through the configured VCS provider.
-2. If TASK_DIR is available locally, load `dod.plan.md`, `increments.plan.md`, and `technical.plan.md` as secondary context.
-3. If `task_id` is available, MAY attempt knowledge-provider enrichment for published artifacts. Failure here MUST NOT block the review.
-4. Review the PR diff first; auxiliary artifacts only enrich intent and history.
-5. If diff evidence conflicts with local or remote artifacts, report the drift and prioritize the current diff as the source of changed behavior.
-6. Return findings with evidence and impact.
+```markdown
+# Peer Review
+
+## Source Mix
+- VCS provider diff / PR metadata: <used | not used>
+- Local TASK_DIR artifacts: <used | not used>
+- Knowledge-provider enrichment: <used | not used>
+
+## Findings
+### Blocking issues
+- <finding or "None">
+
+### Major risks
+- <finding or "None">
+
+### Minor improvements
+- <finding or "None">
+
+### Open questions / assumptions
+- <question or "None">
+
+## VCS-Ready Review Comments
+### Comment <n>
+File: `<path>`
+Applies to diff: `<hunk / changed lines / contextual anchor>`
+
+```text
+<Suggested review comment in English>
+```
+
+## General Review Comment
+
+```text
+<PR-level review comment in English>
+```
+
+## Overall Recommendation
+- <request changes | address majors then re-review | looks good with minor follow-ups>
+```
 
 ---
 
@@ -96,3 +130,4 @@ This command must **NOT**:
 - Create or update artifacts
 - Publish to knowledge provider
 - Post comments or approvals unless the user explicitly requests a separate action
+- Pretend that a VCS-ready snippet was anchored when no diff context exists
