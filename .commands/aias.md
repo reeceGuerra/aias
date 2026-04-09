@@ -35,6 +35,7 @@ Short aliases: `gen` for `generate`, `gen -s` for `generate --shortcuts`.
 Usage notes:
 - `/aias` without arguments shows available subcommands.
 - `/aias new` without flags shows available artifact types.
+- The CLI-style `-c` / `--command` flag used by `/aias new` is unrelated to command-specific flag conventions such as `/handoff -c <command>`.
 
 ---
 
