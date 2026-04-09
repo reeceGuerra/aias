@@ -18,11 +18,12 @@ This is a **system skill** — it is referenced by every mode and every artifact
 Use this skill when:
 - **Creating artifacts** — `/blueprint`, `/enrich`, `/issue`, `/fix`, `/charter`, `/trace`, `/assessment`
 - **Consuming artifacts** — `/implement`, `/validate-plan`, `/pr`, `/commit`, `/consolidate-plan`, `/brief`, `/report`, `/assessment`
+- **Reviewing with artifact context** — `/self-review`, `/peer-review`, `/handoff`
 - **Publishing artifacts** — `/publish`, or any command that triggers progressive knowledge sync (Phase 5)
 - **Syncing with tracker** — `/validate-plan`, `/implement`, `/pr`, `/commit` (Phase 6)
 - **Reasoning about task state** — any mode that loads from `<resolved_tasks_dir>/<TASK_ID>/` (default: `~/.cursor/plans/`)
 
-Commands that reference this skill: `/blueprint`, `/enrich`, `/issue`, `/fix`, `/charter`, `/trace`, `/assessment`, `/implement`, `/validate-plan`, `/pr`, `/commit`, `/consolidate-plan`, `/brief`, `/report`, `/publish`.
+Commands that reference this skill: `/aias`, `/blueprint`, `/brief`, `/charter`, `/commit`, `/consolidate-plan`, `/enrich`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
 
 ---
 
@@ -87,6 +88,8 @@ Old artifact paths (`~/.cursor/issues/`, `~/.cursor/fixes/`, `~/.cursor/charters
 
 Each chat is a single specialized agent: one mode per chat, plus the base rules that always apply. Modes are **never** mixed in the same chat. Handoffs between modes happen across chats — one chat produces an artifact (via a command), and that file is used as input in another chat where a different mode runs. If consecutive steps use the same mode, they stay in the same chat.
 
+Artifacts are the **durable handoff layer**. The `/handoff` command may emit an **operational handoff snippet** to help open the next chat, but that snippet is advisory and never replaces TASK_DIR artifacts or `status.md` as the source of truth.
+
 ### Plan Classification
 
 Every plan is classified to determine its publication and approval requirements:
@@ -100,6 +103,10 @@ Every plan is classified to determine its publication and approval requirements:
 - Assigned by `/blueprint` in `status.md` (`classification: A | B | C`).
 - Validated by `/validate-plan` (gap if missing).
 - `/charter` can **escalate** (A→B, B→C) but **never downgrade**.
+
+Important terminology:
+- **Command Type A** refers to chat-only command behavior in `readme-commands.md`.
+- **Plan Classification A** refers to the low-risk lifecycle class in this skill.
 
 ### Governance in Artifacts
 
