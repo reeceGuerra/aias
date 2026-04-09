@@ -101,6 +101,15 @@ Complete parameter reference for all tools available in the Atlassian MCP server
 | `contentFormat` | string | No | Content format: `"markdown"` or `"adf"` (default: ADF) |
 | `responseContentFormat` | string | No | Response content format: `"markdown"` or `"adf"` (default: ADF) |
 
+**Rho AIAS guidance:**
+- For `/enrich`, use `responseContentFormat` consistent with the parser needed to detect and replace the Rho AIAS-managed block safely.
+- Prefer `contentFormat: "markdown"` for `description`, `customfield_10036`, and `customfield_10062` when the target field behaves correctly with Markdown.
+- If a target textarea rejects Markdown or the rendered result is unstable, retry using explicit ADF for that field.
+- Preserve human-authored content outside the managed block; replace only the `Enhanced by` block owned by Rho AIAS.
+- `/enrich` MUST NOT write RCA fields for bug workflows.
+- For `/report`, use runtime field metadata to determine whether structured RCA fields exist and which option ids are valid.
+- If runtime metadata and the documented mapping diverge, use runtime metadata for the remote write and treat the mapping as needing maintenance.
+
 ### searchJiraIssuesUsingJql
 
 | Parameter | Type | Required | Description |
@@ -156,6 +165,11 @@ Complete parameter reference for all tools available in the Atlassian MCP server
 | `commentVisibility` | string | No | Restrict comment visibility |
 | `contentFormat` | string | No | Content format: `"markdown"` or `"adf"` (default: ADF) |
 | `responseContentFormat` | string | No | Response content format: `"markdown"` or `"adf"` (default: ADF) |
+
+**Rho AIAS guidance:**
+- Do NOT use Jira comments to publish local filesystem paths or machine-specific references.
+- Comments remain valid for intentional tracker communications such as `/brief` or `/publish` closure notices with remote knowledge links.
+- For `/report`, comments are a fallback only when the tracker does not expose equivalent structured RCA fields.
 
 ### addWorklogToJiraIssue
 
