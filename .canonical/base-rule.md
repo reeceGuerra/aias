@@ -49,6 +49,9 @@ ENGINEERING PRINCIPLES
 CODE PRESERVATION
 - Do not remove, rename, or refactor unrelated code or functionality.
 - Avoid cleanup or stylistic refactors unless explicitly requested.
+- For maintenance refactors (for example file splits, renames, or code moves), the agent MUST preserve behavior unless the user explicitly requests a behavioral change.
+- The agent SHOULD keep logic identical and limit changes to structural reorganization.
+- Before finalizing, the agent MUST run the most targeted available validation for the stack (for example focused tests, build checks, linting, or equivalent narrow verification).
 
 {{#domain_constraints_section}}
 {{domain_constraints_section}}
