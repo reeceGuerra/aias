@@ -70,6 +70,9 @@ python3 aias/.canonical/generation/aias_cli.py new --rule security-policy
 # Create a new command
 python3 aias/.canonical/generation/aias_cli.py new -c deploy
 
+# Create the canonical handoff command
+python3 aias/.canonical/generation/aias_cli.py new -c handoff
+
 # Create a new skill
 python3 aias/.canonical/generation/aias_cli.py new -s slack-mcp
 
@@ -154,6 +157,8 @@ Both the CLI and the `/aias` chat command produce identical artifacts. The diffe
 | Smart suggestions | No | Yes (explains, offers alternatives) |
 | Bootstrapping | None — runs directly | Requires manual copy to IDE command path (see [QUICKSTART § Prerequisites](QUICKSTART.md#prerequisites-bootstrapping)) |
 | Best for | Scripted/batch setup, CI | Interactive artifact creation with guidance |
+
+Note: the CLI flag `-c` means `--command` for `aias new`. It is unrelated to command-specific invocation flags such as `/handoff -c <command>`.
 
 ---
 
