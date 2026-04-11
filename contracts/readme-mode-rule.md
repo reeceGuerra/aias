@@ -31,7 +31,7 @@ A **mode rule** is a Cursor rule file (`.mdc` format) that defines **task-specif
 
 ### Location
 
-- **Canonical location:** `aias/.modes/` — the generated source of truth
+- **Canonical location:** `aias-config/modes/` — the generated source of truth
 - **Tool-specific directories** (shortcuts only — see `readme-tool-adapter.md`):
   - Repository-level: `.cursor/rules/<mode-name>.mdc` in the repository root
   - Workspace-level: `.cursor/rules/<mode-name>.mdc` in the workspace directory
