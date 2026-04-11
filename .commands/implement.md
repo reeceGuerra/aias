@@ -14,6 +14,7 @@ You are executing an implementation plan increment by increment, reading plan ar
 
 Invocation:
 - `/implement`
+- `/implement` (with a self-review handoff in the chat opening context)
 
 Usage notes:
 - This command is intended to be used within `@dev` mode.
@@ -21,6 +22,7 @@ Usage notes:
 - The command does NOT execute the entire plan autonomously. It executes **one increment at a time** and waits for user feedback before proceeding.
 - On the first increment, triggers canonical tracker transition `ready` -> `in_progress` (once per task).
 - `increments.plan.md` is the only plan artifact this command may update. It MUST NOT modify validation todos in `technical.plan.md`.
+- **Review Resolution mode:** When the chat opening message contains a handoff snippet from `/self-review` (with findings such as blocking issues, major risks, or minor improvements), the command enters Review Resolution mode instead of plan-driven execution. See Phase 1-R in Section 6.
 
 ---
 
@@ -28,6 +30,7 @@ Usage notes:
 
 This command may use **only** the following inputs:
 - Plan artifacts from TASK_DIR loaded via **rho-aias** skill (Phases 0–3): `technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `dod.plan.md`, `specs.design.md` (when present), `analysis.product.md` (when present)
+- Self-review handoff snippet (from the chat opening context) — activates Review Resolution mode
 - Chat context explicitly provided by the user
 - Codebase state (files, dependencies, existing code)
 - Service configs:
@@ -76,6 +79,8 @@ Output is delivered in **phases**, each clearly communicated in chat:
 - Apply the **incremental-decomposition** skill execution checklist when consuming increments (order, one-at-a-time, verify goal, update status).
 - If the plan has ambiguities or gaps, raise them during the Analyze or Understand phase — do not guess.
 - Follow all `@dev` mode rules (quality bar, feasibility checks, safeguards).
+- **Review Resolution:** When the chat opening message contains a self-review handoff, convert findings into fix items ordered by severity (blocking → major → minor). Each fix item is executed as a mini-increment with the same gate protocol. Open questions / assumptions from the review MUST NOT be auto-executed — present them to the user for decision.
+- **Full test suite mandatory:** Verification MUST use `RunAllTests`. Using `RunSomeTests` or any subset is **forbidden** during `/implement` verification. The full test suite MUST run after every increment to detect collateral impact on tests outside the modified scope.
 
 ---
 
@@ -99,6 +104,44 @@ Follow the **rho-aias** skill loading protocol (Phases 0–3) to resolve TASK_DI
 ```
 
 Do NOT proceed to Phase 2 without completing Phase 1.
+
+---
+
+### Phase 1-R: REVIEW RESOLUTION (conditional)
+
+**Activation:** The chat opening message contains a handoff snippet whose `COMMAND` resolves to `/implement` and whose `Context` or `Findings` block contains self-review findings (blocking issues, major risks, minor improvements).
+
+When activated, this phase **replaces** Phases 2–4 with a review-driven execution loop. If the handoff also references plan artifacts in TASK_DIR (`increments.plan.md`), review findings take precedence — resolve all findings first, then resume plan-driven execution at Phase 2.
+
+**Protocol:**
+
+1. **Parse** findings from the handoff by severity.
+2. **Present** summary to the user:
+   ```
+   REVIEW RESOLUTION:
+     Source: self-review handoff
+     Blocking: <N> items
+     Major: <N> items
+     Minor: <N> items
+     Questions: <N> items (require user decision)
+   ```
+3. **Map** each finding to a concrete fix item (target file, expected change, rationale from the finding).
+4. **Present questions** — If the review includes open questions or assumptions, present them to the user and wait for a decision before proceeding. Do NOT auto-resolve questions.
+5. **Execute** each fix item as a mini-increment following the same protocol as Phase 4:
+   - Announce → Implement fix → Report → Verify (build + `RunAllTests`) → Feedback gate.
+   - Fix items execute in severity order: blocking first, then major, then minor.
+6. **Completion** — After all fixes are applied:
+   ```
+   REVIEW RESOLUTION COMPLETE:
+     Fixed: <N> items
+     Skipped: <N> items (user decision)
+     Verification: <last build + test result>
+
+     Recommended next step:
+     - @review + /self-review to validate fixes
+   ```
+
+Do NOT proceed to Phase 2 without completing Phase 1-R (when activated).
 
 ---
 
@@ -234,7 +277,8 @@ For each increment:
 5. **Verify** (conditional — requires `xcode-mcp`):
    - Resolve `tabIdentifier` via `XcodeListWindows` (once per execution session; reuse for subsequent increments).
    - Run `BuildProject(tabIdentifier)`.
-   - If build succeeds, run `RunAllTests(tabIdentifier)`.
+   - If build succeeds, MUST call `RunAllTests(tabIdentifier)` — running a subset via `RunSomeTests` is **forbidden**. Changes in one increment may break tests outside the modified scope; only a full suite run catches this.
+   - **Result interpretation:** Use `counts.failed` as the authoritative success signal. The `errors` field in individual test results is only present when errors exist — its absence means the test passed, not that it was skipped. If `counts.total > 0` and `counts.failed == 0`, the test suite passed.
    - Report result:
      ```
      ✓ Verification passed:
@@ -367,3 +411,4 @@ This command must **NOT**:
 - Modify files outside the scope defined by the plan
 - Proceed past any phase without completing the previous one
 - Continue after a feedback gate without user confirmation
+- Run only a subset of tests during verification (always run the full suite via `RunAllTests`)

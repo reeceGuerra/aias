@@ -65,6 +65,12 @@ All file operations use **Xcode project organization paths**, not filesystem pat
 
 **Returns:** Test results (limited to 100, failures first) with a text file containing the full summary.
 
+**Result interpretation:**
+- Primary success indicator: `counts.failed == 0`. This is the authoritative signal.
+- Per-result `state` field indicates individual test outcome (e.g., `"passed"`, `"failed"`).
+- The `errors` field in individual results is **only present when the test has errors**. An absent `errors` field means the test passed — it is NOT an indicator that tests did not run.
+- If `counts.total > 0` and `counts.failed == 0`, the test suite passed regardless of whether individual results contain an `errors` field.
+
 ---
 
 ### Run Specific Tests

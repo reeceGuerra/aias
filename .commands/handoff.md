@@ -73,6 +73,7 @@ Rules:
   - `codex`: mode not supported (emit canonical: `aias-config/modes/<mode>.mdc`), `.codex/commands/<command>.md`
   - If tool is unknown or `binding.generation.tools` is missing, emit the canonical path as fallback (`aias-config/modes/<mode>.mdc`, `aias/.commands/<command>.md`).
   - Always verify the resolved path exists before emitting. If missing, fall back to canonical.
+  - Path resolution applies only to framework commands (`aias/.commands/`). Project-specific commands in `aias-config/commands/` are out of scope for handoff resolution.
 
 ---
 
