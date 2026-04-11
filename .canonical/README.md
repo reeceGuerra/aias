@@ -9,9 +9,9 @@ Generic modes that apply to any platform:
 - [delivery.mdc](delivery.mdc): ticket readiness validation, prioritization, and release visibility. Activated with `@delivery`.
 - [devops.mdc](devops.mdc): CI/CD pipeline management and infrastructure. Activated with `@devops`.
 
-**Generated modes** (technology-specific roles and references) are produced by the generator and committed to `aias/.modes/`.
+**Generated modes** (technology-specific roles and references) are produced by the generator and committed to `aias-config/modes/`.
 
-Commands (`/blueprint`, `/issue`, `/fix`, etc.) live in **aias/.commands/** and are platform-agnostic.
+Commands (`/blueprint`, `/issue`, `/fix`, etc.) live in **aias/.commands/** (framework) and **aias-config/commands/** (project custom) and are platform-agnostic.
 
 ## Mode Templates (Phase 2)
 
@@ -27,7 +27,7 @@ Commands (`/blueprint`, `/issue`, `/fix`, etc.) live in **aias/.commands/** and 
 | `product.mdc` | Product analysis mode behavior |
 | `integration.mdc` | Integration mode behavior |
 
-Generated outputs are committed to `aias/.modes/`.
+Generated outputs are committed to `aias-config/modes/`.
 
 ## Canonical Rules (Phase 4)
 
