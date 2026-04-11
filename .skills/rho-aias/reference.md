@@ -33,7 +33,7 @@ Each mode declares which artifacts it **requires** (must be present) and which a
 | Mode | Required artifacts | Optional artifacts |
 |------|--------------------|--------------------|
 | `@planning` | — | `*.product.md`, `*.issue.md`, `*.fix.md`, `*.assessment.md` |
-| `@product` | — | `*.product.md`, `*.design.md` |
+| `@product` | — | `*.product.md`, `*.design.md`, `*.plan.md` |
 | `@dev` | `*.plan.md`, `*.design.md` | `*.product.md`, `*.fix.md`, `*.assessment.md`, `*.trace.md` |
 | `@qa` | `*.issue.md` | `*.trace.md`, `*.plan.md` |
 | `@debug` | `*.fix.md`, `*.issue.md` | `*.plan.md` |
@@ -92,7 +92,7 @@ Each task follows one of five profiles. The profile determines which steps are e
 | implement | Chat Dev | `@dev` | `/implement` | — (code changes) | — |
 | commit | Chat Dev | `@dev` | `/commit` | — | — |
 | pr | Chat Dev | `@dev` | `/pr` | — (PR created) | `in_progress` → `in_review` |
-| closure | (any) | (any) | `/publish` or `/brief`/`/report` | per classification | — |
+| closure | (any) | (any) | `/publish` or `/brief`/`/report` | `delta.publish.md` | — |
 
 ### `bugfix` — Bug investigation and fix
 
@@ -105,7 +105,7 @@ Each task follows one of five profiles. The profile determines which steps are e
 | trace-update* | Chat QA | `@qa` | update issue with logs | `report.issue.md` (updated) | — |
 | analyze | Chat Debug | `@debug` | `/fix` | `analysis.fix.md` | — |
 | assess | Chat Dev | `@dev` | `/assessment` | `feasibility.assessment.md` | — |
-| blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts | `ready` → `in_progress` |
+| blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts, `dor.plan.md`, `dod.plan.md` (bug exception) | `pending_dor` → `in_progress` |
 | validate | Chat Planning | `@planning` | `/validate-plan` | — | — |
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
 | implement | Chat Dev | `@dev` | `/implement` | — (code changes) | — |
@@ -120,27 +120,28 @@ Each task follows one of five profiles. The profile determines which steps are e
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | `pending_dor` → `ready` |
 | blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts | `ready` → `in_progress` |
 | validate | Chat Planning | `@planning` | `/validate-plan` | — | — |
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
 | implement | Chat Dev | `@dev` | `/implement` | — (code changes) | — |
 | commit | Chat Dev | `@dev` | `/commit` | — | — |
 | pr | Chat Dev | `@dev` | `/pr` | — (PR created) | `in_progress` → `in_review` |
-| closure | (any) | (any) | `/publish` or `/brief`/`/report` | per classification | — |
+| closure | (any) | (any) | `/publish` or `/brief`/`/report` | `delta.publish.md` | — |
 
 ### `enrichment` — Ticket enrichment only (no implementation)
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
 | refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | `pending_dor` → `ready` |
-| closure | (any) | (any) | `/publish` or `/brief` | per classification | — |
+| closure | (any) | (any) | `/publish` or `/brief` | `delta.publish.md` | — |
 
 ### `delivery` — Charter and viability assessment
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
 | charter | Chat Delivery | `@delivery` | `/charter` (with or without plans) | `delivery.charter.md` | — |
-| closure | (any) | (any) | `/publish` or `/brief` | per classification | — |
+| closure | (any) | (any) | `/publish` or `/brief` | `delta.publish.md` | — |
 
 ---
 
@@ -150,7 +151,7 @@ Steps are tracked in `status.md` under `completed_steps` (array) and `current_st
 
 | Step name | Trigger | Completion condition |
 |-----------|---------|---------------------|
-| `refinement` | `/enrich` completes | `analysis.product.md` written |
+| `refinement` | `/enrich` completes | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` written |
 | `investigate` | `/issue` completes | `report.issue.md` written |
 | `trace` | `/trace` completes | `instrumentation.trace.md` written |
 | `analyze` | `/fix` completes | `analysis.fix.md` written |
@@ -177,6 +178,7 @@ status: pending_dor
 tracker_status: <provider:pending_dor_label>
 completed_steps: []
 current_step: refinement
+refinement_validated: null
 published: null
 completed: null
 artifacts:
@@ -184,6 +186,7 @@ artifacts:
 ```
 
 The `classification` field is `null` until `/blueprint` assigns it (`A`, `B`, or `C`). See SKILL.md for classification criteria.
+The `refinement_validated` field is `null` initially; set to `true` by `/enrich` after successful publish, `false` if publish was skipped.
 
 ### Governance Resolution (for `/implement`)
 
@@ -213,9 +216,12 @@ Tracker transitions are defined in canonical form and resolved through provider 
 4. Execute provider transition toward mapped target.
 5. If config or mapping is missing/invalid/unresolvable, abort dependent tracker operation.
 
-Ownership rule for review transition:
+Ownership rules:
 
-- `/pr` is the primary owner of canonical transition `in_progress` -> `in_review`.
+- `/enrich` owns canonical transition `pending_dor` -> `ready`.
+- `/blueprint` owns canonical transition `ready` -> `in_progress`.
+- `/blueprint` (bug exception) owns canonical transition `pending_dor` -> `in_progress`.
+- `/pr` owns canonical transition `in_progress` -> `in_review`.
 - `/commit` is verification-only for `in_review` and does not own the primary transition.
 
 Important boundary:
@@ -240,6 +246,7 @@ Important boundary:
 ```
 pending_dor → ready        (/enrich passes)
 ready → in_progress        (/blueprint starts)
+pending_dor → in_progress  (/blueprint bug exception — skips ready)
 in_progress → in_review    (/pr creates PR)
 in_review → in_progress    (PR needs changes, back to implementation)
 in_review → completed      (/publish completes)
@@ -311,9 +318,9 @@ graph TD
 | Service config missing or invalid | Fail-fast before attempting sync; abort dependent operation, request correction |
 | Provider available but page/issue not found | Abort that specific sync operation, report, continue with remaining operations |
 
-### Safety Net: `/publish`
+### Reconciliation + Closure: `/publish`
 
-The `/publish` command acts as a safety net for sync consistency. It re-runs Phase 5c for all artifacts with status `created` or `modified` (idempotent). This catches any artifacts that failed to sync during normal command execution.
+The `/publish` command performs final reconciliation and closure. It re-runs Phase 5c for any remaining non-synced artifacts (idempotent) and generates the Plan Delta. This catches any artifacts that failed to sync during normal command execution.
 
 ### Key Guarantees
 
@@ -423,9 +430,9 @@ After every command execution:
 
 ### `/publish` closure sync
 
-`/publish` acts as a **safety net** for sync consistency — it re-runs Phase 5c for all non-synced artifacts.
+`/publish` performs **reconciliation and closure** — it re-runs Phase 5c for all non-synced artifacts.
 
-1. Safety net: re-run Phase 5c for all non-synced artifacts (idempotent).
+1. Reconciliation: re-run Phase 5c for all non-synced artifacts (idempotent).
 2. Generate `delta.publish.md` and publish as child artifact/page.
 3. Update parent container/dashboard with a completion summary (this is the ONLY page that receives a summary — all artifact pages contain the full file content).
 4. Set `status: completed`, `completed: <date>`.
