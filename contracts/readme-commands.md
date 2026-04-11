@@ -692,11 +692,11 @@ The `/pr` command includes a Plan Delta section comparing planned artifacts vs a
 
 ### `/publish` Command Type
 
-`/publish` is a Type B command that performs closure-only operations: safety net sync through the resolved knowledge provider, Plan Delta generation, and task completion. It is **mode-agnostic** — invocable from any chat session.
+`/publish` is a Type B command that performs reconciliation and closure operations: reconciliation sync through the resolved knowledge provider, Plan Delta generation, and task completion. It is **mode-agnostic** — invocable from any chat session.
 
 ### Tracker Sync Convention
 
-Commands that trigger tracker transitions MUST declare the transition in their Output Contract (Section 4) under a "TRACKER SYNC (Phase 6)" subsection. Only four commands trigger transitions: `/enrich`, `/blueprint`, `/pr`, `/commit`. Transitions must be expressed in canonical status form and resolved through `status_mapping_source` defined in `aias-config/providers/tracker-config.md`. See `aias/contracts/readme-tracker-status-mapping.md` for mapping rules.
+Commands that trigger tracker transitions MUST declare the transition in their Output Contract (Section 4) under a "TRACKER SYNC (Phase 6)" subsection. Only four commands trigger transitions: `/enrich`, `/blueprint`, `/pr`, `/commit`. `/blueprint` has an additional bug exception variant that transitions `pending_dor` -> `in_progress` directly when DoR/DoD are generated via bug exception. Transitions must be expressed in canonical status form and resolved through `status_mapping_source` defined in `aias-config/providers/tracker-config.md`. See `aias/contracts/readme-tracker-status-mapping.md` for mapping rules.
 
 ### Skills Reference Convention
 
