@@ -1,11 +1,11 @@
-# Validate Plan (Plan Completeness Validation) — v4
+# Validate Plan (Plan Alignment Validation) — v5
 
 ## 1. Identity
 
 **Command Type:** Type B — Procedural / Execution
 
-You are validating the **completeness** of an implementation plan.
-This command is responsible for analyzing plan artifacts in the task directory, identifying gaps across five completeness dimensions (investigation, definition, planning, detailing, refinement), and reporting the verdict. When the plan passes validation, this command triggers the canonical tracker transition `pending_dor` -> `ready` through the resolved tracker provider mapping.
+You are validating the **alignment and completeness** of an implementation plan against the DoR/DoD from refinement.
+This command is responsible for analyzing plan artifacts in the task directory, verifying that the technical plan aligns with the DoR/DoD, identifying gaps across completeness dimensions, processing DoR/DoD amendment proposals from `/blueprint`, and reporting the verdict.
 
 **Skills referenced:** `rho-aias`.
 
@@ -18,9 +18,9 @@ Invocation:
 
 Usage notes:
 - This command is intended to be used **after** plan artifacts have been created (via `/blueprint` command).
-- It analyzes the plan artifacts in TASK_DIR to identify missing elements.
+- It analyzes the plan artifacts in TASK_DIR to identify missing elements and verify alignment with DoR/DoD.
 - The output is raw, unstructured data listing gaps by category.
-- When the plan is complete ("Plan ready for implementation"), triggers canonical tracker transition `pending_dor` -> `ready`.
+- When DoR/DoD amendments are proposed in `technical.plan.md`, the Amendment gate is presented.
 - Validation gaps MUST be persisted centrally in `technical.plan.md`; chat is only the reporting surface.
 
 ---
@@ -31,7 +31,6 @@ This command may use **only** the following inputs:
 - Plan artifacts from TASK_DIR loaded via **rho-aias** skill (Phases 0–3): `technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `dod.plan.md`, `specs.design.md` (when present), `analysis.product.md` (when present)
 - Chat context explicitly provided by the user
 - Service configs:
-  - `aias-config/providers/tracker-config.md`
   - `aias-config/providers/knowledge-config.md`
 
 Rules:
@@ -45,7 +44,7 @@ Rules:
 
 CHAT OUTPUT (must follow)
 - **Executive summary at the start:** If the plan is **ready for implementation**, put **"Plan ready for implementation"** in a **separate paragraph and in bold**. If there are gaps, list them by dimension.
-- Output must be presented directly in the chat response as raw, unstructured text. List gaps grouped by the five completeness dimensions.
+- Output must be presented directly in the chat response as raw, unstructured text. List gaps grouped by the completeness dimensions.
 
 ARTIFACT UPDATE (validation backlog)
 - `technical.plan.md` is the **single source of truth** for validation todos.
@@ -63,45 +62,63 @@ ARTIFACT UPDATE (validation backlog)
 - The Markdown body of `technical.plan.md` remains the human-readable technical plan. Validation todos live only in frontmatter.
 - When no gaps exist, `technical.plan.md` MUST NOT retain stale pending validation todos. The validation backlog should be empty or fully completed.
 
-TRACKER SYNC (Phase 6 — when plan is ready)
-- When verdict = "Plan ready for implementation" AND `task_id` in `status.md` is valid for the resolved tracker provider:
-  - Resolve tracker provider from `aias-config/providers/tracker-config.md`.
-  - Transition canonical tracker status from `pending_dor` -> `ready` using provider mapping.
-  - If config is missing, invalid, or unresolvable: abort sync and request provider configuration.
-  - Report transition result in chat.
-- When gaps exist: no tracker transition.
+### Gate: Amendment Approval
+
+**Type:** Decision
+**Fires:** When `technical.plan.md` contains `## Proposed DoR/DoD Amendments`, before the Validation Result gate.
+**Skippable:** No.
+
+**Context output:**
+Present each proposed amendment with context:
+- Which DoR/DoD dimension is affected
+- What the blueprint discovered as a gap
+- Proposed change
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Blueprint proposed <N> amendments to DoR/DoD. How to proceed?"
+- **Options:**
+  - `apply_local`: "Apply amendments locally (do not publish to team)"
+  - `pause`: "Pause — consult the team before proceeding"
+  - `reject`: "Reject amendments — plan adjusts to existing DoR/DoD"
+- **allow_multiple:** false
+
+**On response:**
+- `apply_local` → Apply amendments to `dor.plan.md`/`dod.plan.md` locally. Mark amended artifacts as `modified` in `status.md`. Do NOT publish these changes via Phase 5c — they remain local until reconciliation via `/publish` or team re-runs `/enrich`.
+- `pause` → Halt validation. Inform user to consult the team and return when amendments are resolved (either via `/enrich` re-run or manual update).
+- `reject` → Discard amendments. Remove `## Proposed DoR/DoD Amendments` from `technical.plan.md`. The plan must adjust to the existing DoR/DoD as-is.
 
 ### Gate: Validation Result
 
 **Type:** Confirmation
-**Fires:** When the plan passes validation ("Plan ready for implementation"), before updating `status.md` and triggering tracker sync.
+**Fires:** When the plan passes validation ("Plan ready for implementation"), before updating `status.md`.
 **Skippable:** No.
 
 **Context output:**
 Present validation result in chat:
 - Verdict: "Plan ready for implementation"
 - Classification from `status.md`
-- Tracker transition that will fire (`pending_dor` → `ready`)
 - Status update that will be applied
 
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
-- **Prompt:** "Plan validated — mark as ready and transition tracker to `ready`?"
+- **Prompt:** "Plan validated — mark as ready for implementation?"
 - **Options:**
-  - `confirm`: "Mark ready and sync tracker"
-  - `skip`: "Keep current status — do not transition"
+  - `confirm`: "Mark validated and continue"
+  - `skip`: "Keep current status — do not update"
 - **allow_multiple:** false
 
 **On response:**
-- `confirm` → Proceed to Status Update and Tracker Sync
-- `skip` → Report validation result without status change or tracker transition
+- `confirm` → Proceed to Status Update
+- `skip` → Report validation result without status change
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 STATUS UPDATE (Phase 5)
-- When plan passes and gate confirmed: update `status.md` — set `status: ready`, add `validate` to `completed_steps`, set `current_step` to `implement`.
+- When plan passes and gate confirmed: update `status.md` — add `validate` to `completed_steps`, set `current_step` to `implement`. Do NOT modify the `status` field (it remains `in_progress` as set by `/blueprint`).
+- When amendments are applied locally: mark `dor.plan.md`/`dod.plan.md` as `modified` in `status.md` artifacts map.
 - When gaps exist: no workflow status change, but `technical.plan.md` MUST be marked `modified` in `status.md` if validation todos were written or refreshed.
-- Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if A (see **rho-aias** skill § Phase 5c).
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. Exception: DoR/DoD artifacts marked as locally amended (via Amendment gate `apply_local`) are excluded from Phase 5c until reconciled via `/publish`.
 
 Rules:
 - Do NOT structure the rest of the chat output as a formatted document.
@@ -123,17 +140,19 @@ Rules:
 
 ## 6. Output Structure (Raw Format)
 
-The output must be raw text that identifies gaps across five completeness dimensions:
+The output must be raw text that identifies gaps across completeness dimensions:
 
 **1. Investigation Gaps** (primary: `analysis.product.md`, `technical.plan.md`)**:**
 - List any areas where information is insufficient or context is not understood.
 - Identify missing research, unclear requirements, or incomplete understanding.
 - Specify what needs to be investigated.
 
-**2. Definition Gaps** (primary: `dor.plan.md`, `dod.plan.md`)**:**
-- List any areas where what will be done to complete the requirement is not established.
-- Identify missing functional definitions, unclear scope, or undefined outcomes.
-- Specify what needs to be defined.
+**2. Definition Alignment** (primary: `dor.plan.md`, `dod.plan.md`, `technical.plan.md`)**:**
+- Verify that the technical plan **aligns with** the DoR/DoD from refinement.
+- Check that all DoR functional requirements are covered by at least one increment.
+- Check that DoD criteria are addressable by the planned implementation.
+- Check that DoR test criteria are covered by the testing plan (Category 5 in `/blueprint`).
+- List any alignment gaps: DoR requirements not covered, DoD criteria not achievable, or test criteria not planned.
 
 **3. Planning Gaps** (primary: `increments.plan.md`, `technical.plan.md`)**:**
 - List any areas where organization (how, when, who) is missing.
@@ -178,5 +197,6 @@ This command must **NOT**:
 - Infer gaps that are not explicitly evident in the plan content
 - Perform deep analysis beyond identifying missing elements
 - Assume a task directory if none was provided; ask for task ID or path
-- Transition tracker to any status other than `ready`
-- Transition tracker when gaps exist
+- Modify the `status` field in `status.md` (it remains `in_progress` as set by `/blueprint`)
+- Trigger any tracker status transition (tracker transitions are owned by `/enrich` and `/blueprint`)
+- Publish locally-amended DoR/DoD artifacts via Phase 5c (those are reconciled via `/publish`)
