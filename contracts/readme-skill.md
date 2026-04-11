@@ -140,7 +140,8 @@ skill-name/
 |------|------|-------|
 | Personal | `~/.cursor/skills/skill-name/` | Available across all projects for this user |
 | Project | `.cursor/skills/skill-name/` | Shared with anyone using the repository |
-| Architecture | `aias/.skills/skill-name/` | Maintained in this configuration workspace; distributed to project workspaces |
+| Framework | `aias/.skills/skill-name/` | Core skills shipped with the framework (read-only) |
+| Project | `aias-config/skills/skill-name/` | Custom skills created per-project via `aias new --skill` |
 
 **Note:** Never create skills in `~/.cursor/skills-cursor/`. That directory is reserved for Cursor's internal built-in skills.
 
