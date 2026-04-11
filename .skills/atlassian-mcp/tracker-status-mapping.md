@@ -77,6 +77,9 @@ command_triggers:
   /blueprint:
     from: ready
     to: in_progress
+  /blueprint (bug exception):
+    from: pending_dor
+    to: in_progress
   /pr:
     from: in_progress
     to: in_review
@@ -112,6 +115,7 @@ canonical_to_provider:
 command_triggers:
   /enrich: { from: pending_dor, to: ready }
   /blueprint: { from: ready, to: in_progress }
+  /blueprint (bug exception): { from: pending_dor, to: in_progress }
   /pr: { from: in_progress, to: in_review }
   /commit: { verify: in_review }
 ```
