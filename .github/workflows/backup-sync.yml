@@ -1,0 +1,27 @@
+name: Mirror Backup Sync
+
+on:
+  schedule:
+    # Se ejecuta todos los días a las 00:00 UTC
+    - cron: '0 0 * * *'
+  push:
+    # También se ejecuta cada vez que subas cambios a la rama principal
+    branches: [ main ]
+  workflow_dispatch: # Permite ejecución manual
+
+jobs:
+  mirror_backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Origen
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Clonado completo (todas las ramas e historial)
+
+      - name: Mirror Push al Destino
+        env:
+          DEST_REPO: "https://${{ secrets.BACKUP_TOKEN }}@github.com/guerravc/rho-aias.git"
+        run: |
+          git remote add backup $DEST_REPO
+          # Forzamos la sincronización de todas las ramas y tags
+          git push --mirror backup
