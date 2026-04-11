@@ -26,11 +26,15 @@ from typing import Dict, List, Tuple
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CANONICAL_DIR = ROOT / "aias" / ".canonical"
 CONTRACTS_DIR = ROOT / "aias" / "contracts"
-RULES_DIR = ROOT / "aias" / ".rules"
-MODES_DIR = ROOT / "aias" / ".modes"
-COMMANDS_DIR = ROOT / "aias" / ".commands"
-SKILLS_DIR = ROOT / "aias" / ".skills"
-PROVIDERS_DIR = ROOT / "aias-providers"
+AIAS_CONFIG_DIR = ROOT / "aias-config"
+RULES_DIR = AIAS_CONFIG_DIR / "rules"
+MODES_DIR = AIAS_CONFIG_DIR / "modes"
+FW_COMMANDS_DIR = ROOT / "aias" / ".commands"
+FW_SKILLS_DIR = ROOT / "aias" / ".skills"
+PROJECT_COMMANDS_DIR = AIAS_CONFIG_DIR / "commands"
+PROJECT_SKILLS_DIR = AIAS_CONFIG_DIR / "skills"
+PROVIDERS_DIR = AIAS_CONFIG_DIR / "providers"
+LEGACY_PROVIDERS_DIR = ROOT / "aias-providers"
 GENERATOR = CANONICAL_DIR / "generation" / "generate_modes_and_rules.py"
 
 KEBAB_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
@@ -164,7 +168,7 @@ def new_mode(name: str) -> None:
 
     existing = existing_names(MODES_DIR)
     if name in existing:
-        if not confirm(f"  Mode '{name}' already exists in aias/.modes/. Overwrite?"):
+        if not confirm(f"  Mode '{name}' already exists in aias-config/modes/. Overwrite?"):
             return
 
     description = ask("Description (one line, max 200 chars)")
@@ -234,7 +238,7 @@ def new_rule(name: str) -> None:
     existing = existing_names(RULES_DIR)
     if name in existing:
         print(f"  Existing rules: {', '.join(existing)}")
-        if not confirm(f"  Rule '{name}' already exists in aias/.rules/. Overwrite?"):
+        if not confirm(f"  Rule '{name}' already exists in aias-config/rules/. Overwrite?"):
             return
 
     description = ask("Description (one line, purpose of this rule)")
@@ -269,9 +273,9 @@ def new_command(name: str) -> None:
         print(f"Error: '{name}' is not valid kebab-case (expected: ^[a-z][a-z0-9]*(-[a-z0-9]+)*$)")
         sys.exit(1)
 
-    existing = existing_names(COMMANDS_DIR, suffix=".md")
+    existing = existing_names(PROJECT_COMMANDS_DIR, suffix=".md") + existing_names(FW_COMMANDS_DIR, suffix=".md")
     if name in existing:
-        if not confirm(f"  Command '{name}' already exists in aias/.commands/. Overwrite?"):
+        if not confirm(f"  Command '{name}' already exists. Overwrite?"):
             return
 
     cmd_type = ask_choice("Command type:", ["Type A (chat-only)", "Type B (procedural, writes files)"])
@@ -316,7 +320,7 @@ def new_command(name: str) -> None:
         skill_list = [s.strip() for s in skills.split(",") if s.strip()]
         content += "\n## Skills\n" + "\n".join(f"- **{s}**" for s in skill_list) + "\n"
 
-    path = COMMANDS_DIR / f"{name}.md"
+    path = PROJECT_COMMANDS_DIR / f"{name}.md"
     safe_write(path, content)
 
 
@@ -329,9 +333,12 @@ def new_skill(name: str) -> None:
         print(f"Error: '{name}' is not valid kebab-case (expected: ^[a-z][a-z0-9]*(-[a-z0-9]+)*$)")
         sys.exit(1)
 
-    existing = [d.name for d in SKILLS_DIR.iterdir() if d.is_dir()] if SKILLS_DIR.is_dir() else []
+    existing: List[str] = []
+    for sdir in (FW_SKILLS_DIR, PROJECT_SKILLS_DIR):
+        if sdir.is_dir():
+            existing.extend(d.name for d in sdir.iterdir() if d.is_dir())
     if name in existing:
-        if not confirm(f"  Skill '{name}' already exists in aias/.skills/. Overwrite?"):
+        if not confirm(f"  Skill '{name}' already exists. Overwrite?"):
             return
 
     category = ask_choice("Skill category:", ["MCP", "Tool"])
@@ -373,7 +380,7 @@ def new_skill(name: str) -> None:
 
     content += f"\n## SAFETY RULES\n{safety}\n"
 
-    path = SKILLS_DIR / name / "SKILL.md"
+    path = PROJECT_SKILLS_DIR / name / "SKILL.md"
     safe_write(path, content)
 
 
@@ -408,12 +415,15 @@ def new_provider(category: str) -> None:
 
     skill_binding = ask("Skill binding (skill name that implements this provider)")
     if skill_binding:
-        skill_path = SKILLS_DIR / skill_binding
-        if not skill_path.is_dir():
-            available = [d.name for d in SKILLS_DIR.iterdir() if d.is_dir()] if SKILLS_DIR.is_dir() else []
-            print(f"Error: skill '{skill_binding}' not found in aias/.skills/.")
+        found = any((sdir / skill_binding).is_dir() for sdir in (FW_SKILLS_DIR, PROJECT_SKILLS_DIR))
+        if not found:
+            available: List[str] = []
+            for sdir in (FW_SKILLS_DIR, PROJECT_SKILLS_DIR):
+                if sdir.is_dir():
+                    available.extend(d.name for d in sdir.iterdir() if d.is_dir())
+            print(f"Error: skill '{skill_binding}' not found.")
             if available:
-                print(f"  Available: {', '.join(sorted(available))}")
+                print(f"  Available: {', '.join(sorted(set(available)))}")
             print("  Create one with: aias new --skill <name>")
             sys.exit(1)
 
@@ -552,10 +562,11 @@ def new_context() -> None:
 
         This project uses [Rho AIAS](https://github.com/org/rho-aias) for AI-assisted development.
 
-        - **Rules**: `aias/.rules/` — Generated behavioral rules (always-apply and output contracts)
-        - **Modes**: `aias/.modes/` — Generated task-specific modes (planning, dev, QA, debug, review, product, integration)
-        - **Commands**: `aias/.commands/` — Command definitions (blueprint, implement, commit, PR, etc.)
-        - **Skills**: `aias/.skills/` — Reusable operational skills (rho-aias, atlassian-mcp, figma-mcp, etc.)
+        - **Rules**: `aias-config/rules/` — Generated behavioral rules (always-apply and output contracts)
+        - **Modes**: `aias-config/modes/` — Generated task-specific modes (planning, dev, QA, debug, review, product, integration)
+        - **Commands**: `aias/.commands/` (framework) + `aias-config/commands/` (project) — Command definitions
+        - **Skills**: `aias/.skills/` (framework) + `aias-config/skills/` (project) — Reusable operational skills
+        - **Providers**: `aias-config/providers/` — Provider configuration files
 
         > This file is the single source of truth for project context. Tool-specific context files (e.g., `AGENTS.md`) are symlinks to this file, scoped by the tools selected in `stack-profile.md`.
     """)
@@ -595,7 +606,7 @@ def new_stack_profile() -> None:
         < Add binding.* entries below. See aias/contracts/readme-stack-profile.md for required keys. >
 
         - `binding.generation.stack_id`: `< stack-id >`
-        - `binding.generation.mode_output_dir`: `aias/.modes`
+        - `binding.generation.mode_output_dir`: `aias-config/modes`
         - `binding.generation.tools`: `{tools_csv}`
         - `binding.generation.tasks_dir`: `{tasks_dir}`
 
@@ -708,7 +719,7 @@ def new_stack_fragment() -> None:
 # ---------------------------------------------------------------------------
 
 def _init_providers() -> None:
-    print("\n--- Provider Configs (aias-providers/) ---")
+    print("\n--- Provider Configs (aias-config/providers/) ---")
     print("Select which categories to configure:\n")
 
     selected = []
@@ -727,7 +738,7 @@ def _init_providers() -> None:
         print(f"\n--- {cat} provider ---")
         new_provider(cat)
 
-    print(f"\n  {len(selected)} provider config(s) created in aias-providers/.")
+    print(f"\n  {len(selected)} provider config(s) created in aias-config/providers/.")
 
 
 # ---------------------------------------------------------------------------
@@ -792,6 +803,11 @@ def cmd_init() -> None:
                 continue
         _create_symlink(link_path, rhoaias_target)
         print(f"  Created: {filename} → RHOAIAS.md")
+
+    # Step 5b: Ensure aias-config/ structure
+    for d in (AIAS_CONFIG_DIR, RULES_DIR, MODES_DIR, PROVIDERS_DIR):
+        d.mkdir(parents=True, exist_ok=True)
+    print(f"\n  aias-config/ structure ensured.")
 
     # Step 6: Generate
     rc = run_generator(shortcuts=True)
@@ -931,18 +947,29 @@ def cmd_health() -> None:
     else:
         results.append(("stack-fragment.md", "FAIL", "Not found"))
 
-    # 4. aias/ structure
-    aias_dirs = [RULES_DIR, MODES_DIR, COMMANDS_DIR, SKILLS_DIR]
+    # 4. aias/ + aias-config/ structure
     aias_root = ROOT / "aias"
     if not aias_root.is_dir():
         results.append(("aias/ structure", "FAIL", "aias/ directory not found"))
     else:
-        missing_dirs = [d for d in aias_dirs if not d.is_dir()]
-        if not missing_dirs:
-            results.append(("aias/ structure", "OK", "All subdirectories present"))
+        fw_dirs = [FW_COMMANDS_DIR, FW_SKILLS_DIR]
+        missing_fw = [d for d in fw_dirs if not d.is_dir()]
+        if not missing_fw:
+            results.append(("aias/ structure", "OK", "Framework directories present"))
         else:
-            names = ", ".join(str(d.relative_to(ROOT)) for d in missing_dirs)
+            names = ", ".join(str(d.relative_to(ROOT)) for d in missing_fw)
             results.append(("aias/ structure", "WARN", f"Missing: {names}"))
+
+    config_dirs = [RULES_DIR, MODES_DIR, PROVIDERS_DIR]
+    if not AIAS_CONFIG_DIR.is_dir():
+        results.append(("aias-config/ structure", "WARN", "aias-config/ not found — run 'aias init' or 'aias generate'"))
+    else:
+        missing_cfg = [d for d in config_dirs if not d.is_dir()]
+        if not missing_cfg:
+            results.append(("aias-config/ structure", "OK", "All subdirectories present"))
+        else:
+            names = ", ".join(str(d.relative_to(ROOT)) for d in missing_cfg)
+            results.append(("aias-config/ structure", "WARN", f"Missing: {names}"))
 
     # 5. Contracts
     contracts = ROOT / "aias" / "contracts"
@@ -1022,15 +1049,42 @@ def cmd_health() -> None:
     if PROVIDERS_DIR.is_dir():
         configs = list(PROVIDERS_DIR.glob("*-config.md"))
         if configs:
-            results.append(("Provider configs", "OK", f"{len(configs)} config(s) in aias-providers/"))
+            results.append(("Provider configs", "OK", f"{len(configs)} config(s) in aias-config/providers/"))
         else:
-            results.append(("Provider configs", "WARN", "aias-providers/ exists but has no *-config.md files"))
+            results.append(("Provider configs", "WARN", "aias-config/providers/ exists but has no *-config.md files"))
     else:
-        results.append(("Provider configs", "WARN", "aias-providers/ not found — run 'aias new --provider <category>' to create"))
+        results.append(("Provider configs", "WARN", "aias-config/providers/ not found — run 'aias new --provider <category>' to create"))
+
+    # 9b. Legacy provider location detection
+    if LEGACY_PROVIDERS_DIR.is_dir():
+        results.append(("Legacy providers", "WARN",
+            "Legacy provider location: aias-providers/. Run /aias health in AI assistant to migrate to aias-config/providers/"))
+
+    # 9c. Legacy generated rules/modes location detection
+    legacy_rules = ROOT / "aias" / ".rules"
+    legacy_modes = ROOT / "aias" / ".modes"
+    if legacy_rules.is_dir() and list(legacy_rules.glob("*.mdc")):
+        results.append(("Legacy rules", "WARN",
+            "Legacy generated rules in aias/.rules/. Run aias generate to regenerate in aias-config/rules/"))
+    if legacy_modes.is_dir() and list(legacy_modes.glob("*.mdc")):
+        results.append(("Legacy modes", "WARN",
+            "Legacy generated modes in aias/.modes/. Run aias generate to regenerate in aias-config/modes/"))
+
+    # 9d. Legacy shortcut targets
+    if selected_tools and "cursor" in selected_tools:
+        cursor_rules = ROOT / ".cursor" / "rules"
+        if cursor_rules.is_dir():
+            for link in cursor_rules.iterdir():
+                if link.is_symlink():
+                    target = str(os.readlink(link))
+                    if "aias/.rules/" in target or "aias/.modes/" in target:
+                        results.append(("Legacy shortcuts", "WARN",
+                            "Shortcuts point to legacy location. Run aias generate --shortcuts to update"))
+                        break
 
     # 10. Provider referenced files (resource_files validation)
     CATEGORIES_WITH_RESOURCE_FILES = {"tracker", "knowledge"}
-    LEGACY_PREFIX = "aias/.skills/"
+    LEGACY_PREFIXES = ("aias/.skills/", "aias-providers/")
     if PROVIDERS_DIR.is_dir():
         for cfg in sorted(PROVIDERS_DIR.glob("*-config.md")):
             cat = cfg.stem.replace("-config", "")
@@ -1063,7 +1117,7 @@ def cmd_health() -> None:
             else:
                 for rf in resource_files:
                     rf_path = ROOT / rf
-                    if rf.startswith(LEGACY_PREFIX):
+                    if any(rf.startswith(lp) for lp in LEGACY_PREFIXES):
                         results.append((check_name, "WARN",
                             f"Legacy location: {rf}. Run /aias health in AI assistant to migrate"))
                     elif rf_path.is_file():
