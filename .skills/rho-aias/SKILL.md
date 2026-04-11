@@ -20,7 +20,7 @@ Use this skill when:
 - **Consuming artifacts** — `/implement`, `/validate-plan`, `/pr`, `/commit`, `/consolidate-plan`, `/brief`, `/report`, `/assessment`
 - **Reviewing with artifact context** — `/self-review`, `/peer-review`, `/handoff`
 - **Publishing artifacts** — `/publish`, or any command that triggers progressive knowledge sync (Phase 5)
-- **Syncing with tracker** — `/validate-plan`, `/implement`, `/pr`, `/commit` (Phase 6)
+- **Syncing with tracker** — `/enrich`, `/blueprint`, `/pr`, `/commit` (Phase 6)
 - **Reasoning about task state** — any mode that loads from `<resolved_tasks_dir>/<TASK_ID>/` (default: `~/.cursor/plans/`)
 
 Commands that reference this skill: `/aias`, `/blueprint`, `/brief`, `/charter`, `/commit`, `/consolidate-plan`, `/enrich`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
@@ -35,8 +35,8 @@ Commands that reference this skill: `/aias`, `/blueprint`, `/brief`, `/charter`,
 |---|-----------|--------|----------|-------------|
 | 1 | `technical.plan.md` | `.plan.md` | `/blueprint` | Technical approach, architecture decisions |
 | 2 | `increments.plan.md` | `.plan.md` | `/blueprint` | Increment breakdown with goals and ordering |
-| 3 | `dor.plan.md` | `.plan.md` | `/blueprint` | Definition of Ready checklist |
-| 4 | `dod.plan.md` | `.plan.md` | `/blueprint` | Definition of Done checklist |
+| 3 | `dor.plan.md` | `.plan.md` | `/enrich` | Definition of Ready checklist |
+| 4 | `dod.plan.md` | `.plan.md` | `/enrich` | Definition of Done checklist |
 | 5 | `specs.design.md` | `.design.md` | `/blueprint` | Design specifications (UI, resolved design-provider context) |
 | 6 | `analysis.product.md` | `.product.md` | `/enrich` | Product analysis (JTBD, 5 Whys, MoSCoW) |
 | 7 | `report.issue.md` | `.issue.md` | `/issue` | Issue investigation report |
@@ -157,29 +157,24 @@ Phase 4 — EXECUTION
 Phase 5 — STATUS UPDATE + ARTIFACT TRACKING + KNOWLEDGE SYNC
   5a. Update completed_steps / current_step in status.md
   5b. Set artifact sync status (created/modified) for written artifacts
-  5c. CONDITIONAL KNOWLEDGE SYNC (classification-gated)
-      Read classification from status.md.
-      IF classification is null (not yet assigned) OR classification is A:
-        SKIP knowledge sync. Artifacts remain "created"/"modified" locally.
-      IF classification is B or C:
-        Publish the full publishable content of all non-synced artifacts to resolved knowledge provider.
-        Read each artifact file and publish its complete publishable Markdown body — never summarize.
-        For Cursor-first `*.plan.md` artifacts, strip only the initial YAML frontmatter block before publishing.
-        For non-plan artifacts, publish the full file content.
-        Resolve provider from aias-config/providers/knowledge-config.md.
-        Validate service_category, active_provider, provider enabled flag,
-        skill binding, and capability compatibility.
-        If config is missing/invalid/unresolvable: abort dependent sync
-        operation and request provider configuration correction.
-        Use provider navigation/update algorithm without duplicates.
-        Idempotent: re-publishing updates existing pages, never duplicates.
-        If provider is unavailable at runtime: abort dependent sync operation
-        and report provider unavailability.
-      /publish bypasses this gate — always executes full sync regardless of classification.
+  5c. UNCONDITIONAL KNOWLEDGE SYNC
+      Publish the full publishable content of all non-synced artifacts to resolved knowledge provider.
+      Read each artifact file and publish its complete publishable Markdown body — never summarize.
+      For Cursor-first `*.plan.md` artifacts, strip only the initial YAML frontmatter block before publishing.
+      For non-plan artifacts, publish the full file content.
+      Resolve provider from aias-config/providers/knowledge-config.md.
+      Validate service_category, active_provider, provider enabled flag,
+      skill binding, and capability compatibility.
+      If config is missing/invalid/unresolvable: abort dependent sync
+      operation and request provider configuration correction.
+      Use provider navigation/update algorithm without duplicates.
+      Idempotent: re-publishing updates existing pages, never duplicates.
+      If provider is unavailable at runtime: abort dependent sync operation
+      and report provider unavailability.
   5d. Completion check
 
 Phase 6 — TRACKER SYNC
-  Triggered only by: /validate-plan, /implement, /pr, /commit
+  Triggered only by: /enrich, /blueprint, /pr, /commit
   Resolve provider from aias-config/providers/tracker-config.md.
   Validate service_category, active_provider, provider enabled flag,
   skill binding, and capability compatibility.
