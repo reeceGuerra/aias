@@ -105,6 +105,7 @@ Description shaping rules:
 - If classified as `feature` with `user_facing` orientation, `Description` SHOULD use a user-facing outcome structure (e.g. user story + scope).
 - If classified as `bugfix`, `Description` SHOULD use `Problem / Expected / Actual` framing without RCA sections.
 - If classified as `refactor`, `technical_debt`, or `infrastructure`, `Description` SHOULD use a system-facing structure such as `Technical Intent / Scope / Constraints`.
+- If classified as `spike`, `Description` SHOULD use `Hypothesis / Time-box / Success Criteria` framing.
 - If the resolved classification does not map cleanly to one of these supported description families, `/enrich` MUST use a neutral description format or fire the Classification Comprehension gate when required.
 
 ### Gate: Classification Comprehension
@@ -280,7 +281,7 @@ Evaluate the ticket against the Completeness Checklist:
 Classify each dimension as: **present** / **incomplete** / **missing**.
 
 Derive task classification for description shaping:
-- `work_type`: `feature`, `bugfix`, `refactor`, `technical_debt`, or `infrastructure`
+- `work_type`: `feature`, `bugfix`, `refactor`, `spike`, `technical_debt`, or `infrastructure`
 - `orientation`: `user_facing` or `system_facing`
 
 Classification precedence:
@@ -330,8 +331,30 @@ Structure the information collected in Phase 2 and Phase 3 into DoR and DoD arti
 | **Regression scope** | All upstream artifacts | Areas at risk of regression |
 | **Affected versions** | `report.issue.md`, tracker | Versions where the bug is present |
 
+**DoR refactor template:**
+
+| Dimension | Source | Content |
+|-----------|--------|---------|
+| **Technical debt metric** | Checklist / codebase context | What indicator triggers this refactor (complexity, coupling, duplication, performance) |
+| **Scope boundary** | Checklist | Files, modules, or layers affected; explicit limits |
+| **Target state** | Checklist | Desired end state (architecture, performance, readability) |
+| **Regression risk** | Checklist | Areas at risk, existing test coverage, behavior preservation requirements |
+| **Test criteria** | Checklist | Before/after comparisons, no behavior change verification, performance benchmarks if applicable |
+| **Out of scope** | Checklist | What is NOT being refactored |
+
+**DoR spike template** (lightweight — bounded by time-box):
+
+| Dimension | Source | Content |
+|-----------|--------|---------|
+| **Hypothesis** | Checklist / ticket | What we are trying to learn, prove, or evaluate |
+| **Time-box** | Checklist / ticket | Maximum time allocated for the spike |
+| **Success criteria** | Checklist | What constitutes a successful spike (decision made, prototype built, proof obtained) |
+| **Out of scope** | Checklist | What is NOT part of the spike (production code, deployment, full implementation) |
+
 **DoD feature:** Checklist of criteria that determine when the implemented scope is ready for QA (not production).
 **DoD bugfix:** Fix implemented, root cause confirmed, regression tests pass, no new bugs introduced.
+**DoD refactor:** Refactored code compiles, all existing tests pass, no behavior change (unless explicitly scoped), documentation updated if architecture changed.
+**DoD spike:** Hypothesis answered (confirmed/rejected/inconclusive), findings documented, decision recommendation provided.
 
 After structuring, fire **Gate: DoR Readiness Check**.
 
