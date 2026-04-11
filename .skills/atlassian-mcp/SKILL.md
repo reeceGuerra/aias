@@ -225,13 +225,13 @@ For validated bug RCA publication workflows such as `/report`:
 
 For complete parameter details, types, and return values for every tool, see [reference.md](reference.md).
 
-For Jira field mapping (traceability, field catalogs, format rules, push behavior per command), see [aias-providers/atlassian/jira-field-mapping.md](../../aias-providers/atlassian/jira-field-mapping.md).
+For Jira field mapping (traceability, field catalogs, format rules, push behavior per command), see [aias-config/providers/atlassian/jira-field-mapping.md](../../aias-config/providers/atlassian/jira-field-mapping.md).
 
-For Jira status transitions within the rho-aias development workflow, see [aias-providers/atlassian/tracker-status-mapping.md](../../aias-providers/atlassian/tracker-status-mapping.md).
+For Jira status transitions within the rho-aias development workflow, see [aias-config/providers/atlassian/tracker-status-mapping.md](../../aias-config/providers/atlassian/tracker-status-mapping.md).
 
-For Confluence publishing configuration (space, root page, hierarchy, TECH resolution, date resolution, find-or-create navigation algorithm), see [aias-providers/atlassian/confluence-config.md](../../aias-providers/atlassian/confluence-config.md).
+For Confluence publishing configuration (space, root page, hierarchy, TECH resolution, date resolution, find-or-create navigation algorithm), see [aias-config/providers/atlassian/confluence-config.md](../../aias-config/providers/atlassian/confluence-config.md).
 
-> **Separation of concerns:** Project-specific configuration files (field mappings, status mappings, publishing configs) live in `aias-providers/<provider_id>/`, not in this skill directory. This skill provides operational knowledge (MCP call sequences, safety rules, content format policy). Configuration is resolved through the provider config contract.
+> **Separation of concerns:** Project-specific configuration files (field mappings, status mappings, publishing configs) live in `aias-config/providers/<provider_id>/`, not in this skill directory. This skill provides operational knowledge (MCP call sequences, safety rules, content format policy). Configuration is resolved through the provider config contract.
 
 ---
 
@@ -257,7 +257,7 @@ If runtime metadata contradicts the mapping, use runtime metadata for the write 
 **Read-only by default:**
 - Reading issues, pages, comments, and searching: always allowed.
 - Creating, editing, transitioning issues; creating or updating Confluence pages; adding comments: **only when the user explicitly asks**. Never perform write operations autonomously.
-- **Exception:** Commands that reference [tracker-status-mapping.md](../../aias-providers/atlassian/tracker-status-mapping.md) may perform automatic Jira transitions and Confluence publishes as part of the rho-aias loading protocol (Phase 5 and Phase 6). These are governed by the mapping rules, not by this general safety rule.
+- **Exception:** Commands that reference [tracker-status-mapping.md](../../aias-config/providers/atlassian/tracker-status-mapping.md) may perform automatic Jira transitions and Confluence publishes as part of the rho-aias loading protocol (Phase 5 and Phase 6). These are governed by the mapping rules, not by this general safety rule.
 
 **Abort on failure:**
 - If `getAccessibleAtlassianResources` fails or returns no `cloudId`: abort and ask the user to check Atlassian MCP configuration.
