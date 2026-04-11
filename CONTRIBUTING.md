@@ -8,7 +8,7 @@ Rho AIAS is a contract-driven framework. Every artifact type — modes, commands
 
 Contracts are the canonical standards that govern every artifact type in Rho AIAS. They define structure, required fields, behavioral constraints, and quality criteria. If there is a conflict between an implementation and its governing contract, **the contract wins**.
 
-All contracts live in `aias/contracts/` (11 contracts):
+All contracts live in `aias/contracts/` (13 contracts):
 
 | Contract | Purpose |
 |---|---|
@@ -19,6 +19,8 @@ All contracts live in `aias/contracts/` (11 contracts):
 | `readme-skill.md` | Skill structure and separation of concerns |
 | `readme-provider-config.md` | Service provider configuration and fail-fast resolution |
 | `readme-tracker-status-mapping.md` | Tracker status mapping and trigger naming |
+| `readme-tracker-field-mapping.md` | Tracker field mapping (traceability, catalogs, format resolution) |
+| `readme-knowledge-publishing-config.md` | Knowledge publishing configuration (hierarchy, navigation) |
 | `readme-artifact.md` | Task artifact lifecycle and directory structure |
 | `readme-stack-profile.md` | Stack profile structure and rule bindings |
 | `readme-tool-adapter.md` | Tool adapter shortcut format and fidelity matrix |
