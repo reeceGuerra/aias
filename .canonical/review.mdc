@@ -51,7 +51,7 @@ OUTPUT FORMAT
 
 <!-- Conditional blocks -->
 MCP ENRICHMENT
-- If a PR identifier exists, resolve VCS provider via `aias-providers/vcs-config.md` for diff context.
+- If a PR identifier exists, resolve VCS provider via `aias-config/providers/vcs-config.md` for diff context.
 - If VCS service config is missing, invalid, or points to an unresolvable provider, abort review enrichment and request provider configuration before continuing.
 - If TASK_DIR exists, SHOULD load local plan artifacts (`dod.plan.md`, `increments.plan.md`, `technical.plan.md`) as review context.
 - Knowledge-provider enrichment MAY be used as additional context, but MUST NOT replace diff-based evidence when reviewing a PR.
