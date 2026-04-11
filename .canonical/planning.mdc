@@ -22,8 +22,8 @@ SCOPE
 - When used with `/blueprint`, follow the command's data collection directives.
 
 CONTEXT ENRICHMENT
-- Tracker ticket key or URL -> resolve via `aias-providers/tracker-config.md` for read enrichment.
-- Design URL -> resolve via `aias-providers/design-config.md` for design context and screenshots.
+- Tracker ticket key or URL -> resolve via `aias-config/providers/tracker-config.md` for read enrichment.
+- Design URL -> resolve via `aias-config/providers/design-config.md` for design context and screenshots.
 - External write operations require explicit user instruction.
 - If required service config is missing, invalid, or points to an unresolvable provider, abort the task and request provider configuration before continuing.
 
