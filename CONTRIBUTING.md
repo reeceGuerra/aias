@@ -71,7 +71,7 @@ python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 2. Determine the category:
    - **Type A** — Chat-only. Produces output in the conversation (analysis, reports, explanations).
    - **Type B** — Procedural/execution. Performs side effects (file writes, API calls, artifact creation).
-3. Create the command definition in `aias/.commands/<name>.md`, or use the CLI:
+3. Create the command definition in `aias/.commands/<name>.md` (framework) or `aias-config/commands/<name>.md` (project), or use the CLI:
 
 ```bash
 python3 aias/.canonical/generation/aias_cli.py new --command <name>
@@ -93,7 +93,7 @@ python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 ## Creating a New Skill
 
 1. Read the contract: `aias/contracts/readme-skill.md`.
-2. Create the skill directory and entry point at `aias/.skills/<name>/SKILL.md`, or use the CLI:
+2. Create the skill directory and entry point at `aias/.skills/<name>/SKILL.md` (framework) or `aias-config/skills/<name>/SKILL.md` (project), or use the CLI:
 
 ```bash
 python3 aias/.canonical/generation/aias_cli.py new --skill <name>
