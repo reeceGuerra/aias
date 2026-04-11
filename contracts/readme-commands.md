@@ -526,7 +526,7 @@ All 25 commands are categorized by implementation priority for gate standardizat
 | `/issue` | Artifact Preview (Confirmation) before writing `report.issue.md`. | Coexists with END-OF-RESPONSE CONFIRMATION. |
 | `/fix` | Artifact Preview (Confirmation) before writing `analysis.fix.md`. | Coexists with END-OF-RESPONSE CONFIRMATION. |
 | `/trace` | Artifact Preview (Confirmation) before writing `instrumentation.trace.md` (when TASK_DIR is set). | File write is conditional. |
-| `/validate-plan` | Tracker Transition (Confirmation) before `pending_dor → ready` transition (when plan passes). Add governance validation gaps. | Tracker transition without confirmation. |
+| `/validate-plan` | Governance validation gaps check. | No tracker transition (ownership moved to `/enrich`). |
 
 #### Sweep-only — RFC-2119 language standardization (no new gates)
 
@@ -696,7 +696,7 @@ The `/pr` command includes a Plan Delta section comparing planned artifacts vs a
 
 ### Tracker Sync Convention
 
-Commands that trigger tracker transitions MUST declare the transition in their Output Contract (Section 4) under a "TRACKER SYNC (Phase 6)" subsection. Only four commands trigger transitions: `/validate-plan`, `/implement`, `/pr`, `/commit`. Transitions must be expressed in canonical status form and resolved through `status_mapping_source` defined in `aias-config/providers/tracker-config.md`. See `aias/contracts/readme-tracker-status-mapping.md` for mapping rules.
+Commands that trigger tracker transitions MUST declare the transition in their Output Contract (Section 4) under a "TRACKER SYNC (Phase 6)" subsection. Only four commands trigger transitions: `/enrich`, `/blueprint`, `/pr`, `/commit`. Transitions must be expressed in canonical status form and resolved through `status_mapping_source` defined in `aias-config/providers/tracker-config.md`. See `aias/contracts/readme-tracker-status-mapping.md` for mapping rules.
 
 ### Skills Reference Convention
 
@@ -713,7 +713,7 @@ Commands that reference skills MUST declare them in the Identity section (Sectio
 ### Plan Classification
 
 `/blueprint` MUST assign a Plan Classification (`A`, `B`, or `C`) in `status.md`. `/validate-plan` MUST verify the classification is present. `/charter` MAY escalate the classification (A→B, B→C) but MUST NOT downgrade it. Classification determines closure requirements:
-- **Type A:** `/report` or `/brief` to the resolved tracker provider (no mandatory knowledge publish)
+- **Type A:** `/report` or `/brief` to the resolved tracker provider
 - **Type B/C:** `/publish` to the resolved knowledge provider
 
 ### Type A Terminology
