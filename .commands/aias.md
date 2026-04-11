@@ -29,7 +29,7 @@ Invocation mirrors the CLI interface:
 - `/aias generate --shortcuts` — Run generator with shortcuts (reads tools from stack profile)
 - `/aias generate --shortcuts --tools cursor,claude` — Override tools for this run
 - `/aias health` — Verify setup health
-- `/aias configure-providers` — AI-assisted provider configuration with MCP discovery (generates referenced files in `aias-providers/<provider_id>/`)
+- `/aias configure-providers` — AI-assisted provider configuration with MCP discovery (generates referenced files in `aias-config/providers/<provider_id>/`)
 
 Short aliases: `gen` for `generate`, `gen -s` for `generate --shortcuts`.
 
@@ -166,7 +166,7 @@ Each `new` subcommand produces a specific artifact structure. See the plan (§ C
 - Do NOT generate artifacts from memory — always read the governing contract first.
 - Do NOT skip the smart suggestion protocol when user input is below quality threshold.
 - Do NOT create a templates directory — contracts are the single source of truth.
-- Do NOT overwrite or modify files in `aias/.canonical/` — these are framework source templates maintained exclusively by the framework maintainer. The `init` and `new` subcommands create project-level artifacts only (stack-profile.md, stack-fragment.md, RHOAIAS.md, aias-providers/, modes, rules, commands, skills).
+- Do NOT overwrite or modify files in `aias/.canonical/` — these are framework source templates maintained exclusively by the framework maintainer. The `init` and `new` subcommands create project-level artifacts only (stack-profile.md, stack-fragment.md, RHOAIAS.md, aias-config/providers/, modes, rules, commands, skills).
 - Do NOT use Glob to verify file existence before writing. Use Shell (`ls`) or Read instead — Glob respects git exclusion rules and may report files as missing when they exist on disk.
 - Do NOT modify `binding.generation.tools` after the user has set it. If the generator fails, report errors to the user — do NOT rewrite the stack profile to fix them.
 
@@ -178,14 +178,14 @@ This is an **AI agent command** (not a CLI subcommand). It uses MCP discovery to
 
 ### Flow
 
-1. **Prerequisite check**: Verify that `aias-providers/` contains at least one `*-config.md`. If not, instruct the user to run `aias init` or `aias new --provider <category>` first.
+1. **Prerequisite check**: Verify that `aias-config/providers/` contains at least one `*-config.md`. If not, instruct the user to run `aias init` or `aias new --provider <category>` first.
 2. **Provider selection**: List existing `*-config.md` files and ask the user which provider to configure.
 3. **MCP availability check**: Attempt to connect to the MCP server declared in the selected provider config.
 4. **Discovery mode** (MCP available):
    - For `tracker`: read sample tickets, discover field schemas via `getJiraIssue` with metadata, list available transitions, statuses, components, priorities. Generate `jira-field-mapping.md` and `tracker-status-mapping.md` with real field IDs, schemas, and option catalogs.
    - For `knowledge`: read space metadata, discover page hierarchy. Generate `confluence-config.md` with real space key, root page ID, and TECH resolution table.
 5. **Fallback mode** (MCP unavailable): Read the governing contract for each file (`readme-tracker-field-mapping.md`, `readme-knowledge-publishing-config.md`, `readme-tracker-status-mapping.md`) and generate a skeleton file with contractual placeholders that the user must fill manually.
-6. **Write files**: Write generated files to `aias-providers/<provider_id>/` (e.g., `aias-providers/atlassian/`).
+6. **Write files**: Write generated files to `aias-config/providers/<provider_id>/` (e.g., `aias-config/providers/atlassian/`).
 7. **Update config**: Update `resource_files` and `*_source` paths in the corresponding `*-config.md` to point to the newly created files.
 8. **Report**: Show the user which files were generated and their locations.
 
@@ -195,16 +195,50 @@ No templates directory is created. The contracts are the single source of truth 
 
 ## 9. `health` — Legacy Migration Assistance
 
-When the AI agent executes `/aias health` and the CLI output contains `[WARN]` entries with "Legacy location":
+When the AI agent executes `/aias health` and the CLI output contains `[WARN]` entries with "Legacy" in the check name or detail:
 
-1. Parse the health output for legacy warnings.
-2. Present an interactive gate: "Configuration files detected in legacy location (`aias/.skills/`). Migrate to `aias-providers/<provider_id>/`?"
-3. If the user accepts:
-   - Copy files from legacy to canonical location (`aias-providers/<provider_id>/`).
-   - Update `resource_files` and `*_source` paths in the corresponding `*-config.md`.
-   - Do NOT delete the originals (they coexist during v7.5).
+1. Parse the health output for all legacy warnings.
+2. For each detected legacy scenario, present an interactive gate and offer migration:
+
+### Scenario A — Provider directory migration (`aias-providers/` → `aias-config/providers/`)
+
+Triggered when `[WARN] Legacy providers` appears in health output.
+
+1. Present gate: "Provider configs detected in legacy location (`aias-providers/`). Migrate to `aias-config/providers/`?"
+2. If the user accepts:
+   - Create `aias-config/providers/` if it does not exist.
+   - Copy all contents from `aias-providers/` to `aias-config/providers/` (configs + provider subdirectories).
+   - Update `resource_files` and `*_source` paths in each `*-config.md` within `aias-config/providers/` (replace `aias-providers/` with `aias-config/providers/`).
+   - Do NOT delete `aias-providers/` (coexists during v7.6).
    - Report migration results.
-4. If the user declines: proceed without migration.
+3. If the user declines: proceed without migration.
+
+### Scenario B — Generated rules/modes regeneration (`aias/.rules/` and `aias/.modes/`)
+
+Triggered when `[WARN] Legacy rules` or `[WARN] Legacy modes` appears in health output.
+
+1. Inform the user: "Generated rules/modes detected in legacy location inside the submodule. The fix is to re-run the generator, which now writes to `aias-config/rules/` and `aias-config/modes/`."
+2. Offer to execute: `python3 aias/.canonical/generation/aias_cli.py generate --shortcuts`
+3. The old files in `aias/.rules/` and `aias/.modes/` are harmless residuals (already `.gitignore`d in the submodule repo).
+
+### Scenario C — Shortcuts re-targeting
+
+Triggered when `[WARN] Legacy shortcuts` appears in health output.
+
+1. This is resolved automatically by Scenario B (re-running `generate --shortcuts`).
+2. New shortcuts will point to `aias-config/` locations.
+
+### Scenario D — Legacy skill path in resource_files (`aias/.skills/` prefix)
+
+Triggered when `[WARN] Referenced files` mentions "Legacy location: aias/.skills/...".
+
+1. Present gate: "Referenced files use legacy skill path. Migrate to `aias-config/providers/<provider_id>/`?"
+2. If the user accepts:
+   - Copy referenced files from `aias/.skills/<skill>/` to `aias-config/providers/<provider_id>/`.
+   - Update `resource_files` and `*_source` paths in the corresponding `*-config.md`.
+   - Do NOT delete the originals (they coexist).
+   - Report migration results.
+3. If the user declines: proceed without migration.
 
 ---
 
