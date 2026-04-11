@@ -26,7 +26,7 @@ An **output contract** is a Cursor rule file (`.mdc` format) with `alwaysApply: 
 
 ### Location
 
-- **Canonical location:** `aias/.rules/output-contract.mdc` — the generated source of truth
+- **Canonical location:** `aias-config/rules/output-contract.mdc` — the generated source of truth
 - **Tool-specific locations** (shortcuts only — see `readme-tool-adapter.md`):
   - Cursor: `.cursor/rules/output-contract.mdc`
   - Claude Code: `.claude/rules/output-contract.md`
