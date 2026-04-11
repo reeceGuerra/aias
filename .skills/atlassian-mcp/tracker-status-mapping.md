@@ -1,3 +1,8 @@
+> **DEPRECATED (v7.5)** — This file has moved to `aias-providers/atlassian/tracker-status-mapping.md`.
+> This copy is kept for backward compatibility during migration.
+> Run `/aias health` to detect and migrate automatically.
+> This file will be removed in a future version.
+
 # Tracker Status Mapping (Jira Provider)
 
 ## Purpose
