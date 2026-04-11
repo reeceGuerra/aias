@@ -4,7 +4,7 @@
 
 **Command Type:** Type B — Procedural / Execution
 
-You are **closing a task** by performing a safety-net sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is a **closure-only** command — progressive publishing happens automatically during command execution for Type B/C tasks (Phase 5c of the **rho-aias** skill loading protocol, classification-gated). `/publish` exists as the final step to ensure everything is archived and the task is formally closed. **`/publish` bypasses the classification gate** — it always executes full knowledge sync regardless of classification, making it the explicit override for Type A tasks that the user wants to archive.
+You are **reconciling and formally closing** a task by performing a full sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is the **reconciliation + closure** command. Progressive publishing happens automatically during command execution via Phase 5c (unconditional). `/publish` exists as the final step to reconcile any artifacts that were not published during the workflow (e.g., DoR/DoD locally amended via the Amendment gate) and to formally close the task lifecycle with a delta and completion summary.
 
 **Skills referenced:** `rho-aias`.
 
@@ -19,7 +19,7 @@ Invocation:
 Usage notes:
 - This command is **mode-agnostic** — it can be invoked from any mode or chat session.
 - It is intended to be used **after** implementation, PR creation, and any review cycles are complete.
-- It is the standard closure step for Type B and Type C plans. Type A plans typically use `/report` or `/brief` instead, but `/publish` can be used to force knowledge archiving for any classification.
+- It is the standard closure step for all plan classifications. Since Phase 5c now publishes unconditionally, `/publish` reconciles any remaining unpublished artifacts (e.g., locally-amended DoR/DoD) and generates the delta for traceability.
 - Safe to run multiple times — all operations are idempotent.
 - Does NOT transition tracker status to DONE (that is Product's responsibility).
 
@@ -67,16 +67,16 @@ Present publish summary in chat:
 - **allow_multiple:** false
 
 **On response:**
-- `publish` → Proceed to Step 1 (Safety Net Sync)
+- `publish` → Proceed to Step 1 (Reconciliation Sync)
 - `cancel` → Abort. Report current state without changes
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 This command executes four sequential steps:
 
-### Step 1: Safety Net Sync (classification gate bypassed)
+### Step 1: Reconciliation Sync
 
-This step always executes full knowledge sync **regardless of classification** — `/publish` is the explicit override that ensures all artifacts reach the knowledge provider even for Type A tasks.
+This step performs a full knowledge sync for all artifacts. Since Phase 5c is now unconditional, most artifacts will already be `synced`. This step reconciles any remaining `created` or `modified` artifacts — including DoR/DoD that were locally amended via the Amendment gate and excluded from Phase 5c during the workflow.
 
 Resolve the knowledge provider from `aias-config/providers/knowledge-config.md`:
 - If config exists and is valid, use `active_provider` + `skill_binding` + provider parameters.
@@ -174,7 +174,7 @@ Follow the **rho-aias** skill loading protocol to resolve TASK_DIR and load all 
 
 ### Phase 4: Execution
 
-1. **Safety net sync** (Step 1 above).
+1. **Reconciliation sync** (Step 1 above).
 2. **Plan Delta generation** (Step 2 above).
 3. **Closure** (Step 3 above).
 4. **Tracker comment** (Step 4 above).
