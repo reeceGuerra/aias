@@ -207,7 +207,7 @@ All interactive gates MUST use the `AskQuestion` tool as defined in `readme-comm
 
 Tracker transitions are defined in canonical form and resolved through provider mapping:
 
-1. Load `aias-providers/tracker-config.md`.
+1. Load `aias-config/providers/tracker-config.md`.
 2. Resolve `providers.<active_provider>.status_mapping_source`.
 3. Load mapping file and resolve canonical transition targets.
 4. Execute provider transition toward mapped target.
@@ -383,7 +383,7 @@ TASK: /assessment
 
 ## Knowledge Sync Details
 
-**Configuration source:** Resolve provider from `aias-providers/knowledge-config.md`.
+**Configuration source:** Resolve provider from `aias-config/providers/knowledge-config.md`.
 
 ### Generic publishing model
 
@@ -408,7 +408,7 @@ After every command execution:
 0. **Classification gate:** Read `classification` from `status.md`.
    - If `classification` is `null` (not yet assigned) or `A`: **skip knowledge sync**. Artifacts remain `created`/`modified` locally. Log: "Knowledge sync skipped (classification: \<value\>)." Proceed to step 5.
    - If `classification` is `B` or `C`: proceed to step 1.
-1. Resolve knowledge provider from `aias-providers/knowledge-config.md`:
+1. Resolve knowledge provider from `aias-config/providers/knowledge-config.md`:
    - Validate active provider, skill binding, provider enablement, and capability compatibility.
    - If config is missing/invalid/unresolvable: abort dependent sync operation and request provider configuration correction.
 2. Read provider configuration to resolve publishing target and hierarchy metadata.
@@ -442,7 +442,7 @@ Use the same guard for every service-dependent sync step:
 
 ```text
 resolveServiceOrAbort(category):
-  load aias-providers/<category>-config.md
+  load aias-config/providers/<category>-config.md
   validate schema + active provider + skill binding + capability
   if valid:
     continue
