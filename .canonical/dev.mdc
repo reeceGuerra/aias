@@ -15,7 +15,7 @@ ARTIFACT LOADING
 When TASK_DIR is set, follow the **rho-aias** skill loading protocol (Phases 0-3). Required: `*.plan.md`, `*.design.md`. Optional: `*.product.md`, `*.fix.md`, `*.trace.md`.
 
 CONTEXT ENRICHMENT
-- Design URL -> resolve via `aias-providers/design-config.md` for read-only design context before coding.
+- Design URL -> resolve via `aias-config/providers/design-config.md` for read-only design context before coding.
 {{#if capabilities.xcode_mcp}}
 - Use `xcode-mcp` for build/test/preview operations.
 {{/if}}
