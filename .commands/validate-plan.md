@@ -31,8 +31,8 @@ This command may use **only** the following inputs:
 - Plan artifacts from TASK_DIR loaded via **rho-aias** skill (Phases 0–3): `technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `dod.plan.md`, `specs.design.md` (when present), `analysis.product.md` (when present)
 - Chat context explicitly provided by the user
 - Service configs:
-  - `aias-providers/tracker-config.md`
-  - `aias-providers/knowledge-config.md`
+  - `aias-config/providers/tracker-config.md`
+  - `aias-config/providers/knowledge-config.md`
 
 Rules:
 - All inputs must be explicit.
@@ -65,7 +65,7 @@ ARTIFACT UPDATE (validation backlog)
 
 TRACKER SYNC (Phase 6 — when plan is ready)
 - When verdict = "Plan ready for implementation" AND `task_id` in `status.md` is valid for the resolved tracker provider:
-  - Resolve tracker provider from `aias-providers/tracker-config.md`.
+  - Resolve tracker provider from `aias-config/providers/tracker-config.md`.
   - Transition canonical tracker status from `pending_dor` -> `ready` using provider mapping.
   - If config is missing, invalid, or unresolvable: abort sync and request provider configuration.
   - Report transition result in chat.
