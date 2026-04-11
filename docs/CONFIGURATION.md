@@ -19,7 +19,7 @@ Rho AIAS configuration is composed of a small set of artifacts, each with a spec
 | `RHOAIAS.md` | Project root | Project context (single source of truth) |
 | `stack-profile.md` | Project root | Technology stack declaration for generation |
 | `stack-fragment.md` | Project root | Build system integration content |
-| Service configs | `aias-providers/` | External provider bindings |
+| Service configs | `aias-config/providers/` | External provider bindings |
 | Context symlinks | Project root | Tool-specific symlinks → `RHOAIAS.md` |
 | Editor settings | `vscode/` (optional) | VSCode/Cursor workspace settings |
 | Project docs | `docs/` (optional) | Style guides, conventions |
@@ -119,14 +119,14 @@ python3 aias/.canonical/generation/aias_cli.py new --stack-fragment
 
 ## Service Configuration
 
-Rho AIAS resolves external providers by category, not by vendor name. Each category has a dedicated config file in `aias-providers/`:
+Rho AIAS resolves external providers by category, not by vendor name. Each category has a dedicated config file in `aias-config/providers/`:
 
 | Category | Config file | Purpose | Example provider |
 |---|---|---|---|
-| `tracker` | `aias-providers/tracker-config.md` | Task/issue tracking | Jira, Linear |
-| `knowledge` | `aias-providers/knowledge-config.md` | Publishing and archive | Confluence, Notion |
-| `design` | `aias-providers/design-config.md` | Design context retrieval | Figma |
-| `vcs` | `aias-providers/vcs-config.md` | Version control operations | GitHub, GitLab |
+| `tracker` | `aias-config/providers/tracker-config.md` | Task/issue tracking | Jira, Linear |
+| `knowledge` | `aias-config/providers/knowledge-config.md` | Publishing and archive | Confluence, Notion |
+| `design` | `aias-config/providers/design-config.md` | Design context retrieval | Figma |
+| `vcs` | `aias-config/providers/vcs-config.md` | Version control operations | GitHub, GitLab |
 
 ### Config structure
 
@@ -178,16 +178,16 @@ If some files already exist, the CLI detects them and asks before overwriting.
 
 ### 3. Configure services (optional)
 
-Set up external provider bindings in `aias-providers/` for any categories your workflow uses.
+Set up external provider bindings in `aias-config/providers/` for any categories your workflow uses.
 
 #### Recommended: AI-assisted discovery (`/aias configure-providers`)
 
 In your AI coding tool, run `/aias configure-providers`. The agent:
 
-1. Detects existing `*-config.md` files in `aias-providers/`.
+1. Detects existing `*-config.md` files in `aias-config/providers/`.
 2. Connects to the MCP server for the selected provider.
 3. Discovers field schemas, statuses, spaces, and hierarchies from live data.
-4. Generates complete configuration files in `aias-providers/<provider_id>/` (e.g., `aias-providers/atlassian/jira-field-mapping.md`).
+4. Generates complete configuration files in `aias-config/providers/<provider_id>/` (e.g., `aias-config/providers/atlassian/jira-field-mapping.md`).
 5. Updates `resource_files` and `*_source` paths in the provider config.
 
 If MCP is unavailable, the agent falls back to generating contractual skeletons for manual completion.
