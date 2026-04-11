@@ -14,13 +14,14 @@ This command is responsible for formatting validated implementation context into
 ## 2. Invocation / Usage
 
 Invocation:
-- `/pr`
-- `/pr <branch>` or `/pr --create <branch>` — to **create** the PR: `<branch>` is the **base** (merge target); the **current local branch** is the head.
+- `/pr` — create the PR (resolves base branch via gate if not provided)
+- `/pr <branch>` — create the PR against `<branch>` as base; the **current local branch** is the head.
+- `/pr --dry` — generate the PR description in chat without creating (dry-run)
 - `/pr --update` — update an existing PR description with the latest context.
 
 Usage notes:
 - This command is intended to be used **after** implementation is complete (post-dev, MAY be post-review).
-- Without a branch or create flag, only return the PR description as Markdown in chat.
+- By default, `/pr` creates the PR via the resolved VCS provider. Use `--dry` to only preview the description in chat.
 - Reads plan artifacts from TASK_DIR to generate the Plan Delta section.
 - After PR creation, this command is the canonical owner of tracker transition `in_progress` -> `in_review`.
 - If unpublished artifacts exist, shows a `/publish` nudge.
@@ -54,10 +55,31 @@ Rules:
 - The code block **MUST start** with a Markdown heading (`#` or `##`).
 - Only one code block is allowed.
 
+### Gate: Base Branch Resolution (conditional)
+
+**Type:** Input
+**Fires:** When `/pr` is invoked without a base branch AND the base cannot be inferred from the repository default branch via the VCS provider.
+**Skippable:** No.
+
+**Resolution logic:**
+1. If the user provided `<branch>`, use it as base — skip this gate.
+2. If not, attempt to infer the default branch from the repository via the resolved VCS provider.
+3. If inference fails, fire this gate.
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` asking the user to provide the base branch name as free text.
+- **Prompt:** "Base branch not specified and could not be inferred. Which branch should this PR target?"
+- **Options:** Free-text input (the user writes the branch name).
+
+**On response:**
+- Use the provided branch name as the base and proceed to the PR Confirmation gate.
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
 ### Gate: PR Confirmation
 
 **Type:** Confirmation
-**Fires:** Before creating or updating a PR (i.e., when `--create <branch>` or `--update` is specified). Does NOT fire when only generating the description in chat (bare `/pr`).
+**Fires:** Before creating or updating a PR. Does NOT fire in `--dry` mode.
 **Skippable:** No.
 
 **Context output:**
@@ -122,6 +144,7 @@ knowledge = resolve(knowledge-config) or abort(missing/invalid knowledge config)
 - Do **NOT** invent changes or scope.
 - If information is missing, leave the section empty or add a short placeholder comment.
 - Keep the content concise and review-friendly.
+- **Evidence attachments:** GitHub does not provide a public API for uploading images to PR descriptions. The `Screenshots` section in the template supports manual attachment via the web UI after PR creation. If evidence files (images, GIFs) exist in TASK_DIR or are referenced in chat, note their local paths in the Screenshots section so the user can attach them manually.
 
 ---
 
@@ -197,7 +220,7 @@ Select one:
 
 This command must **NOT**:
 - Invent changes or scope
-- Create a PR without a branch or explicit create indication
+- Create a PR without confirming via the PR Confirmation gate
 - Perform `git push` (if creating the PR, assume the user has already pushed the current branch or guide them to do so)
 - Perform implementation or reasoning
 - Modify code or files (except status.md)
