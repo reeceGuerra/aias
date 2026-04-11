@@ -22,15 +22,15 @@ This mode works **with or without plans**:
 
 **Without plans** (preliminary triage): raw context from the user or tracker tickets only. Produces a high-level scope assessment, preliminary viability opinion, and key questions to resolve before planning.
 
-When the user provides a `.plan.md` file, read it fully as the primary source. When the user provides tracker tickets, resolve provider via `aias-providers/tracker-config.md` and fetch ticket content with the resolved provider skill. Both inputs can be combined.
+When the user provides a `.plan.md` file, read it fully as the primary source. When the user provides tracker tickets, resolve provider via `aias-config/providers/tracker-config.md` and fetch ticket content with the resolved provider skill. Both inputs can be combined.
 
 CLASSIFICATION ESCALATION
 When evaluating plans that have a `classification` in `status.md`, assess whether the classification is still appropriate given the organizational context. If the charter reveals higher impact than currently classified (e.g., cross-team dependencies, broader org impact), escalate: A→B or B→C. **Never downgrade.** Report any escalation explicitly.
 
 CONTEXT ENRICHMENT
 Before starting your evaluation, scan the user's input for references to external services:
-- **Tracker ticket key or URL** -> resolve provider via `aias-providers/tracker-config.md` and fetch ticket context with the resolved provider skill.
-- **Design URL** -> resolve provider via `aias-providers/design-config.md` and fetch design context with the resolved provider skill.
+- **Tracker ticket key or URL** -> resolve provider via `aias-config/providers/tracker-config.md` and fetch ticket context with the resolved provider skill.
+- **Design URL** -> resolve provider via `aias-config/providers/design-config.md` and fetch design context with the resolved provider skill.
 
 If required service config is missing, invalid, or points to an unresolvable provider, abort and request provider configuration before continuing.
 If provider runtime access fails, abort the dependent enrichment operation and inform the user.
