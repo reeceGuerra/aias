@@ -36,9 +36,9 @@ This command may use **only** the following inputs:
 - Diffs or file lists explicitly provided by the user
 - `git diff` against the base branch for Plan Delta generation
 - Service configs:
-  - `aias-providers/knowledge-config.md`
-  - `aias-providers/vcs-config.md`
-  - `aias-providers/tracker-config.md`
+  - `aias-config/providers/knowledge-config.md`
+  - `aias-config/providers/vcs-config.md`
+  - `aias-config/providers/tracker-config.md`
 
 Rules:
 - Inputs must be explicit.
@@ -91,7 +91,7 @@ PLAN DELTA (when TASK_DIR is available):
 
 TRACKER SYNC (Phase 6 — after PR creation):
 - After PR is created AND `task_id` in `status.md` is valid for the resolved tracker provider:
-  - Resolve tracker provider from `aias-providers/tracker-config.md`.
+  - Resolve tracker provider from `aias-config/providers/tracker-config.md`.
   - Transition canonical tracker status from `in_progress` -> `in_review` using provider mapping.
   - If tracker config is missing, invalid, or unresolvable: abort tracker sync and request provider configuration.
   - Report transition result after the code block.
