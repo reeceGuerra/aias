@@ -32,7 +32,7 @@ Usage notes:
 
 This command may use **only** the following inputs:
 
-- Tracker ticket content read via resolved provider from `aias-providers/tracker-config.md`:
+- Tracker ticket content read via resolved provider from `aias-config/providers/tracker-config.md`:
   - summary
   - description
   - issue type
@@ -47,8 +47,8 @@ This command may use **only** the following inputs:
 - Project architecture and conventions from the active base rule
 - Upstream artifacts from TASK_DIR if they exist (loaded via **rho-aias** skill (Phases 0–3)
 - Service configs:
-  - `aias-providers/tracker-config.md`
-  - `aias-providers/knowledge-config.md`
+  - `aias-config/providers/tracker-config.md`
+  - `aias-config/providers/knowledge-config.md`
 
 Rules:
 
@@ -189,7 +189,7 @@ After writing `analysis.product.md`:
 ### Phase 1 — Read
 
 1. Follow **rho-aias** skill loading protocol (Phases 0–3) to resolve TASK_DIR and load existing artifacts.
-2. Resolve tracker provider from `aias-providers/tracker-config.md`; if missing/invalid/unresolvable, abort and request provider configuration.
+2. Resolve tracker provider from `aias-config/providers/tracker-config.md`; if missing/invalid/unresolvable, abort and request provider configuration.
 3. Load `field_mapping_source` from the resolved tracker config (MANDATORY for write commands). If field mapping is missing or unresolvable, STOP with `MISSING_FIELD_MAPPING` and request configuration via `/aias configure-providers`.
 4. Use the resolved provider to read the ticket: description, acceptance criteria, comments, linked issues, status.
 5. If `@product` analysis is present in the chat context, collect it as supplementary input.
