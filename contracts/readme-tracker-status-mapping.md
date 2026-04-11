@@ -93,8 +93,8 @@ Optional target metadata:
 
 The following command transitions are mandatory:
 
-- `/validate-plan`: `pending_dor -> ready`
-- `/implement`: `ready -> in_progress`
+- `/enrich`: `pending_dor -> ready`
+- `/blueprint`: `ready -> in_progress`
 - `/pr`: `in_progress -> in_review`
 - `/commit`: verify `in_review` (no state change if already there)
 
