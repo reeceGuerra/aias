@@ -86,13 +86,13 @@ Commands define **how to execute** and format output. They structure data from m
 - `/brief` — Generate feature brief
 - `/report` — Generate validated bug RCA report and publish RCA fields when requested
 - `/pr` — Generate PR description
-- `/enrich` — Analyze and enrich a tracker ticket; writes to task directory (use with `@product` or standalone)
+- `/enrich` — Analyze and refine a tracker ticket; produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md`; publishes to knowledge provider; transitions `pending_dor → ready` (use with `@product` or standalone)
 - `/explain` — Concept-focused learning response (use in any mode, natural in `@product`)
 - `/trace` — Generate log instrumentation plan; writes to task directory (use with `@qa` or `@debug`)
 - `/assessment` — Evaluate fix feasibility; bridges `/fix` to `/blueprint` in bugfix flows (use with `@dev`)
-- `/validate-plan` — Validate plan completeness; canonical transition `pending_dor` → `ready` via provider mapping
+- `/validate-plan` — Validate plan alignment with DoR/DoD; process DoR/DoD amendments
 - `/consolidate-plan` — Work through plan gaps one by one
-- `/publish` — Archive all task artifacts to the resolved knowledge provider and close the task
+- `/publish` — Reconcile remaining artifacts, generate Plan Delta, and formally close the task
 - `/guide` — Operational reference for the rho-aias framework (profiles, commands, prompt format, status lifecycle, artifacts)
 - `/handoff` — Generate an operational Markdown handoff snippet for the next chat or agent
 - `/run` — Build and launch app on Simulator (use with `@tooling` or directly)
@@ -236,13 +236,13 @@ TASK: Review the changes on the current branch. When done, /self-review.
 | `/peer-review` | Review a PR or third-party change | `@review` + PR URL/number | Findings + VCS-ready snippets + general review comment |
 | `/handoff` | Prepare the next chat with explicit context | Current chat context + optional TASK_DIR | Single Markdown handoff snippet |
 | `/pr` | PR description | Implementation context | PR template |
-| `/enrich` | Enrich tracker-backed task | Task ID + `@product` context | Task directory |
+| `/enrich` | Refine task: product analysis + DoR/DoD + publish | Task ID + `@product` context | Task directory + `pending_dor → ready` |
 | `/explain` | Concept learning | Topic or question | Structured explanation (chat) |
 | `/trace` | Log instrumentation plan | `@qa` or `@debug` context | Task directory |
 | `/assessment` | Evaluate fix feasibility | `@dev` + fix + issue | Task directory |
-| `/validate-plan` | Validate plan completeness | Plan in task directory | `pending_dor` → `ready` (canonical, provider-mapped) |
+| `/validate-plan` | Validate plan alignment with DoR/DoD | Plan in task directory | Alignment verdict + amendment resolution |
 | `/consolidate-plan` | Work through plan gaps | Plan in task directory | Updated plan artifacts |
-| `/publish` | Archive task artifacts and close (Type B/C) | Task directory | Resolved knowledge provider archive + closure data. Mode-agnostic. |
+| `/publish` | Reconcile + close task (all classifications) | Task directory | Resolved knowledge provider archive + delta + closure data. Mode-agnostic. |
 | `/run` | Build & launch on Simulator | Project alias + flags | Execution summary (chat) |
 | `/test` | Run project tests | Project alias + flags | Execution summary (chat) |
 | `/commit` | Commit changes | Git status (automatic) | Git commit |
@@ -287,27 +287,33 @@ To create or regenerate workspace artifacts, use `aias init` or individual `aias
 
 ## Example: Your First Feature
 
-**Step 1: Plan** (one message)
+**Step 1: Refine** (product analysis + DoR/DoD)
+```
+MODE: @product
+REPO: mobilemax-dev
+TASK ID: MAX-14000
+CONTEXT: Product wants a user profile screen where users can view and
+         edit their name, email, and phone number.
+TASK: Analyze with product frameworks. When done, /enrich MAX-14000.
+```
+
+**Step 2: Plan** (new chat)
 ```
 MODE: @planning
 REPO: mobilemax-dev
 TASK ID: MAX-14000
 TASK DIR: MAX-14000
-PROFILE: feature
 FIGMA: https://figma.com/design/abc123/user-profile
-CONTEXT: Product wants a user profile screen where users can view and
-         edit their name, email, and phone number.
+CONTEXT: Requirement refined — DoR/DoD in TASK_DIR.
 TASK: Analyze the requirement. When done, /blueprint.
 ```
 
-**Step 2: Delivery Assessment** (optional, new chat)
+**Step 3: Validate** (same chat or new)
 ```
-MODE: @delivery
-TASK DIR: MAX-14000
-TASK: Assess readiness. When done, /charter.
+/validate-plan
 ```
 
-**Step 3: Implement** (new chat)
+**Step 4: Implement** (new chat)
 ```
 MODE: @dev
 REPO: mobilemax-dev
@@ -315,12 +321,15 @@ TASK DIR: MAX-14000
 TASK: /implement
 ```
 
-**Step 4: Commit & PR**
+**Step 5: Commit, PR & Close**
 ```
 /commit
 ```
 ```
 /pr
+```
+```
+/publish
 ```
 
 ---
