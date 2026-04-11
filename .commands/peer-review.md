@@ -34,8 +34,8 @@ This command may use **only** the following inputs:
 - Optional knowledge-provider artifacts resolved by `task_id`
 - Chat context explicitly provided by the user
 - Service configs:
-  - `aias-providers/vcs-config.md`
-  - `aias-providers/knowledge-config.md`
+  - `aias-config/providers/vcs-config.md`
+  - `aias-config/providers/knowledge-config.md`
 
 Rules:
 - VCS provider context is **mandatory** for PR review. If PR diff or metadata cannot be resolved, stop and request a valid PR identifier or provider configuration.
