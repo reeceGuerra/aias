@@ -36,6 +36,16 @@ This guides you through creating `RHOAIAS.md`, `stack-profile.md`, `stack-fragme
 
 If the project is already set up, skip to **Core Concepts** below.
 
+### Upgrading from v7.5
+
+If your project was set up with v7.5 or earlier, update the `aias/` submodule and then:
+
+1. Run `python3 aias/.canonical/generation/aias_cli.py generate --shortcuts` — regenerates rules and modes into `aias-config/` and updates shortcuts.
+2. Run `python3 aias/.canonical/generation/aias_cli.py health` — detects legacy locations.
+3. If legacy warnings appear, run `/aias health` in your AI assistant for interactive migration.
+
+Key changes in v7.6: `aias/` is now read-only. Generated rules/modes moved from `aias/.rules/` and `aias/.modes/` to `aias-config/rules/` and `aias-config/modes/`. Provider configs moved from `aias-providers/` to `aias-config/providers/`. Custom commands and skills go to `aias-config/commands/` and `aias-config/skills/`.
+
 ---
 
 ## Core Concepts
@@ -128,7 +138,7 @@ All fields except MODE and TASK are optional — use only what the task needs. W
 
 For commands that depend on tracker/knowledge/design/VCS providers:
 
-- Resolve provider by category from `aias-providers/<category>-config.md`.
+- Resolve provider by category from `aias-config/providers/<category>-config.md`.
 - Validate active provider, skill binding, and required mapping/config sources.
 - If config or mapping is missing/invalid/unresolvable, abort the dependent operation and request correction.
 - Do not continue with silent fallback behavior.
