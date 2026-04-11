@@ -7,9 +7,9 @@ This directory contains the maintenance-time generation flow for platform modes,
 Generate committed mode and rule files for:
 
 **Canonical outputs**:
-- `aias/.modes/*.mdc` — Generated platform modes
-- `aias/.rules/base.mdc` — Generated base rule (flat)
-- `aias/.rules/output-contract.mdc` — Generated output contract (flat)
+- `aias-config/modes/*.mdc` — Generated platform modes
+- `aias-config/rules/base.mdc` — Generated base rule (flat)
+- `aias-config/rules/output-contract.mdc` — Generated output contract (flat)
 
 **Shortcuts** (Phase 5, with `--shortcuts` flag):
 - `.cursor/rules/*.mdc` — Rules + modes for Cursor
@@ -46,11 +46,11 @@ Before any file is generated, the script runs 6 sequential validation gates that
 | Gate | Name | What it checks |
 |---|---|---|
 | **G0** | Infrastructure | Canonical sources (`base-rule.md`, `output-contract.md`) exist and contain a `` ```markdown `` code block. Fragment file exists. All 7 canonical mode templates exist. |
-| **G1** | Profile Discovery | `stack-profile.md` exists at repo root. Profile is readable and parses into non-empty bindings. `generation.stack_id` is present and `generation.mode_output_dir` is set to `aias/.modes`. |
+| **G1** | Profile Discovery | `stack-profile.md` exists at repo root. Profile is readable and parses into non-empty bindings. `generation.stack_id` is present and `generation.mode_output_dir` is set to `aias-config/modes`. |
 | **G2** | Mode Binding Completeness | For every profile × mode, the 4 frontmatter keys (`description`, `model`, `color`, `globs`) are present and non-empty. |
 | **G3** | Rule Binding Completeness | For every discovered workspace: all required base rule keys (9) and output contract keys (4) resolve (workspace → shared → platform fallback). `profile` binding is present. |
 | **G4** | Fragment Validation | `stack-fragment.md` exists at repo root, is non-empty, and contains at least one UPPERCASE section header. |
-| **G5** | Output Directory | `aias/.rules/` and `aias/.modes/` exist or can be created. |
+| **G5** | Output Directory | `aias-config/rules/` and `aias-config/modes/` exist or can be created. |
 
 ### Post-flight Validation (only with `--shortcuts`)
 
@@ -72,7 +72,7 @@ Before any file is generated, the script runs 6 sequential validation gates that
 5. Replaces placeholders (`{{key}}`).
 6. Removes template-only comments.
 7. Injects header `GENERATED — DO NOT EDIT` after frontmatter.
-8. Writes to canonical path (`aias/.modes/`).
+8. Writes to canonical path (`aias-config/modes/`).
 
 ### Rule generation
 
@@ -83,7 +83,7 @@ Before any file is generated, the script runs 6 sequential validation gates that
 5. Renders Mustache-style sections (`{{#key}}...{{/key}}`) with standalone tag line handling.
 6. Replaces placeholders (`{{key}}`).
 7. For `output-contract.mdc`: loads build system integration from fragment files and generates file header section from project name + author bindings.
-8. Writes to canonical path (`aias/.rules/`, flat).
+8. Writes to canonical path (`aias-config/rules/`, flat).
 
 ### Shortcut generation (with `--shortcuts`)
 
@@ -128,7 +128,7 @@ Run generation twice and diff all outputs:
 ```bash
 BACKUP="/tmp/rho-aias-idempotency"
 rm -rf "$BACKUP" && mkdir -p "$BACKUP"
-for f in aias/.modes/*.mdc aias/.rules/*.mdc; do
+for f in aias-config/modes/*.mdc aias-config/rules/*.mdc; do
   [ -f "$f" ] || continue
   mkdir -p "$BACKUP/$(dirname "$f")"
   cp "$f" "$BACKUP/$f"
@@ -170,13 +170,13 @@ When onboarding a new repo:
 ### Modes
 - [x] Generated files include `GENERATED — DO NOT EDIT`.
 - [x] Frontmatter includes `description`, `alwaysApply`, `model`, `color`, `globs` (array YAML).
-- [x] All 7 mode files exist in `aias/.modes/`.
+- [x] All 7 mode files exist in `aias-config/modes/`.
 - [x] Product modes include `SCOPE`.
 - [x] No generated mode includes `GENERATION NOTES`.
 
 ### Rules
 - [x] All 5 standard workspaces generate `base.mdc` and `output-contract.mdc`.
-- [x] `aias/.rules/` contains flat `base.mdc` and `output-contract.mdc` (no subdirectories).
+- [x] `aias-config/rules/` contains flat `base.mdc` and `output-contract.mdc` (no subdirectories).
 - [x] Generated rules match pre-existing files (verified via backup-diff test).
 - [x] Binding value unescaping handles `\n` → newline and `` \` `` → `` ` ``.
 - [x] Conditional sections produce no spurious blank lines.
