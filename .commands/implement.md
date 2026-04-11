@@ -4,7 +4,7 @@
 
 **Command Type:** Type B — Procedural / Execution
 
-You are executing an implementation plan increment by increment, reading plan artifacts from the task directory. This command orchestrates a mandatory protocol: **read → analyze → understand → execute → feedback gate → next**. It ensures the developer has full visibility and control at every step. On the first increment, it triggers the canonical tracker transition `ready` -> `in_progress` through the resolved tracker provider mapping.
+You are executing an implementation plan increment by increment, reading plan artifacts from the task directory. This command orchestrates a mandatory protocol: **read → analyze → understand → execute → feedback gate → next**. It ensures the developer has full visibility and control at every step.
 
 **Skills referenced:** `rho-aias`, `incremental-decomposition`, `xcode-mcp` (conditional — iOS projects).
 
@@ -20,7 +20,6 @@ Usage notes:
 - This command is intended to be used within `@dev` mode.
 - It requires plan artifacts in TASK_DIR (`technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `dod.plan.md`, and `specs.design.md` when present). Optionally loads `analysis.product.md` for product context.
 - The command does NOT execute the entire plan autonomously. It executes **one increment at a time** and waits for user feedback before proceeding.
-- On the first increment, triggers canonical tracker transition `ready` -> `in_progress` (once per task).
 - `increments.plan.md` is the only plan artifact this command may update. It MUST NOT modify validation todos in `technical.plan.md`.
 - **Review Resolution mode:** When the chat opening message contains a handoff snippet from `/self-review` (with findings such as blocking issues, major risks, or minor improvements), the command enters Review Resolution mode instead of plan-driven execution. See Phase 1-R in Section 6.
 
@@ -34,7 +33,6 @@ This command may use **only** the following inputs:
 - Chat context explicitly provided by the user
 - Codebase state (files, dependencies, existing code)
 - Service configs:
-  - `aias-config/providers/tracker-config.md`
   - `aias-config/providers/knowledge-config.md`
 
 Rules:
@@ -49,17 +47,9 @@ Rules:
 
 This command produces **code changes** directly in the codebase (not a file artifact).
 
-TRACKER SYNC (Phase 6 — first increment only)
-- Before executing the first increment, if `task_id` in `status.md` is valid for the resolved tracker provider:
-  - Resolve tracker provider from `aias-config/providers/tracker-config.md`.
-  - Transition canonical tracker status from `ready` -> `in_progress` using provider mapping.
-  - If tracker config is missing, invalid, or unresolvable: abort sync and request provider configuration.
-  - Report transition result in chat.
-- This transition fires **once per task** (on the first increment only). Subsequent increments do not trigger it again.
-
 STATUS UPDATE (Phase 5 — after each increment)
-- Update `status.md`: set `status: in_progress` (first increment), update `current_step` to `implement`.
-- Run Phase 5c (classification-gated): sync non-synced artifacts to resolved knowledge provider only if classification in `status.md` is B or C. Skip if A (see **rho-aias** skill § Phase 5c).
+- Update `status.md`: update `current_step` to `implement` (if not already set). Do NOT modify the `status` field — it remains `in_progress` as set by `/blueprint`.
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
 
 Output is delivered in **phases**, each clearly communicated in chat:
 - Phase 1 (Read): Confirmation of plan loaded
@@ -394,7 +384,6 @@ IMPLEMENTATION SUMMARY:
 SERVICE RESOLUTION PSEUDOFLOW:
 
 ```
-tracker = resolve(tracker-config) or abort(missing/invalid tracker config)
 knowledge = resolve(knowledge-config) or abort(missing/invalid knowledge config)
 ```
 
