@@ -57,6 +57,26 @@ Future categories must follow:
 
 ---
 
+## Referenced Document Directory
+
+Provider configs reference external documents (field mappings, status mappings, publishing configs) that contain project-specific configuration. These documents live in a provider-specific subdirectory:
+
+- `aias-providers/<provider_id>/` — where `provider_id` matches the `active_provider` value (e.g., `atlassian`, `figma`, `github`)
+
+Documents are referenced via path keys in the provider parameters (`field_mapping_source`, `status_mapping_source`, `config_source`) and declared as dependencies in `skill_binding.resource_files`.
+
+Creation: via `/aias configure-providers` (AI-assisted discovery) or manual scaffolding via `aias new --provider`.
+
+### Referenced Document Contracts
+
+| Document type | Governing contract |
+|---|---|
+| Field mapping | `aias/contracts/readme-tracker-field-mapping.md` |
+| Status mapping | `aias/contracts/readme-tracker-status-mapping.md` |
+| Publishing config | `aias/contracts/readme-knowledge-publishing-config.md` |
+
+---
+
 ## Canonical Categories and Baseline Providers
 
 Only these categories are valid in this contract:
@@ -105,7 +125,7 @@ All service configs must conform to this schema model.
 |---|---|---|---|
 | `skill` | string | yes | pattern: `^[a-z0-9-]{2,64}$`; must be resolvable |
 | `capability` | string | yes | pattern: `^[a-z][a-z0-9-]{1,64}$` |
-| `resource_files` | string[] | no | each item pattern: `^[A-Za-z0-9._/-]+$` |
+| `resource_files` | string[] | conditional | Dependency manifest: declarative list of external files the skill needs for this category. Required for categories with `*_source` keys (`tracker`, `knowledge`). Not applicable for `design`, `vcs`. Each item pattern: `^[A-Za-z0-9._/-]+$`. Every `*_source` path must also appear in `resource_files`. |
 
 ### `providers.<provider_id>` Minimum Keys
 
@@ -159,11 +179,13 @@ provider_mode: mcp
 skill_binding:
   skill: atlassian-mcp
   capability: knowledge-publish
+  resource_files:
+    - aias-providers/atlassian/confluence-config.md
 providers:
   confluence:
     enabled: true
     mcp_server: user-Atlassian
-    config_source: aias/.skills/atlassian-mcp/confluence-config.md
+    config_source: aias-providers/atlassian/confluence-config.md
 ```
 
 ### `tracker` minimum template
@@ -175,12 +197,15 @@ provider_mode: mcp
 skill_binding:
   skill: atlassian-mcp
   capability: tracker-sync
+  resource_files:
+    - aias-providers/atlassian/jira-field-mapping.md
+    - aias-providers/atlassian/tracker-status-mapping.md
 providers:
   jira:
     enabled: true
     mcp_server: user-Atlassian
-    field_mapping_source: aias/.skills/atlassian-mcp/jira-field-mapping.md
-    status_mapping_source: aias/.skills/atlassian-mcp/tracker-status-mapping.md
+    field_mapping_source: aias-providers/atlassian/jira-field-mapping.md
+    status_mapping_source: aias-providers/atlassian/tracker-status-mapping.md
 ```
 
 ### `design` minimum template
@@ -240,6 +265,38 @@ A service config is valid only if all rules below pass:
 
 If unresolved, consumers must abort the dependent operation and request provider configuration correction.
 
+### Tracker Field Mapping Rule
+
+When `service_category=tracker`:
+
+- `providers.<active_provider>.field_mapping_source` is mandatory for write commands (`/enrich`, `/report`).
+- The referenced file must exist.
+- The referenced file must follow `aias/contracts/readme-tracker-field-mapping.md`.
+- The path must also appear in `skill_binding.resource_files`.
+
+If any condition fails, consumers must abort dependent write operations with `MISSING_FIELD_MAPPING`.
+
+### Knowledge Config Source Rule
+
+When `service_category=knowledge`:
+
+- `providers.<active_provider>.config_source` is mandatory.
+- The referenced file must exist.
+- The referenced file must follow `aias/contracts/readme-knowledge-publishing-config.md`.
+- The path must also appear in `skill_binding.resource_files`.
+
+If any condition fails, consumers must abort dependent publishing operations with `MISSING_CONFIG_SOURCE`.
+
+### Resource Files Consistency Rule
+
+When `skill_binding.resource_files` is declared:
+
+- Every `*_source` key value in `providers.<active_provider>` must have its path listed in `resource_files`.
+- Every path in `resource_files` must point to an existing file.
+- Paths pointing to `aias/.skills/` are valid but legacy (deprecated in v7.5).
+
+If any condition fails, consumers must report the inconsistency and request configuration correction.
+
 ### Tracker Status Mapping Rule
 
 When `service_category=tracker`:
@@ -280,6 +337,8 @@ When resolution fails, consumers must use these normalized outcomes:
 | `UNRESOLVABLE_SKILL` | `skill_binding.skill` cannot be resolved | Abort dependent operation and request config fix |
 | `UNSUPPORTED_CAPABILITY` | capability not compatible with category intent | Abort dependent operation and request capability mapping fix |
 | `UNAVAILABLE_PROVIDER` | provider/API unavailable at runtime | Abort remote operation and report provider unavailability |
+| `MISSING_FIELD_MAPPING` | `field_mapping_source` not found or non-conformant | Abort dependent write operation and request config fix |
+| `MISSING_CONFIG_SOURCE` | `config_source` not found or non-conformant | Abort dependent publishing operation and request config fix |
 
 Error messages should include: category, configured provider (if available), and reason code.
 
@@ -382,6 +441,9 @@ These stable check IDs are reserved for future validators (BL-S03):
 | `PRECEDENCE_CANONICAL` | canonical precedence rule is present verbatim |
 | `CONSUMER_DOC_REFERENCES` | commands/skills reference category resolution model |
 | `FAILFAST_CODES_DECLARED` | standardized failure table exists |
+| `FIELD_MAPPING_RESOLVABLE` | `field_mapping_source` exists and conforms to `readme-tracker-field-mapping.md` |
+| `CONFIG_SOURCE_RESOLVABLE` | `config_source` exists and conforms to `readme-knowledge-publishing-config.md` |
+| `RESOURCE_FILES_RESOLVABLE` | all paths in `resource_files` exist and all `*_source` paths are listed |
 
 ---
 
@@ -419,6 +481,8 @@ Problem: invalid config must abort dependent service operations.
 - `aias/contracts/readme-commands.md`
 - `aias/contracts/readme-skill.md`
 - `aias/contracts/readme-tracker-status-mapping.md`
+- `aias/contracts/readme-tracker-field-mapping.md`
+- `aias/contracts/readme-knowledge-publishing-config.md`
 - `aias/contracts/readme-artifact.md`
 - `aias/contracts/readme-mode-rule.md`
 - `aias/contracts/readme-project-context.md`
