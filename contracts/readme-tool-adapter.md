@@ -45,15 +45,18 @@ Shortcuts use one of two strategies:
 
 ## Canonical Source Locations
 
-All canonical content lives exclusively in `aias/`:
+Canonical content is split between the read-only framework (`aias/`) and per-project configuration (`aias-config/`):
 
-| Artifact type | Canonical location |
-|---|---|
-| Rules (always-apply) | `aias/.rules/*.mdc` |
-| Modes (conditional) | `aias/.modes/*.mdc` |
-| Commands | `aias/.commands/*.md` |
-| Skills | `aias/.skills/*/` |
-| Context | `RHOAIAS.md` (project root) |
+| Artifact type | Framework (read-only) | Project (mutable) |
+|---|---|---|
+| Rules (always-apply) | — | `aias-config/rules/*.mdc` |
+| Modes (conditional) | — | `aias-config/modes/*.mdc` |
+| Commands | `aias/.commands/*.md` | `aias-config/commands/*.md` |
+| Skills | `aias/.skills/*/` | `aias-config/skills/*/` |
+| Providers | — | `aias-config/providers/` |
+| Context | — | `RHOAIAS.md` (project root) |
+
+Rules and modes have no framework location — they are always generated per-project from canonical templates. Commands and skills have both framework and project locations; the generator discovers both sources and creates shortcuts for all.
 
 ---
 
@@ -63,10 +66,10 @@ All canonical content lives exclusively in `aias/`:
 
 | Artifact | Shortcut location | Strategy | Format |
 |---|---|---|---|
-| Rules | `.cursor/rules/<name>.mdc` | Symlink | Symlink → `aias/.rules/<name>.mdc` |
-| Modes | `.cursor/rules/<name>.mdc` | Symlink | Symlink → `aias/.modes/<name>.mdc` (inherits `globs` for auto-activation) |
-| Commands | `.cursor/commands/<name>.md` | Symlink | Symlink → `aias/.commands/<name>.md` |
-| Skills | `.cursor/skills/<name>/SKILL.md` | Symlink | Symlink → `aias/.skills/<name>/SKILL.md` |
+| Rules | `.cursor/rules/<name>.mdc` | Symlink | Symlink → `aias-config/rules/<name>.mdc` |
+| Modes | `.cursor/rules/<name>.mdc` | Symlink | Symlink → `aias-config/modes/<name>.mdc` (inherits `globs` for auto-activation) |
+| Commands | `.cursor/commands/<name>.md` | Symlink | Symlink → `aias/.commands/<name>.md` or `aias-config/commands/<name>.md` |
+| Skills | `.cursor/skills/<name>/SKILL.md` | Symlink | Symlink → `aias/.skills/<name>/SKILL.md` or `aias-config/skills/<name>/SKILL.md` |
 | Context | `AGENTS.md` | Symlink | Symlink → `RHOAIAS.md` |
 
 ### Claude Code
@@ -76,7 +79,7 @@ All canonical content lives exclusively in `aias/`:
 | Rules | `.claude/rules/<name>.md` | Enriched text | `[name] description` + path instruction |
 | Modes | `.claude/rules/<name>.md` | Enriched text | Optional `paths:` frontmatter + `[name] description` + path instruction |
 | Commands | Not supported | — | — |
-| Skills | `.claude/skills/<name>/SKILL.md` | Symlink | Symlink → `aias/.skills/<name>/SKILL.md` |
+| Skills | `.claude/skills/<name>/SKILL.md` | Symlink | Symlink → `aias/.skills/<name>/SKILL.md` or `aias-config/skills/<name>/SKILL.md` |
 | Context | `CLAUDE.md` | Symlink | Symlink → `RHOAIAS.md` |
 
 ### Windsurf
@@ -97,7 +100,7 @@ All canonical content lives exclusively in `aias/`:
 |---|---|---|---|
 | Rules | `.github/copilot-instructions.md` | Enriched text | Single file aggregating `[name] description` per rule |
 | Modes | `.github/instructions/<name>.instructions.md` | Enriched text | Optional `applyTo:` frontmatter + `[name] description` + path instruction |
-| Commands | `.github/agents/<name>.md` | Symlink | Symlink → `aias/.commands/<name>.md` |
+| Commands | `.github/agents/<name>.md` | Symlink | Symlink → `aias/.commands/<name>.md` or `aias-config/commands/<name>.md` |
 | Skills | Not supported | — | — |
 | Context | `AGENTS.md` | Symlink | Symlink → `RHOAIAS.md` (shared with Cursor/Windsurf) |
 
@@ -107,8 +110,8 @@ All canonical content lives exclusively in `aias/`:
 |---|---|---|---|
 | Rules | Not supported | — | `.codex/rules/` in Codex is for sandbox/permissions, not behavioral instructions |
 | Modes | Not supported | — | — |
-| Commands | `.codex/commands/<name>.md` | Symlink | Symlink → `aias/.commands/<name>.md` |
-| Skills | `.agents/skills/<name>/SKILL.md` | Symlink | Symlink → `aias/.skills/<name>/SKILL.md` |
+| Commands | `.codex/commands/<name>.md` | Symlink | Symlink → `aias/.commands/<name>.md` or `aias-config/commands/<name>.md` |
+| Skills | `.agents/skills/<name>/SKILL.md` | Symlink | Symlink → `aias/.skills/<name>/SKILL.md` or `aias-config/skills/<name>/SKILL.md` |
 | Context | `codex.md` | Symlink | Symlink → `RHOAIAS.md` |
 
 ### Gemini
@@ -132,8 +135,8 @@ Symlink shortcuts are filesystem symlinks from the tool-specific path to the can
 **Rules and Modes (Cursor):**
 
 ```
-.cursor/rules/base.mdc → aias/.rules/base.mdc          (symlink)
-.cursor/rules/planning.mdc → aias/.modes/planning.mdc   (symlink)
+.cursor/rules/base.mdc → aias-config/rules/base.mdc          (symlink)
+.cursor/rules/planning.mdc → aias-config/modes/planning.mdc   (symlink)
 ```
 
 Note: Cursor mode symlinks inherit `globs` from the canonical `.mdc` file, enabling auto-activation by file pattern. This is a behavioral improvement over the previous text shortcut pattern which omitted `globs`.
@@ -172,7 +175,7 @@ Enriched text shortcuts are text files containing a `[name] description` behavio
 
 ```
 [base] Core behavior for RDSUI design system development
-Read and follow the canonical rule at: aias/.rules/base.mdc
+Read and follow the canonical rule at: aias-config/rules/base.mdc
 ```
 
 **Modes (Claude Code) — with `paths:` frontmatter:**
@@ -183,23 +186,23 @@ paths:
   - "*.plan.md"
 ---
 [planning] Planning mode: senior technical lead focused on turning vague requests into clear, actionable planning data
-Read and follow the canonical mode at: aias/.modes/planning.mdc
+Read and follow the canonical mode at: aias-config/modes/planning.mdc
 ```
 
 **Rules (Windsurf):**
 
 ```
 [base] Core behavior for RDSUI design system development
-Read and follow the canonical rule at: aias/.rules/base.mdc
+Read and follow the canonical rule at: aias-config/rules/base.mdc
 ```
 
 **Rules (GitHub Copilot) — aggregated:**
 
 ```
 Read and follow these canonical rules:
-- [base] Core behavior for RDSUI design system development — aias/.rules/base.mdc
-- [output-contract] Output contract: complete file contents + reasoning — aias/.rules/output-contract.mdc
-- [continuous-improvement] Continuous improvement — learn from user feedback — aias/.rules/continuous-improvement.mdc
+- [base] Core behavior for RDSUI design system development — aias-config/rules/base.mdc
+- [output-contract] Output contract: complete file contents + reasoning — aias-config/rules/output-contract.mdc
+- [continuous-improvement] Continuous improvement — learn from user feedback — aias-config/rules/continuous-improvement.mdc
 ```
 
 **Modes (GitHub Copilot) — with `applyTo:` frontmatter:**
@@ -209,7 +212,7 @@ Read and follow these canonical rules:
 applyTo: "*.plan.md,*.product.md"
 ---
 [planning] Planning mode: senior technical lead focused on turning vague requests into clear, actionable planning data
-Read and follow the canonical mode at: aias/.modes/planning.mdc
+Read and follow the canonical mode at: aias-config/modes/planning.mdc
 ```
 
 ### Context Symlinks
@@ -239,17 +242,18 @@ Each tool reads `RHOAIAS.md` content directly via filesystem resolution — no L
 
 Shortcuts are generated by `generate_modes_and_rules.py` as part of the standard generation pipeline. The generator:
 
-1. Produces canonical files in `aias/.rules/` and `aias/.modes/`
+1. Produces canonical files in `aias-config/rules/` and `aias-config/modes/`
 2. Reads `binding.generation.tools` from `stack-profile.md` to determine target tools
 3. Generates tool-specific shortcuts only for the listed tools
-4. Treats `aias/.commands/*.md` canonically by directory discovery, so new commands such as `/handoff` flow into supported command shortcut targets without a hardcoded command registry
-5. Validates shortcuts via post-flight gates G6–G7 (scoped to listed tools)
+4. Discovers commands from two sources: framework (`aias/.commands/`) and project (`aias-config/commands/`), generating shortcuts for both
+5. Discovers skills from two sources: framework (`aias/.skills/`) and project (`aias-config/skills/`), generating shortcuts for both
+6. Validates shortcuts via post-flight gates G6–G7 (scoped to listed tools)
 
 ### Pre-flight Validation Gates
 
 | Gate | Name | Validates |
 |---|---|---|
-| G5 | Output Directory | `aias/.rules/` and `aias/.modes/` exist or can be created |
+| G5 | Output Directory | `aias-config/rules/` and `aias-config/modes/` exist or can be created |
 | G6 | Shortcut Consistency | Every canonical file has corresponding shortcuts for supported tools. Symlinks are validated for existence AND target resolution (broken symlinks produce a specific error distinct from "missing"). |
 | G7 | No Content Duplication | Symlinks are **exempt** (they point to full canonical content by design). Enriched text shortcuts must not exceed 500 bytes. Aggregated files (`copilot-instructions.md`) must not exceed 1500 bytes. |
 
