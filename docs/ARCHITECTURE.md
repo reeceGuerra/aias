@@ -339,7 +339,7 @@ The generator script (`aias/.canonical/generation/generate_modes_and_rules.py`) 
 | G6 | Shortcut consistency — all generated shortcuts reference valid canonical files |
 | G7 | Zero content duplication — shortcuts are references, not copies |
 
-If any pre-flight gate fails, generation aborts with a diagnostic message. Post-flight failures produce warnings for manual review.
+If any pre-flight gate fails, generation aborts with a diagnostic message. Post-flight failures are **fatal** when `--shortcuts` is active: the generator exits with code 1 (output is preserved but the process signals failure). Without `--shortcuts`, post-flight validation is skipped.
 
 ### CLI
 
