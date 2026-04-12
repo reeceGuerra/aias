@@ -1,5 +1,8 @@
 # Skill Contract — Cursor Configuration System (v1.1)
 
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
+
 This document defines the **canonical contract** for skills used in this rho-aias development architecture.
 
 It exists to:
@@ -113,7 +116,7 @@ Skills that teach the agent how to use a specific CLI tool, script, or local uti
 Characteristics:
 - Map to a specific tool or script
 - Document invocation, parameters, expected output
-- May include validation or error handling steps
+- MAY include validation or error handling steps
 
 Examples (hypothetical):
 - `xcodebuild-skill` — How to build and test with xcodebuild
@@ -123,7 +126,7 @@ Examples (hypothetical):
 
 ## Canonical Skill Definition Structure
 
-All skills **must follow this structure**.
+All skills **MUST follow this structure**.
 
 ### 1. Directory and File Layout
 
@@ -180,17 +183,17 @@ List the operations the skill supports. For each operation:
 
 - **Operation name** (e.g., "Read Jira issue", "Create pull request")
 - **When to use** — brief trigger condition
-- **Prerequisites** — what must be obtained first (e.g., `cloudId`)
+- **Prerequisites** — what MUST be obtained first (e.g., `cloudId`)
 - **Call sequence** — step-by-step: which tool/API to call, with which parameters, in which order
 - **Parameter extraction** — how to get required parameters from user input (URLs, keys, etc.)
-- **Output** — what the call returns and how the consuming mode/command should use it
+- **Output** — what the call returns and how the consuming mode/command SHOULD use it
 
 ---
 
 #### SAFETY RULES (Required)
 
 - **Read/write boundary:** What is read-only by default; what requires explicit user request to write
-- **Abort on failure:** What to do when the service does not respond or is not configured (must include: abort, do not invent data, inform the user)
+- **Abort on failure:** What to do when the service does not respond or is not configured (MUST include: abort, MUST NOT invent data, inform the user)
 - **Data integrity:** Do not fabricate, infer, or assume data that the service did not return
 - **Tracker mapping integrity (when capability = `tracker-sync`):** Require a valid `status_mapping_source` with canonical trigger keys in `slash + kebab-case`; if missing/invalid/unresolvable, abort dependent tracker operation and inform the user
 
@@ -213,7 +216,7 @@ Keep references **one level deep** (SKILL.md → reference.md, not deeper).
 ### Single Responsibility
 - One skill = one external resource or service
 - Do not combine Atlassian + GitHub in one skill
-- If a service has clearly distinct sub-domains (e.g., Jira vs Confluence), they may share a skill if they share the same MCP server and authentication flow; otherwise, split
+- If a service has clearly distinct sub-domains (e.g., Jira vs Confluence), they MAY share a skill if they share the same MCP server and authentication flow; otherwise, split
 
 ### Conciseness
 - Target: **SKILL.md under 500 lines** (excluding frontmatter)
@@ -222,9 +225,9 @@ Keep references **one level deep** (SKILL.md → reference.md, not deeper).
 - Use progressive disclosure: essential info in SKILL.md, detailed reference in separate files
 
 ### Read-Only by Default
-- Every operation must state whether it is read or write
-- Write operations must require **explicit user instruction** (e.g., "publish to Jira", "create the PR")
-- If the user does not ask for a write operation, the skill must not perform one
+- Every operation MUST state whether it is read or write
+- Write operations MUST require **explicit user instruction** (e.g., "publish to Jira", "create the PR")
+- If the user does not ask for a write operation, the skill MUST NOT perform one
 
 ### Abort on Failure
 - If the MCP/service does not respond, is not configured, or returns an error: **abort the operation that depends on this skill**
@@ -233,12 +236,12 @@ Keep references **one level deep** (SKILL.md → reference.md, not deeper).
 - This rule applies to every operation in every skill
 
 ### Stability
-- Skills should change only when the underlying service API or MCP changes
+- Skills SHOULD change only when the underlying service API or MCP changes
 - Operational details (call sequences, parameters) belong here; workflow decisions (when to call) belong in modes
 - A stable skill reduces maintenance across all modes and commands that consume it
 
 ### Service-Skill Immutability Policy
-- MCP service skills are provider-specific by design (e.g., `atlassian-mcp`, `figma-mcp`, `github-mcp`) and must not be refactored into provider-agnostic workflow abstractions.
+- MCP service skills are provider-specific by design (e.g., `atlassian-mcp`, `figma-mcp`, `github-mcp`) and MUST NOT be refactored into provider-agnostic workflow abstractions.
 - Service-skill changes are allowed only when at least one of these triggers is true:
   - The provider API/MCP contract changed and the skill needs refresh.
   - A validated bug exists in call sequencing, parameters, or safety handling.
@@ -308,7 +311,7 @@ Read Jira issues and fetch Figma designs.
 OPERATIONS
 If the user is in @planning mode, read the Jira ticket to enrich the DoR.
 ```
-**Problem:** The skill should not know about modes. It provides "how to read a Jira ticket"; the mode decides "when to read it".
+**Problem:** The skill SHOULD NOT know about modes. It provides "how to read a Jira ticket"; the mode decides "when to read it".
 
 ### Including Command Logic
 ```markdown
@@ -323,7 +326,7 @@ Format the Jira ticket data as a markdown table with columns: Key, Summary, Stat
 # Bad: fallback with invented data
 If the MCP does not respond, use the ticket key as the title and assume status is "Open".
 ```
-**Problem:** Violates abort-on-failure and data integrity. Must abort and inform the user.
+**Problem:** Violates abort-on-failure and data integrity. MUST abort and inform the user.
 
 ### Too Verbose
 ```markdown
@@ -350,7 +353,7 @@ If a piece of knowledge fits in more than one category, it probably needs to be 
 
 ## Versioning
 
-Skills should be versioned when:
+Skills SHOULD be versioned when:
 - The underlying MCP or API changes (new parameters, deprecated operations, changed sequences)
 - Operations are added or removed
 - Safety rules change
