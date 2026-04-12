@@ -100,10 +100,7 @@ Commands define **how to execute** and format output. They structure data from m
 - `/self-review` — Review your own local work (use with `@review`)
 - `/peer-review` — Review a PR or third-party change (use with `@review`)
 - `/handoff` — Generate an operational Markdown handoff snippet for the next chat or agent
-- `/run` — Build and launch app on Simulator (use with `@tooling` or directly)
-- `/test` — Run project tests (use with `@tooling` or directly)
 - `/commit` — Stage and commit files
-- `/spm` — Manage Swift Package Manager dependencies
 - `/aias` — Framework management (health checks, configuration, scaffolding)
 - `/copyedit` — Technical writing review and refinement
 
@@ -250,10 +247,7 @@ TASK: Review the changes on the current branch. When done, /self-review.
 | `/validate-plan` | Validate plan alignment with DoR/DoD | Plan in task directory | Alignment verdict + amendment resolution |
 | `/consolidate-plan` | Work through plan gaps | Plan in task directory | Updated plan artifacts |
 | `/publish` | Reconcile + close task (all classifications) | Task directory | Resolved knowledge provider archive + delta + closure data. Mode-agnostic. |
-| `/run` | Build & launch on Simulator | Project alias + flags | Execution summary (chat) |
-| `/test` | Run project tests | Project alias + flags | Execution summary (chat) |
 | `/commit` | Commit changes | Git status (automatic) | Git commit |
-| `/spm` | Manage dependencies | Package name + flags | Execution summary (chat) |
 | `/aias` | Framework management | Subcommand + flags | Health, config, scaffolding |
 | `/copyedit` | Technical writing review | Document content | Refined text |
 | `/guide` | Operational reference | Topic or subcommand | Framework reference (chat) |
@@ -275,7 +269,6 @@ Each mode performs best with a specific model type. Cursor does not auto-select 
 | `@product` | sonnet-4.6 | Broad conceptual exploration with good product analysis |
 | `@integration` | sonnet-4.6 | Cross-repo coordination requires balanced reasoning |
 | `@devops` | sonnet-4.6 | Pipeline configuration with practical accuracy |
-| `@tooling` | gpt-5.3-codex | Script generation and CLI development |
 
 **General guidance:**
 - **opus** — Use for tasks requiring deep reasoning, multi-step analysis, or architectural decisions
@@ -348,7 +341,7 @@ TASK: /implement
 
 ## Further Reading
 
-- **Detailed workflows:** [WORKFLOWS.md](WORKFLOWS.md) — Feature development, bug fix, enrichment, build/run/test, CI/CD, integration, and all other end-to-end flows
+- **Detailed workflows:** [WORKFLOWS.md](WORKFLOWS.md) — Feature development, bug fix, enrichment, CI/CD, integration, and all other end-to-end flows
 - **Artifact catalog and protocol:** `aias/.skills/rho-aias/SKILL.md` — Artifact types, skill loading protocol, Plan Classification, one-mode-per-chat rule
 - **CLI reference:** [CLI.md](CLI.md) — `aias` subcommands, flags, and examples
 - **Framework guide:** Run `/guide` for operational reference (profiles, commands, status lifecycle, artifacts)
