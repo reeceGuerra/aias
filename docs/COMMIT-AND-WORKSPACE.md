@@ -51,4 +51,4 @@ Example (multi-root: config + app; commit only in app):
 ## Summary
 
 - **Agnostic commit:** resolution uses `.code-workspace` folders that are git roots. No external config files are required.  
-- **Workspace:** optionally use `cursor.commitRoot` to select a folder in multi-root setups; `cursor.projectType` MAY still be used for hints without `/commit` requiring it.
+- **Workspace:** MAY use `cursor.commitRoot` to select a folder in multi-root setups; `cursor.projectType` MAY still be used for hints without `/commit` requiring it.
