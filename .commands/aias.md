@@ -29,6 +29,7 @@ Invocation mirrors the CLI interface:
 - `/aias generate --shortcuts` — Run generator with shortcuts (reads tools from stack profile)
 - `/aias generate --shortcuts --tools cursor,claude` — Override tools for this run
 - `/aias health` — Verify setup health
+- `/aias refresh-context` — Propose updates to `RHOAIAS.md` based on recent project changes
 - `/aias configure-providers` — AI-assisted provider configuration with MCP discovery (generates referenced files in `aias-config/providers/<provider_id>/`)
 
 Short aliases: `gen` for `generate`, `gen -s` for `generate --shortcuts`.
@@ -55,6 +56,7 @@ Usage notes:
 | `new --stack-fragment` | Chat answers (fragment type A/B/C, details) | `readme-output-contract.md` § Fragment Structure Options |
 | `generate` | None (invokes generator). With `--shortcuts`: reads `binding.generation.tools` from stack profile. Optional `--tools <csv>` overrides binding. | — |
 | `health` | None (runs checks) | — |
+| `refresh-context` | `RHOAIAS.md` + knowledge provider or filesystem/git log | `readme-project-context.md` |
 | `configure-providers` | Provider category selection + MCP connection | `readme-provider-config.md`, `readme-tracker-field-mapping.md`, `readme-knowledge-publishing-config.md`, `readme-tracker-status-mapping.md` |
 
 ---
@@ -76,6 +78,18 @@ Usage notes:
   6. **Generation** — invoke generator with `--shortcuts`
 
   > **Provider configuration** is handled separately via `new --provider` (skeleton) or `/aias configure-providers` (AI-assisted discovery with MCP). Run after `init` when you need tracker, knowledge, design, or VCS integration.
+
+- **Refresh context**: The `refresh-context` subcommand analyzes project changes since `RHOAIAS.md` was last modified and proposes section-level updates. Flow:
+  1. Read `RHOAIAS.md` and parse its sections against the mandatory structure from `readme-project-context.md`.
+  2. Attempt to resolve knowledge provider from `aias-config/providers/knowledge-config.md`.
+  3. **If knowledge provider is available**: search for published plans (`technical.plan.md`, `delta.publish.md`) with `completed` date after `RHOAIAS.md`'s last modification. Extract structural changes (new modules, dependencies, pattern shifts).
+  4. **If knowledge provider is not available**: fire a gate:
+     - `filesystem` — "Analyze directory tree + dependency manifests vs RHOAIAS.md"
+     - `gitlog` — "Analyze `git log` for structural changes since last RHOAIAS.md update"
+     - `cancel` — "Abort"
+  5. Compare detected changes against each RHOAIAS.md section. Propose diffs only for sections with detected drift.
+  6. Fire approval gate before writing. Present the proposed changes per section and let the user approve, adjust, or reject.
+  7. Write approved changes to `RHOAIAS.md`. The agent MUST NOT write without gate approval.
 
 ---
 
