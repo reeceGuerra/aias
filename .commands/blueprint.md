@@ -55,7 +55,7 @@ Context enrichment requirements:
 
 Rules:
 - All inputs must be explicit.
-- If critical information is missing, ask before proceeding (see `@planning` INTERACTIVE QUESTIONING for priority rules).
+- If critical information is missing, fire an AskQuestion gate before proceeding (see `@planning` INTERACTIVE QUESTIONING for priority rules). When `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md`.
 
 ---
 
