@@ -189,7 +189,7 @@ Follow the **rho-aias** skill loading protocol to resolve TASK_DIR and load all 
 - `status.md` set to `completed`.
 - No further Phase 5c sync needed (already done in Step 1).
 
-### Phase 6: No Tracker Transition
+### Phase 6 — Tracker Boundary (No Transition)
 
 `/publish` does NOT trigger a tracker status transition. It only posts an optional closure comment through the resolved tracker provider. Final transition to `DONE` remains Product's responsibility.
 
