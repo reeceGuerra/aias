@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are executing an implementation plan increment by increment, reading plan artifacts from the task directory. This command orchestrates a mandatory protocol: **read → analyze → understand → execute → feedback gate → next**. It ensures the developer has full visibility and control at every step.
 
@@ -148,9 +148,9 @@ Analyze the plan structure and the current codebase state. Report:
 6. **Governance resolution** — Read `classification` from `status.md` and `## Governance` section from `increments.plan.md`. Determine effective governance per the resolution flowchart:
    1. If `increments.plan.md` contains a `## Governance` section with a custom gate at a trigger point → custom gate takes **precedence** at that trigger point.
    2. Else, apply the classification baseline from `readme-commands.md`:
-      - **Type A:** Feedback after each increment.
-      - **Type B:** Feedback after each increment.
-      - **Type C:** Approval gate before Increment 1; Feedback after each.
+      - **Minor:** Feedback after each increment.
+      - **Standard:** Feedback after each increment.
+      - **Critical:** Approval gate before Increment 1; Feedback after each.
    3. Else (legacy — `status.md` has no `classification` field): Feedback after each increment.
 
 ```
@@ -217,11 +217,11 @@ Present execution readiness in chat:
 
 **Trigger conditions (in precedence order):**
 1. Custom gate at trigger "before Increment 1" in `## Governance` → fire the custom gate via AskQuestion (takes precedence).
-2. Classification C baseline → fire this Approval gate.
-3. Classification A/B baseline or legacy → skip (no approval needed).
+2. Classification Critical baseline → fire this Approval gate.
+3. Classification Minor/Standard baseline or legacy → skip (no approval needed).
 
-**AskQuestion (baseline Type C):**
-- **Prompt:** "Classification C — pre-implementation approval required. Approve execution of <count> increments?"
+**AskQuestion (baseline Critical):**
+- **Prompt:** "Classification Critical — pre-implementation approval required. Approve execution of <count> increments?"
 - **Options:**
   - `approve`: "Approve and begin execution"
   - `reject`: "Reject — return to planning"
@@ -290,8 +290,8 @@ For each increment:
 **Resolution flowchart:**
 1. Check `increments.plan.md` `## Governance` for custom gate at trigger "after Increment N" → fire custom gate via AskQuestion (takes precedence at this trigger point).
 2. Else, apply classification baseline:
-   - **Type A / B:** Fire this Feedback gate.
-   - **Type C:** Fire this Feedback gate (Type C pre-implementation approval already handled in Phase 3).
+   - **Minor / Standard:** Fire this Feedback gate.
+   - **Critical:** Fire this Feedback gate (Critical pre-implementation approval already handled in Phase 3).
 3. Else (legacy — no `classification` in `status.md`): Fire this Feedback gate.
 
 **Context output:**
