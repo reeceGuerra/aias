@@ -1,5 +1,8 @@
 # Tracker Field Mapping Contract — Cursor Configuration System (v1.0)
 
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
+
 This document defines the canonical contract for tracker field mapping artifacts used by provider-specific tracker integrations.
 
 It exists to:
@@ -28,7 +31,7 @@ Legacy location (deprecated in v7.5):
 
 - `aias/.skills/<provider-skill>/jira-field-mapping.md`
 
-The active file must be referenced by `field_mapping_source` in `aias-config/providers/tracker-config.md` and listed in `skill_binding.resource_files`.
+The active file MUST be referenced by `field_mapping_source` in `aias-config/providers/tracker-config.md` and listed in `skill_binding.resource_files`.
 
 ---
 
@@ -46,13 +49,13 @@ When runtime metadata and the mapping document diverge, the agent MUST use runti
 
 ## Mandatory Sections (Order)
 
-Each field mapping file must contain these sections in this exact order:
+Each field mapping file MUST contain these sections in this exact order:
 
 1. `Precedence Rule`
 2. Issue Type Sections (one per supported issue type)
 3. `Format Rules for MCP Writes`
 
-Each Issue Type Section must contain:
+Each Issue Type Section MUST contain:
 
 1. `Traceability` (table mapping command output to provider fields)
 2. `Mapping Rules` (field-specific constraints)
@@ -64,14 +67,14 @@ Each Issue Type Section must contain:
 
 ### Issue Type Sections
 
-Each supported issue type must have its own section with:
+Each supported issue type MUST have its own section with:
 
 - Issue type name and ID (e.g., `Story (issuetype.id: 10005)`)
 - A traceability table mapping from command outputs to provider fields
 
 ### Traceability Table
 
-Each traceability table must include these columns at minimum:
+Each traceability table MUST include these columns at minimum:
 
 | Column | Required | Description |
 |---|---|---|
@@ -94,7 +97,7 @@ The format value is the **pre-resolved default** for that field. Runtime metadat
 
 ### Field Catalog
 
-Each issue type section must include a field catalog with:
+Each issue type section MUST include a field catalog with:
 
 | Column | Required | Description |
 |---|---|---|
@@ -103,11 +106,11 @@ Each issue type section must include a field catalog with:
 | Schema | yes | Field type (e.g., `string`, `option`, `array`) |
 | Format (API/MCP) | yes | Deterministic format for API writes |
 
-For categorical fields (schema: `option`), the mapping must include an option catalog with ID-to-value mappings.
+For categorical fields (schema: `option`), the mapping MUST include an option catalog with ID-to-value mappings.
 
 ### Mapping Rules
 
-Each issue type section must include explicit rules governing:
+Each issue type section MUST include explicit rules governing:
 
 - Which command owns each field
 - Merge strategy for fields with shared ownership
@@ -117,7 +120,7 @@ Each issue type section must include explicit rules governing:
 
 ## Command Push Behavior
 
-The mapping must declare which commands write to which fields:
+The mapping MUST declare which commands write to which fields:
 
 | Command | Write behavior | Preflight required |
 |---|---|---|
@@ -130,7 +133,7 @@ Commands that only publish comments (e.g., `/brief`) are excluded from the field
 
 ## Format Rules for MCP Writes
 
-The mapping must include a section that defines the deterministic format resolution strategy:
+The mapping MUST include a section that defines the deterministic format resolution strategy:
 
 1. For each target field, resolve `content_format` using the Precedence Rule.
 2. Build a field write plan with resolved formats before any write operation.
@@ -148,7 +151,7 @@ When resolving field mapping configuration:
 - If a target field key is not found in the mapping: use runtime metadata if available, otherwise abort.
 - If format resolution yields no deterministic value: abort dependent write operation.
 
-Error response must include:
+Error response MUST include:
 
 - provider
 - field_mapping_source path
