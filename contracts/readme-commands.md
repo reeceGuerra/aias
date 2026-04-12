@@ -1,4 +1,6 @@
-# Cursor Commands – System Contract (v6)
+# Cursor Commands – System Contract (v6.0)
+
+> **Keyword convention**: This contract defines and uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY). See section "RFC-2119 Keyword Policy" below for definitions.
 
 This document defines the **canonical contract** for all Cursor commands used in this workspace system.
 
@@ -750,7 +752,7 @@ Commands that predate this version continue to function. The Governance section 
 - Each command must declare its category in **Identity**
 - Output format decisions must be system-wide, not ad-hoc
 - When in doubt, prefer explicitness over brevity
-- Artifact-producing commands must follow the **rho-aias** skill loading protocol
+- Artifact-producing commands MUST follow the **rho-aias** skill loading protocol
 - Commands must declare their skill references in the Identity section
 
 This document is the **source of truth** for command structure.
