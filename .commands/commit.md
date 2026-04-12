@@ -185,8 +185,35 @@ Present warning in chat:
    - Select commit TYPE.
    - Generate commit message.
 6. **Documentation awareness**: scan the planned changes for modifications to data models, API contracts, dependencies, configuration, or installation-related files. If detected, include a non-blocking documentation reminder in the output (see Output Contract).
+7. **RHOAIAS freshness check**: if TASK_DIR is set and `status.md` has `rhoaias_update: required`:
+   - Check if `RHOAIAS.md` is modified in `git status` (staged or unstaged). If yes → auto-set `rhoaias_update: done` in `status.md`, no gate.
+   - If `RHOAIAS.md` is not modified → fire **Gate: RHOAIAS Context Update**.
+   - If `rhoaias_update` is `deferred`, `done`, `skipped`, `null`, or absent → no action.
 
 If any step fails, STOP before execution.
+
+#### Gate: RHOAIAS Context Update
+
+**Type:** Confirmation
+**Fires:** Phase 1 step 7, **once per task** — only when `rhoaias_update: required` (not `deferred`).
+**Skippable:** Yes.
+
+**Context output:**
+"RHOAIAS.md update was flagged by `/blueprint` — you should update it before creating a PR. Use `/aias refresh-context` or edit manually."
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "RHOAIAS.md update is pending. Stop to update, or continue committing?"
+- **Options:**
+  - `stop`: "Stop committing — I'll update RHOAIAS.md first"
+  - `continue`: "Continue — I'll handle it later"
+- **allow_multiple:** false
+
+**On response:**
+- `stop` → STOP command. User updates RHOAIAS.md and re-invokes `/commit`.
+- `continue` → Set `rhoaias_update: deferred` in `status.md`. Proceed with Phase 1 step 3+. Subsequent `/commit` invocations see `deferred` and skip the gate silently.
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 ### Phase 2 — Execute (Skipped in Planning Mode)
 
