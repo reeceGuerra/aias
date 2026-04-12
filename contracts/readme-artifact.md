@@ -28,7 +28,7 @@ The **`rho-aias` skill** (`aias/.skills/rho-aias/`) is the single source of trut
 | Closed artifact catalog (types, suffixes, producers) | `SKILL.md` — ARTIFACT CATALOG |
 | Directory structure and discovery rules | `SKILL.md` — Discovery rules |
 | Loading protocol (7 phases) | `SKILL.md` — LOADING PROTOCOL |
-| Plan Classification (A/B/C) | `SKILL.md` — CORE RULES |
+| Plan Classification (Minor/Standard/Critical) | `SKILL.md` — CORE RULES |
 | Per-mode artifact requirements | `reference.md` — Per-Mode Artifact Requirements |
 | Loading order | `reference.md` — Loading Order |
 | Writing rules | `reference.md` — Writing Rules |
