@@ -100,6 +100,11 @@ COMMIT SUMMARY:
   Tracker: <in_review (verified) | no open PR | no ticket in context>
 ```
 
+STATUS UPDATE (Phase 5 — after commits, when TASK_DIR is set):
+1. Add `commit` to `completed_steps` in `status.md`.
+2. Set `current_step` to `pr`.
+3. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
+
 TRACKER SYNC (Phase 6 — after commits, execution mode only)
 - After all commits are done, resolve VCS provider from `aias-config/providers/vcs-config.md`.
 - Detect if there is an open PR for the current branch via the resolved VCS skill.
