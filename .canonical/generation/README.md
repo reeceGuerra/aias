@@ -48,7 +48,7 @@ Before any file is generated, the script runs 6 sequential validation gates that
 | **G0** | Infrastructure | Canonical sources (`base-rule.md`, `output-contract.md`) exist and contain a `` ```markdown `` code block. Fragment file exists. All 9 canonical mode templates exist. |
 | **G1** | Profile Discovery | `stack-profile.md` exists at repo root. Profile is readable and parses into non-empty bindings. `generation.stack_id` is present and `generation.mode_output_dir` is set to `aias-config/modes`. |
 | **G2** | Mode Binding Completeness | For every profile × mode, the 4 frontmatter keys (`description`, `model`, `color`, `globs`) are present and non-empty. |
-| **G3** | Rule Binding Completeness | For every discovered workspace: all required base rule keys (9) and output contract keys (4) resolve (workspace → shared → platform fallback). `profile` binding is present. |
+| **G3** | Rule Binding Completeness | For every discovered workspace: all required base rule keys (10) and output contract keys (4) resolve (workspace → shared → platform fallback). `profile` binding is present. |
 | **G4** | Fragment Validation | `stack-fragment.md` exists at repo root, is non-empty, and contains at least one UPPERCASE section header. |
 | **G5** | Output Directory | `aias-config/rules/` and `aias-config/modes/` exist or can be created. |
 
@@ -103,6 +103,10 @@ All 9 modes (`planning`, `dev`, `qa`, `debug`, `review`, `product`, `integration
    - **Codex**: `.md` → path reference (commands in `.codex/commands/`, skills in `.agents/skills/`)
 
 Shortcut content is always a path reference to the canonical source — never duplicated content.
+
+## Prerequisites
+
+- **Python 3.10+** (stdlib only, no third-party dependencies). The CLI validates the version at startup and exits with a clear error if the requirement is not met.
 
 ## Run instructions
 
