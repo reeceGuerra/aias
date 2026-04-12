@@ -104,6 +104,8 @@ Provide **3–5 short questions** (multiple choice or short answer) that check:
 
 **Do NOT provide answers.** Present only the questions and tell the user to respond. Provide the answer key and feedback only after the user submits their answers.
 
+**Interactive mechanism:** Quiz questions SHOULD use `AskQuestion` when the runtime exposes it, presenting each question as a Decision gate with answer options. When `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` as fallback. This is a SHOULD (not MUST) because quiz interaction is pedagogical, not governance — informal chat responses remain acceptable.
+
 ---
 
 ## 7. Non-Goals / Forbidden Actions
