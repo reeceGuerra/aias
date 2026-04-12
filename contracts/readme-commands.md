@@ -48,7 +48,7 @@ This exception does **not** authorize open-ended command autonomy. It exists onl
 
 All commands belong to **exactly one** category.
 
-### Type A — Chat-Only Commands
+### Advisory — Chat-Only Commands
 
 Characteristics:
 - Output is presented exclusively in the chat response
@@ -70,7 +70,7 @@ Examples:
 
 ---
 
-### Type B — Procedural / Execution Commands
+### Operative — Procedural / Execution Commands
 
 Characteristics:
 - May write artifacts to TASK_DIR
@@ -102,8 +102,8 @@ Understanding when to use a mode rule vs a command is critical for maintaining a
 - Step-by-step procedures and workflows
 - Templates and output formats
 - Specific data transformations
-- Execution of external tools (Type B)
-- Structured output generation (Type A)
+- Execution of external tools (Operative)
+- Structured output generation (Advisory)
 
 ✅ **Procedural details:**
 - "Generate a brief with these exact sections: Problem, Approach, Risks, DoD"
@@ -141,7 +141,7 @@ The separation enables a reliable **two-message workflow**:
 
 ### Examples by Command Type
 
-#### Type A Commands (Chat-Only)
+#### Advisory Commands (Chat-Only)
 
 **Workflow:**
 1. User asks about a workflow profile or framework concept
@@ -152,7 +152,7 @@ The separation enables a reliable **two-message workflow**:
 - **Command (`/guide`, `/explain`):** Reads reference material and presents information in chat — no files written, no state changed
 - **Command (`/peer-review`):** Reads PR context through the configured VCS provider, then returns findings/snippets in chat — no files written, no remote mutation
 
-#### Type B Commands (Procedural / Execution)
+#### Operative Commands (Procedural / Execution)
 
 **Workflow:**
 1. `@planning` → Provides raw planning data (requirements, risks, approach)
@@ -162,7 +162,7 @@ The separation enables a reliable **two-message workflow**:
 - **Mode (`planning.mdc`):** "Think about requirements, risks, and edge cases"
 - **Command (`/blueprint`):** "Write `technical.plan.md`, `increments.plan.md`, etc. to TASK_DIR, update status, sync"
 
-**Alternative Workflow (Type B with direct execution):**
+**Alternative Workflow (Operative with direct execution):**
 1. Chat context → User provides explicit intent
 2. `/commit` → Stages files, generates commit message, executes `git commit`, verifies tracker review state if PR is open
 
@@ -199,7 +199,7 @@ Describe **what this command is** and **what it is responsible for**.
 This section **must include** a formal declaration of the command category.
 
 **Required subfield:**
-- `Command Type:` `Type A` | `Type B`
+- `Command Type:` `Advisory` | `Operative`
 
 Purpose:
 - Anchor the ontological role of the command
@@ -300,7 +300,7 @@ Examples:
 - Do not write code
 - Do not modify files
 - Do not suggest alternatives
-- Do not write files or mutate external systems (for Type A)
+- Do not write files or mutate external systems (for Advisory commands)
 
 Purpose:
 - Reduce overreach
@@ -497,7 +497,7 @@ All 25 commands are categorized by implementation priority for gate standardizat
 | Command | Required Gates | Notes |
 |---|---|---|
 | `/blueprint` | Comprehension (Confirmation, `MUST ... UNLESS --fast`), Checkpoint (Confirmation, `MUST ... UNLESS --fast`), Preview (Confirmation, always fires). Add governance output logic (producer rules). | Governance producer. Only structural gates. |
-| `/implement` | Understand (Confirmation, always). Pre-Implementation Approval (Approval, Type C baseline or custom). Inter-Increment Feedback (Feedback, Type B/C baseline or custom). Increment-specific custom gates (per governance schema). | Governance consumer. Plan-driven resolution. |
+| `/implement` | Understand (Confirmation, always). Pre-Implementation Approval (Approval, Critical baseline or custom). Inter-Increment Feedback (Feedback, Standard/Critical baseline or custom). Increment-specific custom gates (per governance schema). | Governance consumer. Plan-driven resolution. |
 
 #### P1 — High-risk, zero gates (new gates)
 
@@ -535,11 +535,11 @@ All 25 commands are categorized by implementation priority for gate standardizat
 | `/run` | Enforcement language sweep only. | Low-risk (local simulator). |
 | `/test` | Enforcement language sweep only. | Low-risk (local test execution). |
 | `/spm` | Enforcement language sweep only. | Has `--dry-run` safety. |
-| `/guide` | Enforcement language sweep only. | Type A, chat-only. |
-| `/explain` | Enforcement language sweep only. | Type A, chat-only. |
-| `/self-review` | Enforcement language sweep only. | Type A, chat-only local review. |
-| `/peer-review` | Enforcement language sweep only. | Type A, read-only VCS review. |
-| `/handoff` | Enforcement language sweep only. | Type A, operational handoff formatting. |
+| `/guide` | Enforcement language sweep only. | Advisory, chat-only. |
+| `/explain` | Enforcement language sweep only. | Advisory, chat-only. |
+| `/self-review` | Enforcement language sweep only. | Advisory, chat-only local review. |
+| `/peer-review` | Enforcement language sweep only. | Advisory, read-only VCS review. |
+| `/handoff` | Enforcement language sweep only. | Advisory, operational handoff formatting. |
 
 ---
 
@@ -582,9 +582,9 @@ Minimum governance requirements per classification. These are **non-reducible** 
 
 | Classification | Structural Gates (always) | Pre-Implementation Gate | Inter-Increment Gate | Custom Governance |
 |---|---|---|---|---|
-| **Type A** (Local/Low-Risk) | Understand (Confirmation) | None | None | MUST NOT be present |
-| **Type B** (Medium-Impact) | Understand (Confirmation) | None | Feedback after each increment | MAY be present if risk warrants |
-| **Type C** (Critical/Strategic) | Understand (Confirmation) | Approval before first increment | Feedback after each increment | MUST be present with ≥1 Approval gate |
+| **Minor** (Local/Low-Risk) | Understand (Confirmation) | None | None | MUST NOT be present |
+| **Standard** (Medium-Impact) | Understand (Confirmation) | None | Feedback after each increment | MAY be present if risk warrants |
+| **Critical** (Critical/Strategic) | Understand (Confirmation) | Approval before first increment | Feedback after each increment | MUST be present with ≥1 Approval gate |
 
 **Notes:**
 - "Understand" is structural (part of `/implement` Phase 3) and fires for all classifications. It verifies comprehension, not governance.
@@ -597,9 +597,9 @@ Minimum governance requirements per classification. These are **non-reducible** 
 
 | Classification | Producer Behavior |
 |---|---|
-| **Type A** | MUST NOT generate a `## Governance` section. If custom gates are needed, MUST escalate classification to B first. |
-| **Type B** | MAY generate a `## Governance` section when risk analysis warrants gates beyond the baseline (risk severity, external dependencies, cross-module impact). |
-| **Type C** | MUST generate a `## Governance` section with at least 1 Approval gate at the highest-risk increment. |
+| **Minor** | MUST NOT generate a `## Governance` section. If custom gates are needed, MUST escalate classification to Standard first. |
+| **Standard** | MAY generate a `## Governance` section when risk analysis warrants gates beyond the baseline (risk severity, external dependencies, cross-module impact). |
+| **Critical** | MUST generate a `## Governance` section with at least 1 Approval gate at the highest-risk increment. |
 
 **`--fast` interaction:** `/blueprint --fast` skips Comprehension and Checkpoint structural gates but does NOT affect classification assignment or governance output.
 
@@ -609,9 +609,9 @@ Minimum governance requirements per classification. These are **non-reducible** 
 
 ```
 Step 1: READ classification from status.md
-  ├── classification = A → Baseline A (no inter-increment gates)
-  ├── classification = B → Baseline B (Feedback after each increment)
-  ├── classification = C → Baseline C (Approval before first + Feedback after each)
+  ├── classification = minor → Baseline Minor (no inter-increment gates)
+  ├── classification = standard → Baseline Standard (Feedback after each increment)
+  ├── classification = critical → Baseline Critical (Approval before first + Feedback after each)
   └── classification = null (legacy) → GOTO Step 3
 
 Step 2: CHECK for ## Governance section in increments.plan.md
@@ -621,9 +621,9 @@ Step 2: CHECK for ## Governance section in increments.plan.md
   └── Section absent → Fire only baseline gates per classification
 
 Step 3: LEGACY FALLBACK (no classification in status.md)
-  → Treat as Type B: Feedback gate after each increment
+  → Treat as Standard: Feedback gate after each increment
   → Ignore any ## Governance section
-  → Log warning: "No classification found. Using legacy fallback (Type B behavior)."
+  → Log warning: "No classification found. Using legacy fallback (Standard behavior)."
 ```
 
 #### Precedence Rule
@@ -646,9 +646,9 @@ Classification changes from `/charter` auto-propagate because `/implement` reads
 
 | Check | Condition | Result |
 |---|---|---|
-| Type C without governance | `classification = C` AND no `## Governance` section | **Gap**: "Type C requires a Governance section with ≥1 Approval gate." |
-| Type A with governance | `classification = A` AND `## Governance` section exists | **Gap**: "Type A MUST NOT have a Governance section. Escalate classification or remove." |
-| Type C without approval | `classification = C` AND `## Governance` exists but zero Approval gates | **Gap**: "Type C Governance requires ≥1 Approval gate." |
+| Critical without governance | `classification = critical` AND no `## Governance` section | **Gap**: "Critical requires a Governance section with ≥1 Approval gate." |
+| Minor with governance | `classification = minor` AND `## Governance` section exists | **Gap**: "Minor MUST NOT have a Governance section. Escalate classification or remove." |
+| Critical without approval | `classification = critical` AND `## Governance` exists but zero Approval gates | **Gap**: "Critical Governance requires ≥1 Approval gate." |
 | Missing classification | `classification = null` | **Gap** (existing check): "Classification not assigned." |
 
 ---
@@ -670,7 +670,7 @@ When both are present, the sequence is: Context → Artifact Preview gate → Wr
 
 When `/implement` encounters a plan without classification (created before governance):
 1. Finds `classification: null` in `status.md`.
-2. Enters legacy fallback: Type B baseline (Feedback after each increment).
+2. Enters legacy fallback: Standard baseline (Feedback after each increment).
 3. Ignores any `## Governance` section.
 4. Logs warning in chat.
 
@@ -692,7 +692,7 @@ The `/pr` command includes a Plan Delta section comparing planned artifacts vs a
 
 ### `/publish` Command Type
 
-`/publish` is a Type B command that performs reconciliation and closure operations: reconciliation sync through the resolved knowledge provider, Plan Delta generation, and task completion. It is **mode-agnostic** — invocable from any chat session.
+`/publish` is an Operative command that performs reconciliation and closure operations: reconciliation sync through the resolved knowledge provider, Plan Delta generation, and task completion. It is **mode-agnostic** — invocable from any chat session.
 
 ### Tracker Sync Convention
 
@@ -708,21 +708,13 @@ Commands that reference skills MUST declare them in the Identity section (Sectio
 
 ### `/assessment` Command
 
-`/assessment` is a Type B command that evaluates fix feasibility. It bridges `/fix` output to `/blueprint` input in bugfix workflows by filtering error mechanisms and solutions against codebase evidence. Produces `feasibility.assessment.md`.
+`/assessment` is an Operative command that evaluates fix feasibility. It bridges `/fix` output to `/blueprint` input in bugfix workflows by filtering error mechanisms and solutions against codebase evidence. Produces `feasibility.assessment.md`.
 
 ### Plan Classification
 
-`/blueprint` MUST assign a Plan Classification (`A`, `B`, or `C`) in `status.md`. `/validate-plan` MUST verify the classification is present. `/charter` MAY escalate the classification (A→B, B→C) but MUST NOT downgrade it. Classification determines closure requirements:
-- **Type A:** `/report` or `/brief` to the resolved tracker provider
-- **Type B/C:** `/publish` to the resolved knowledge provider
-
-### Type A Terminology
-
-`Type A` is overloaded in the framework and MUST be interpreted by scope:
-- **Command Type A** = chat-only command behavior under **Command Categories**
-- **Plan Classification Type A** = local / low-risk lifecycle classification under **Plan Classification**
-
-Documentation SHOULD name the surrounding concept explicitly when ambiguity is possible.
+`/blueprint` MUST assign a Plan Classification (`minor`, `standard`, or `critical`) in `status.md`. `/validate-plan` MUST verify the classification is present. `/charter` MAY escalate the classification (minor→standard, standard→critical) but MUST NOT downgrade it. Classification determines closure requirements:
+- **Minor:** `/report` or `/brief` to the resolved tracker provider
+- **Standard/Critical:** `/publish` to the resolved knowledge provider
 
 ### Structured Prompt — Artifact Reference Fields
 
