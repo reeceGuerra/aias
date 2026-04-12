@@ -1,5 +1,8 @@
 # Provider Config Contract — Cursor Configuration System (v2.1)
 
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
+
 This document defines the canonical contract for provider configuration artifacts used by the service abstraction layer.
 
 It exists to:
@@ -44,14 +47,14 @@ A service config is not a mode, command, skill, or runtime artifact.
 
 ## File Location and Naming
 
-Service config files must live under:
+Service config files MUST live under:
 
 - `aias-config/providers/knowledge-config.md`
 - `aias-config/providers/tracker-config.md`
 - `aias-config/providers/design-config.md`
 - `aias-config/providers/vcs-config.md`
 
-Future categories must follow:
+Future categories MUST follow:
 
 - `aias-config/providers/<category>-config.md`
 
@@ -94,7 +97,7 @@ Baseline providers are template defaults only. They are not runtime fallbacks.
 
 ## Mandatory Section Order (Per File)
 
-Each service config file must include these sections in this order:
+Each service config file MUST include these sections in this order:
 
 1. `Purpose`
 2. `Active provider`
@@ -107,7 +110,7 @@ Each service config file must include these sections in this order:
 
 ## Normative Schema
 
-All service configs must conform to this schema model.
+All service configs MUST conform to this schema model.
 
 ### Root Keys
 
@@ -116,25 +119,25 @@ All service configs must conform to this schema model.
 | `service_category` | string | yes | enum: `knowledge|tracker|design|vcs` |
 | `active_provider` | string | yes | pattern: `^[a-z][a-z0-9-]{1,62}$` |
 | `provider_mode` | string | no | enum: `mcp|api|manual`; default `mcp` |
-| `skill_binding` | object | yes | must include `skill`, `capability` |
-| `providers` | object map | yes | keyset must include `active_provider` |
+| `skill_binding` | object | yes | MUST include `skill`, `capability` |
+| `providers` | object map | yes | keyset MUST include `active_provider` |
 
 ### `skill_binding` Keys
 
 | Key | Type | Required | Constraints |
 |---|---|---|---|
-| `skill` | string | yes | pattern: `^[a-z0-9-]{2,64}$`; must be resolvable |
+| `skill` | string | yes | pattern: `^[a-z0-9-]{2,64}$`; MUST be resolvable |
 | `capability` | string | yes | pattern: `^[a-z][a-z0-9-]{1,64}$` |
-| `resource_files` | string[] | conditional | Dependency manifest: declarative list of external files the skill needs for this category. Required for categories with `*_source` keys (`tracker`, `knowledge`). Not applicable for `design`, `vcs`. Each item pattern: `^[A-Za-z0-9._/-]+$`. Every `*_source` path must also appear in `resource_files`. |
+| `resource_files` | string[] | conditional | Dependency manifest: declarative list of external files the skill needs for this category. Required for categories with `*_source` keys (`tracker`, `knowledge`). Not applicable for `design`, `vcs`. Each item pattern: `^[A-Za-z0-9._/-]+$`. Every `*_source` path MUST also appear in `resource_files`. |
 
 ### `providers.<provider_id>` Minimum Keys
 
 | Key | Type | Required | Constraints |
 |---|---|---|---|
-| `enabled` | boolean | yes | active provider must be `true` |
+| `enabled` | boolean | yes | active provider MUST be `true` |
 | `mcp_server` | string | conditional | required when `provider_mode=mcp` |
 
-Additional keys are category/provider-specific and allowed, but must not violate root invariants.
+Additional keys are category/provider-specific and allowed, but MUST NOT violate root invariants.
 
 ---
 
@@ -152,7 +155,7 @@ Required provider keys:
 Required provider keys:
 - `field_mapping_source` (string path)
 - `status_mapping_source` (string path)
-- `status_mapping_source` must point to a file conforming to `aias/contracts/readme-tracker-status-mapping.md`
+- `status_mapping_source` MUST point to a file conforming to `aias/contracts/readme-tracker-status-mapping.md`
 
 ### `design` (`figma`)
 
@@ -264,57 +267,57 @@ A service config is valid only if all rules below pass:
 - `.cursor/skills/<skill>/`
 - `~/.cursor/skills/<skill>/`
 
-If unresolved, consumers must abort the dependent operation and request provider configuration correction.
+If unresolved, consumers MUST abort the dependent operation and request provider configuration correction.
 
 ### Tracker Field Mapping Rule
 
 When `service_category=tracker`:
 
 - `providers.<active_provider>.field_mapping_source` is mandatory for write commands (`/enrich`, `/report`).
-- The referenced file must exist.
-- The referenced file must follow `aias/contracts/readme-tracker-field-mapping.md`.
-- The path must also appear in `skill_binding.resource_files`.
+- The referenced file MUST exist.
+- The referenced file MUST follow `aias/contracts/readme-tracker-field-mapping.md`.
+- The path MUST also appear in `skill_binding.resource_files`.
 
-If any condition fails, consumers must abort dependent write operations with `MISSING_FIELD_MAPPING`.
+If any condition fails, consumers MUST abort dependent write operations with `MISSING_FIELD_MAPPING`.
 
 ### Knowledge Config Source Rule
 
 When `service_category=knowledge`:
 
 - `providers.<active_provider>.config_source` is mandatory.
-- The referenced file must exist.
-- The referenced file must follow `aias/contracts/readme-knowledge-publishing-config.md`.
-- The path must also appear in `skill_binding.resource_files`.
+- The referenced file MUST exist.
+- The referenced file MUST follow `aias/contracts/readme-knowledge-publishing-config.md`.
+- The path MUST also appear in `skill_binding.resource_files`.
 
-If any condition fails, consumers must abort dependent publishing operations with `MISSING_CONFIG_SOURCE`.
+If any condition fails, consumers MUST abort dependent publishing operations with `MISSING_CONFIG_SOURCE`.
 
 ### Resource Files Consistency Rule
 
 When `skill_binding.resource_files` is declared:
 
-- Every `*_source` key value in `providers.<active_provider>` must have its path listed in `resource_files`.
-- Every path in `resource_files` must point to an existing file.
+- Every `*_source` key value in `providers.<active_provider>` MUST have its path listed in `resource_files`.
+- Every path in `resource_files` MUST point to an existing file.
 - Paths pointing to `aias/.skills/` are valid but legacy (deprecated in v7.5).
 
-If any condition fails, consumers must report the inconsistency and request configuration correction.
+If any condition fails, consumers MUST report the inconsistency and request configuration correction.
 
 ### Tracker Status Mapping Rule
 
 When `service_category=tracker`:
 
 - `providers.<active_provider>.status_mapping_source` is mandatory.
-- The referenced file must exist.
-- The referenced file must follow `aias/contracts/readme-tracker-status-mapping.md`.
-- `command_triggers` in the referenced mapping must use only `slash + kebab-case`.
+- The referenced file MUST exist.
+- The referenced file MUST follow `aias/contracts/readme-tracker-status-mapping.md`.
+- `command_triggers` in the referenced mapping MUST use only `slash + kebab-case`.
 - Legacy trigger keys (for example `snake_case`) are invalid.
 
-If any condition fails, consumers must abort dependent tracker operations and request configuration correction.
+If any condition fails, consumers MUST abort dependent tracker operations and request configuration correction.
 
 ---
 
 ## Capability Compatibility Matrix
 
-The configured `skill_binding.capability` must be compatible with the service category.
+The configured `skill_binding.capability` MUST be compatible with the service category.
 
 | Category | Required capability set (minimum) |
 |---|---|
@@ -323,13 +326,13 @@ The configured `skill_binding.capability` must be compatible with the service ca
 | `design` | `design-context` |
 | `vcs` | `pull-request-and-branch` |
 
-If a custom provider uses different labels, the mapped capability must still satisfy the category intent above.
+If a custom provider uses different labels, the mapped capability MUST still satisfy the category intent above.
 
 ---
 
 ## Standard Failure Rules
 
-When resolution fails, consumers must use these normalized outcomes:
+When resolution fails, consumers MUST use these normalized outcomes:
 
 | Error code | Trigger condition | Mandatory behavior |
 |---|---|---|
@@ -341,13 +344,13 @@ When resolution fails, consumers must use these normalized outcomes:
 | `MISSING_FIELD_MAPPING` | `field_mapping_source` not found or non-conformant | Abort dependent write operation and request config fix |
 | `MISSING_CONFIG_SOURCE` | `config_source` not found or non-conformant | Abort dependent publishing operation and request config fix |
 
-Error messages should include: category, configured provider (if available), and reason code.
+Error messages SHOULD include: category, configured provider (if available), and reason code.
 
 ---
 
 ## Resolution and Precedence (Canonical Formulation)
 
-Consumers must use this canonical algorithm:
+Consumers MUST use this canonical algorithm:
 
 ```text
 resolveServiceOrAbort(category):
@@ -371,7 +374,7 @@ No alternate precedence source is allowed.
 
 ### Commands and modes
 
-Consumers with external services must:
+Consumers with external services MUST:
 
 - Declare required service configs as inputs/dependencies.
 - Resolve providers by category.
@@ -380,7 +383,7 @@ Consumers with external services must:
 
 ### Skills coordinating cross-service behavior
 
-Cross-service skills (for example `rho-aias`) must:
+Cross-service skills (for example `rho-aias`) MUST:
 
 - Resolve providers by category before service-dependent steps.
 - Preserve protocol ordering and semantics.
@@ -473,7 +476,7 @@ Problem: violates fail-fast and hides configuration defects.
 skill_binding:
   skill: custom-skill-that-does-not-exist
 ```
-Problem: invalid config must abort dependent service operations.
+Problem: invalid config MUST abort dependent service operations.
 
 ---
 
