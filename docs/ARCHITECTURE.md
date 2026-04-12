@@ -85,8 +85,8 @@ Commands define *how to execute*. Where modes shape reasoning, commands structur
 
 Two command types:
 
-- **Type A (chat-only)** — Produces structured output within the chat. No side effects, no file writes, and no external mutation. Read-only provider calls are allowed when the command contract says so. Examples: `/explain`, `/guide`, `/peer-review`, `/handoff`.
-- **Type B (procedural)** — May write artifacts to the task directory, call external services, or trigger multi-step workflows. Examples: `/blueprint`, `/implement`, `/publish`, `/commit`.
+- **Advisory (chat-only)** — Produces structured output within the chat. No side effects, no file writes, and no external mutation. Read-only provider calls are allowed when the command contract says so. Examples: `/explain`, `/guide`, `/peer-review`, `/handoff`.
+- **Operative (procedural)** — May write artifacts to the task directory, call external services, or trigger multi-step workflows. Examples: `/blueprint`, `/implement`, `/publish`, `/commit`.
 
 Commands are invoked within a mode context. The mode provides the reasoning; the command provides the structure. A command without a mode is syntax without semantics.
 
@@ -116,7 +116,7 @@ Contracts are the single source of truth for every artifact type in the framewor
 
 | Contract | Governs |
 |---|---|
-| `readme-commands.md` | Command definitions (Type A and Type B) |
+| `readme-commands.md` | Command definitions (Advisory and Operative) |
 | `readme-base-rule.md` | Base rules (invariant/parametrizable taxonomy) |
 | `readme-output-contract.md` | Output contract rules (build system fragments) |
 | `readme-mode-rule.md` | Mode rules (reasoning stance definitions) |
@@ -432,9 +432,9 @@ Plans are classified at creation time by `/blueprint` based on complexity:
 
 | Class | Scope | Typical artifacts |
 |---|---|---|
-| A | Small, single-increment | Plan only |
-| B | Medium, multi-increment | Plan + design |
-| C | Large, cross-system | Plan + design + charter |
+| Minor | Small, single-increment | Plan only |
+| Standard | Medium, multi-increment | Plan + design |
+| Critical | Large, cross-system | Plan + design + charter |
 
 Classification can be escalated by `/charter` but never downgraded. It is used only for governance (gates in `/implement`), not for publishing decisions. When `refinement_validated: true` in `status.md` (set by `/enrich` after team refinement), classification-derived governance gates are relaxed.
 
