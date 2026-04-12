@@ -1,5 +1,8 @@
 # Artifact Contract — Cursor Configuration System (v2)
 
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
+
 This document defines the **design contract** for task artifacts used in the rho-aias development architecture.
 
 It exists to:
@@ -150,9 +153,9 @@ For the human-written Structured Prompt, ergonomic aliases without underscores m
 
 ### Catalog Rules
 
-- The artifact catalog is **closed** — no new types may be invented by agents or commands
+- The artifact catalog is **closed** — new artifact types MUST NOT be invented by agents or commands
 - Adding a new artifact type requires updating `SKILL.md`, `reference.md`, `examples.md`, and this contract
-- Every artifact type must have: a unique suffix, a single producer command, and a clear purpose
+- Every artifact type MUST have: a unique suffix, a single producer command, and a clear purpose
 
 ---
 
