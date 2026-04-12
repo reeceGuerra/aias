@@ -115,9 +115,23 @@ Mappings MAY add provider-specific metadata, but MUST NOT alter these canonical 
 
 ## Boundary Rules (Mandatory)
 
-1. Framework never auto-transitions to `completed`.
-2. Framework never auto-transitions to `cancelled`.
+1. Framework MUST NOT auto-transition to `completed`.
+2. Framework MUST NOT auto-transition to `cancelled`.
 3. If provider status already matches target, transition is idempotent (no-op).
+
+### Terminal State Governance
+
+Terminal states (`completed`, `cancelled`) are **exclusively human decisions** — the framework MUST NOT execute, suggest, or automate transitions toward them, even optionally.
+
+**Rationale:**
+
+- **QA cycles can reject work.** A merged PR does not mean "done" — work may be bounced back after validation, regression testing, or stakeholder review. Equating merge with completion creates a false signal.
+- **Closure authority belongs to roles, not tools.** Product owners, QA leads, or Scrum masters accept delivery based on criteria the framework cannot evaluate (business acceptance, regulatory sign-off, user validation).
+- **Automation creates perverse incentives.** If the framework could close tickets, developers might optimize for "get the framework to mark it done" rather than "ensure the work is actually accepted."
+
+This boundary is by design, not a missing feature. The framework's responsibility ends at `in_review` (via `/pr`). Everything after that — acceptance, closure, cancellation — is a team governance decision.
+
+See also: `rho-aias/reference.md` § Tracker Mapping Resolution for operational enforcement.
 
 ---
 

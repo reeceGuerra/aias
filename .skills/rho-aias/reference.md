@@ -229,7 +229,7 @@ Important boundary:
 
 - The lifecycle below describes the internal task state stored in `status.md`.
 - Tracker-side transitions are resolved via `status_mapping_source` and are limited by tracker boundary rules.
-- The framework never auto-transitions tracker state to `completed`/`DONE` or `cancelled`.
+- **Terminal state governance:** The framework MUST NOT transition tracker state to `completed`/`DONE` or `cancelled` — these are exclusively human decisions owned by Product, QA, or Scrum leads. The framework's last automated tracker transition is `in_review` (via `/pr`). See `readme-tracker-status-mapping.md` § Terminal State Governance for the full rationale.
 
 ### Status lifecycle (6 states)
 
