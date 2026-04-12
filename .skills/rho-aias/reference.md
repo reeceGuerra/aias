@@ -180,6 +180,7 @@ tracker_status: <provider:pending_dor_label>
 completed_steps: []
 current_step: refinement
 refinement_validated: null
+rhoaias_update: null
 published: null
 completed: null
 artifacts:
@@ -188,6 +189,20 @@ artifacts:
 
 The `classification` field is `null` until `/blueprint` assigns it (`minor`, `standard`, or `critical`). See SKILL.md for classification criteria.
 The `refinement_validated` field is `null` initially; set to `true` by `/enrich` after successful publish, `false` if publish was skipped.
+
+### RHOAIAS.md Freshness Tracking
+
+The `rhoaias_update` field tracks whether `RHOAIAS.md` needs updating for the current task. Valid states:
+
+| State | Set by | Meaning |
+|-------|--------|---------|
+| `null` | `/blueprint` (or absent by default) | Task does not impact RHOAIAS.md, or field not yet evaluated |
+| `required` | `/blueprint` | Impact detected — RHOAIAS.md should be updated before PR |
+| `deferred` | `/commit` gate | User acknowledged the need but chose to continue; silent in subsequent commits |
+| `done` | Auto-detected by `/commit` or `/pr` | RHOAIAS.md was modified (present in `git status` or `git diff`) |
+| `skipped` | `/pr` gate | User consciously chose not to update |
+
+**Backward compatibility:** If the field is absent in an existing `status.md`, all commands MUST treat it as `null`. This field is not relevant to tracker sync and does not require an entry in `readme-tracker-field-mapping.md`.
 
 ### Governance Resolution (for `/implement`)
 
