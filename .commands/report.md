@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **validated bug RCA report** for tracker publication after the bug has been investigated and the fix has been validated. This command is the owner of the six RCA fields for bug workflows. It prefers structured tracker fields when the provider supports them and falls back to a structured tracker comment only when equivalent fields do not exist.
 

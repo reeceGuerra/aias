@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **planning and executing** Swift Package Manager operations.
 This command is responsible for interpreting user intent, generating a **complete, schema-compliant JSON plan**, executing `max-spm` with that plan, and formatting the result as a human-readable report.

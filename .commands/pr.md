@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **pull request description** for this repository using the configured VCS provider.
 This command is responsible for formatting validated implementation context into a review-ready PR description, including a Plan Delta section that compares planned artifacts against actual implementation. After PR creation, it triggers the configured tracker transition to review state.

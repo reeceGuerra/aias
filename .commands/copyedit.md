@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are performing **editorial copyediting** to improve the communicative quality of any document that contains natural language prose — excluding code and structured configuration files.
 

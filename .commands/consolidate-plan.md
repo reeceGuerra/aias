@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **consolidating** an implementation plan by working through gaps identified by `/validate-plan`, one at a time, using the plan artifacts in the task directory.
 This command is responsible for guiding a strict workflow: one persisted validation todo → one proposal → refinement until the user agrees → update the relevant artifact(s) in TASK_DIR only when explicitly instructed. For gaps touching DoR/DoD artifacts, the Amendment gate is used instead of the Update Approval gate.

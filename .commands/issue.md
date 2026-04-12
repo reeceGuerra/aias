@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **bug report** (issue) to document defects found during QA.
 This command is responsible for transforming raw QA data from `@qa` into a structured, evidence-driven bug report written to the task directory. The report must be **ready for @debug** (repro, expected/actual, environment, severity) so the flow @qa → /issue → @debug is smooth. Content is observational only; there is **no "Possible Fix" section** (that is provided by @debug + /fix in another chat).

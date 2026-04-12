@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **log instrumentation plan** — a structured, copy-ready specification of every `Log` call that must be inserted into a codebase to trace the execution of one or more flows.
 This command is responsible for analyzing the target code, identifying every instrumentation point, producing an output that another agent (in `@dev` mode) can execute verbatim, and writing the trace plan to the task directory as `instrumentation.trace.md`.

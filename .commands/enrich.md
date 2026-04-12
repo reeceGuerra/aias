@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **analyzing, enriching, and refining** a task for autonomous development. This command reads tracker data for the provided task id via the resolved tracker provider, evaluates its completeness against a product and technical checklist, classifies the task shape for description formatting, generates missing content, writes the product analysis to the task directory, and can push a curated remote enrichment to the resolved tracker provider after confirmation. Additionally, it produces **Definition of Ready** (`dor.plan.md`) and **Definition of Done** (`dod.plan.md`) artifacts from a dedicated structuring phase, publishes all artifacts to the knowledge provider, and triggers the canonical tracker transition `pending_dor` -> `ready` when publishing succeeds.
 

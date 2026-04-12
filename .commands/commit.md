@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **staging and committing** modified files to git, **one file per commit**.
 This command is responsible for deterministically converting a validated working tree into a sequence of atomic commits with clear, file-scoped messages. It also detects open PRs for the current branch and verifies tracker review status through the configured provider.

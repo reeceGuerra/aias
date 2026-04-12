@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **debug analysis and fix plan** to guide implementation of bug fixes.
 This command is responsible for transforming raw debugging data from `@debug` (including any code/diffs suggested in chat) into a structured `analysis.fix.md` artifact in the task directory. That artifact is **context for @dev in another chat**, which can execute the fix. Optional: consume `report.issue.md` from TASK_DIR as repro context; include a "Validation" section.

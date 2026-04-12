@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **reconciling and formally closing** a task by performing a full sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is the **reconciliation + closure** command. Progressive publishing happens automatically during command execution via Phase 5c (unconditional). `/publish` exists as the final step to reconcile any artifacts that were not published during the workflow (e.g., DoR/DoD locally amended via the Amendment gate) and to formally close the task lifecycle with a delta and completion summary.
 

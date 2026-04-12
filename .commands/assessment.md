@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are evaluating the **feasibility of a fix proposal** by analyzing the error mechanisms and solutions from `analysis.fix.md`, filtering them against codebase evidence, and producing a concrete approach for planning. This command bridges the gap between debug analysis and planning: it ensures only validated mechanisms and viable solutions reach `/blueprint`.
 

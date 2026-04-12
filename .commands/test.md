@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **running tests** for a configured project via the `max-test` script.
 This command is responsible for resolving project configuration from `projects.json`, determining the test strategy (swiftpm or xcodebuild), constructing the CLI invocation, executing `max-test`, and presenting an execution summary.

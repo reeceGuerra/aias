@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are **building and launching** an iOS app on the Simulator via the `max-run` script.
 This command is responsible for resolving project and simulator configuration from `projects.json`, constructing the CLI invocation, executing `max-run`, and presenting an execution summary.

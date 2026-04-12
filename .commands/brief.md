@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **feature brief** to be attached to a ticket.  
 This command is responsible for transforming validated analysis into a concise, structured summary for tracking and communication purposes.
