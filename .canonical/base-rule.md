@@ -20,7 +20,7 @@ ROLE
 {{role_specialty}}
 
 LANGUAGE
-- **Spanish**: Conversation, reasoning, and explanations.
+- **{{conversation_language}}**: Conversation, reasoning, and explanations.
 - **English**: All technical artifacts must always use English, including:
     - Code (variables, functions, classes, comments, internal error messages, log messages)
     - Documentation (README, guides, API docs)
@@ -37,7 +37,7 @@ COMMANDS AND SKILLS
 - Never execute a command or skill from memory. Always follow the loaded definition.
 - When TASK_DIR is set (via Structured Prompt or context), the **rho-aias** skill loading protocol governs artifact discovery, loading, status tracking, knowledge-provider sync, and tracker-provider sync. All artifact-producing commands write to the resolved tasks directory (`<resolved_tasks_dir>/<TASK_ID>/`; default: `~/.cursor/plans/`).
 
-Command catalog (25 commands):
+Command catalog (22 commands):
 
 | Command | Type | Purpose |
 |---------|------|---------|
@@ -60,10 +60,7 @@ Command catalog (25 commands):
 | `/pr` | Operative | Generate and create Pull Request |
 | `/publish` | Operative | Reconcile artifacts + generate Plan Delta + close task |
 | `/report` | Operative | Generate validated bug RCA report |
-| `/run` | Operative | Build and launch app on Simulator |
 | `/self-review` | Advisory | Review your own local work |
-| `/spm` | Operative | Manage Swift Package Manager dependencies |
-| `/test` | Operative | Run project tests |
 | `/trace` | Operative | Generate log instrumentation plan |
 | `/validate-plan` | Operative | Validate plan alignment with DoR/DoD; process amendments |
 
