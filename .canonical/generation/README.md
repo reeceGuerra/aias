@@ -54,10 +54,12 @@ Before any file is generated, the script runs 6 sequential validation gates that
 
 ### Post-flight Validation (only with `--shortcuts`)
 
+Post-flight gates are **fatal**: if any G6/G7 check fails, the generator exits with code 1 (generation output is preserved but the process signals failure).
+
 | Gate | Name | What it checks |
 |---|---|---|
 | **G6** | Shortcut Consistency | Every canonical rule and mode has corresponding shortcuts for all supported tools (Cursor, Claude Code, Windsurf, GitHub Copilot, Codex). Commands validated for Cursor, Copilot, and Codex. Skills validated for Cursor, Claude Code, and Codex. |
-| **G7** | No Content Duplication | No shortcut file exceeds 300 bytes (shortcuts are path references, not content). Checked across all shortcut directories including `.codex/commands`, `.agents/skills`, `.cursor/skills`, `.claude/skills`. |
+| **G7** | No Content Duplication | No enriched text shortcut exceeds 500 bytes (symlinks are exempt). Aggregated files (`copilot-instructions.md`) must not exceed 1500 bytes. Checked across all shortcut directories including `.codex/commands`, `.agents/skills`, `.cursor/skills`, `.claude/skills`. |
 
 ## Generator behavior
 
@@ -65,14 +67,17 @@ Before any file is generated, the script runs 6 sequential validation gates that
 
 ### Mode generation
 
+All 9 modes (`planning`, `dev`, `qa`, `debug`, `review`, `product`, `integration`, `delivery`, `devops`) are template-based. Transversal modes (`delivery`, `devops`) have built-in default bindings — stack-profile overrides are optional.
+
 1. Reads `binding.*` keys from stack profiles.
-2. Resolves stack identity and mode output path.
-3. Loads canonical mode templates.
-4. Renders conditional blocks (`{{#if ...}}...{{/if}}`).
-5. Replaces placeholders (`{{key}}`).
-6. Removes template-only comments.
-7. Injects header `GENERATED — DO NOT EDIT` after frontmatter.
-8. Writes to canonical path (`aias-config/modes/`).
+2. Resolves stack identity.
+3. Loads canonical mode templates (all from `aias/.canonical/*.mdc`).
+4. Resolves per-mode frontmatter: explicit bindings take priority, then built-in defaults for transversal modes.
+5. Renders conditional blocks (`{{#if ...}}...{{/if}}`).
+6. Replaces placeholders (`{{key}}`).
+7. Removes template-only comments.
+8. Injects header `GENERATED — DO NOT EDIT` after frontmatter.
+9. Writes to canonical path (`aias-config/modes/`).
 
 ### Rule generation
 
@@ -84,6 +89,8 @@ Before any file is generated, the script runs 6 sequential validation gates that
 6. Replaces placeholders (`{{key}}`).
 7. For `output-contract.mdc`: loads build system integration from fragment files and generates file header section from project name + author bindings.
 8. Writes to canonical path (`aias-config/rules/`, flat).
+
+**Multi-workspace behavior:** When multiple workspace IDs are discovered, rules are generated sequentially but written to the same flat files (`base.mdc`, `output-contract.mdc`). Only the last workspace (alphabetically sorted) is preserved (last-wins). A warning is emitted when this occurs. For most setups a single workspace is expected.
 
 ### Shortcut generation (with `--shortcuts`)
 
@@ -189,5 +196,5 @@ When onboarding a new repo:
 - [x] Windsurf: always-apply rules only (no modes).
 - [x] GitHub Copilot: aggregated rules, modes with `applyTo:`, agents for commands.
 - [x] Codex: commands, skills shortcuts generated.
-- [x] No shortcut exceeds 300 bytes (path reference only, no content duplication).
+- [x] No enriched text shortcut exceeds 500 bytes; aggregated files do not exceed 1500 bytes (symlinks are exempt).
 - [x] Gemini: no shortcuts (context only via `GEMINI.md`).
