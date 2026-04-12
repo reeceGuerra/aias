@@ -18,7 +18,7 @@ Invocation:
 
 Usage notes:
 - Best used with `@review` mode active.
-- Prefer this command when the primary context is local code plus local artifacts in TASK_DIR.
+- SHOULD use this command when the primary context is local code plus local artifacts in TASK_DIR.
 - This command produces findings in chat only. It does not write artifacts, publish to providers, or modify code.
 
 ---
