@@ -53,7 +53,7 @@ Usage notes:
 | `new --provider` | Category + chat answers (provider, skill binding, capability, MCP server) | `readme-provider-config.md` |
 | `new --context` | Chat answers (project name, platform, description, architecture, technologies) | `readme-project-context.md` |
 | `new --stack-profile` | Chat answers (language, build system, UI framework, test framework, target tools, tasks directory) | `readme-stack-profile.md` |
-| `new --stack-fragment` | Chat answers (fragment type A/B/C, details) | `readme-output-contract.md` § Fragment Structure Options |
+| `new --stack-fragment` | Chat answers (fragment structure: automatic / manual / hybrid, details) | `readme-output-contract.md` § Fragment Structure Options |
 | `generate` | None (invokes generator). With `--shortcuts`: reads `binding.generation.tools` from stack profile. Optional `--tools <csv>` overrides binding. | — |
 | `health` | None (runs checks) | — |
 | `refresh-context` | `RHOAIAS.md` + knowledge provider or filesystem/git log | `readme-project-context.md` |
@@ -70,7 +70,7 @@ Usage notes:
   1. **Detection** — check for existing `RHOAIAS.md`, `stack-profile.md`, `stack-fragment.md`
   2. **Context** — create `RHOAIAS.md` (ask: project name, platform, description, architecture, technologies)
   3. **Stack profile** — create `stack-profile.md` (ask: language, build system, UI framework, test framework, **target tools** — see § 5 Tool selection, **tasks directory** — see § 5 Tasks directory)
-  4. **Stack fragment** — create `stack-fragment.md` (ask: fragment type A/B/C, details)
+  4. **Stack fragment** — create `stack-fragment.md` (ask: fragment structure — automatic discovery, manual project file, or hybrid; details)
   5. **Context symlinks** — create context symlinks to `RHOAIAS.md`, scoped by tool selection:
      - `cursor`, `windsurf`, or `copilot` selected → `AGENTS.md`
      - `claude` selected → `CLAUDE.md`
@@ -83,10 +83,32 @@ Usage notes:
   1. Read `RHOAIAS.md` and parse its sections against the mandatory structure from `readme-project-context.md`.
   2. Attempt to resolve knowledge provider from `aias-config/providers/knowledge-config.md`.
   3. **If knowledge provider is available**: search for published plans (`technical.plan.md`, `delta.publish.md`) with `completed` date after `RHOAIAS.md`'s last modification. Extract structural changes (new modules, dependencies, pattern shifts).
-  4. **If knowledge provider is not available**: fire a gate:
-     - `filesystem` — "Analyze directory tree + dependency manifests vs RHOAIAS.md"
-     - `gitlog` — "Analyze `git log` for structural changes since last RHOAIAS.md update"
-     - `cancel` — "Abort"
+  4. **If knowledge provider is not available**: fire the Refresh Source gate.
+
+#### Gate: Refresh Source
+
+**Type:** Decision
+**Fires:** During `refresh-context`, when knowledge provider is not available.
+**Skippable:** No.
+
+**Context output:**
+"Knowledge provider not available. Select an alternative source for detecting project changes."
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Knowledge provider unavailable. How should project changes be detected?"
+- **Options:**
+  - `filesystem`: "Analyze directory tree + dependency manifests vs RHOAIAS.md"
+  - `gitlog`: "Analyze git log for structural changes since last RHOAIAS.md update"
+  - `cancel`: "Abort refresh"
+- **allow_multiple:** false
+
+**On response:**
+- `filesystem` → Analyze directory tree and dependency manifests against current RHOAIAS.md
+- `gitlog` → Analyze `git log` for structural changes since last RHOAIAS.md update
+- `cancel` → Abort the refresh-context operation
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
   5. Compare detected changes against each RHOAIAS.md section. Propose diffs only for sections with detected drift.
   6. Fire approval gate before writing. Present the proposed changes per section and let the user approve, adjust, or reject.
   7. Write approved changes to `RHOAIAS.md`. The agent MUST NOT write without gate approval.
@@ -124,17 +146,37 @@ When generating or filling `binding.mode.<mode>.globs` entries in a stack profil
 
 - Use **file-type patterns only** (e.g., `*.swift`, `*.plan.md`, `*.kt`). Do NOT use repository directory names, project names, or workspace-specific path prefixes.
 - Globs are consumed by generated mode frontmatter and must remain portable across any repository using the same stack.
-- If the user provides repo-specific paths, apply the smart suggestion protocol: explain the portability issue and offer generic alternatives.
+- If the user provides repo-specific paths, apply this command's smart suggestion protocol: explain the portability issue and offer generic alternatives.
 
 ### Tool selection (stack profiles)
 
-When creating or updating a stack profile (`init` step 3 or `new --stack-profile`), the agent MUST ask the user which AI coding tools they want to generate shortcuts for.
+When creating or updating a stack profile (`init` step 3 or `new --stack-profile`), the agent MUST fire a gate to ask the user which AI coding tools they want to generate shortcuts for.
 
-- Present the 5 valid options: `cursor`, `claude`, `windsurf`, `copilot`, `codex`.
-- Allow multi-select (the user may choose one or more).
-- At least one tool MUST be selected.
-- Write the result as `binding.generation.tools` in the profile (comma-separated).
-- Do NOT default to all tools without asking. Do NOT skip this question.
+#### Gate: Tool Selection
+
+**Type:** Decision
+**Fires:** During `init` step 3 or `new --stack-profile`, before writing `binding.generation.tools`.
+**Skippable:** No.
+
+**Context output:**
+Present available tools for shortcut generation.
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Select target tools for shortcut generation."
+- **Options:**
+  - `cursor`: "Cursor"
+  - `claude`: "Claude Code"
+  - `windsurf`: "Windsurf"
+  - `copilot`: "Copilot"
+  - `codex`: "Codex"
+- **allow_multiple:** true
+
+**On response:**
+- At least one tool MUST be selected. If the user selects none, re-present the gate.
+- Write the selected tools as `binding.generation.tools` in the profile (comma-separated).
+
+**Anti-bypass:** Do NOT default to all tools without asking. Do NOT skip this gate.
 
 ### Tasks directory (stack profiles)
 
@@ -178,7 +220,7 @@ Each `new` subcommand produces a specific artifact structure. See the plan (§ C
 - Do NOT run `generate --shortcuts` in the meta-workspace (the meta-workspace uses manually maintained shortcuts).
 - Do NOT implement semantic evaluation in the CLI script — that is exclusive to this command.
 - Do NOT generate artifacts from memory — always read the governing contract first.
-- Do NOT skip the smart suggestion protocol when user input is below quality threshold.
+- Do NOT skip this command's smart suggestion protocol when user input is below quality threshold.
 - Do NOT create a templates directory — contracts are the single source of truth.
 - Do NOT overwrite or modify files in `aias/.canonical/` — these are framework source templates maintained exclusively by the framework maintainer. The `init` and `new` subcommands create project-level artifacts only (stack-profile.md, stack-fragment.md, RHOAIAS.md, aias-config/providers/, modes, rules, commands, skills).
 - Do NOT use Glob to verify file existence before writing. Use Shell (`ls`) or Read instead — Glob respects git exclusion rules and may report files as missing when they exist on disk.
@@ -218,14 +260,23 @@ When the AI agent executes `/aias health` and the CLI output contains `[WARN]` e
 
 Triggered when `[WARN] Legacy providers` appears in health output.
 
-1. Present gate: "Provider configs detected in legacy location (`aias-providers/`). Migrate to `aias-config/providers/`?"
-2. If the user accepts:
+1. Fire the Provider Migration gate:
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Provider configs detected in legacy location (`aias-providers/`). Migrate to `aias-config/providers/`?"
+- **Options:**
+  - `migrate`: "Migrate provider configs to aias-config/providers/"
+  - `skip`: "Skip migration"
+- **allow_multiple:** false
+
+2. If the user selects `migrate`:
    - Create `aias-config/providers/` if it does not exist.
    - Copy all contents from `aias-providers/` to `aias-config/providers/` (configs + provider subdirectories).
    - Update `resource_files` and `*_source` paths in each `*-config.md` within `aias-config/providers/` (replace `aias-providers/` with `aias-config/providers/`).
    - Do NOT delete `aias-providers/` (coexists during v7.6).
    - Report migration results.
-3. If the user declines: proceed without migration.
+3. If the user selects `skip`: proceed without migration.
 
 ### Scenario B — Generated rules/modes regeneration (`aias/.rules/` and `aias/.modes/`)
 
@@ -246,13 +297,22 @@ Triggered when `[WARN] Legacy shortcuts` appears in health output.
 
 Triggered when `[WARN] Referenced files` mentions "Legacy location: aias/.skills/...".
 
-1. Present gate: "Referenced files use legacy skill path. Migrate to `aias-config/providers/<provider_id>/`?"
-2. If the user accepts:
+1. Fire the Skill Path Migration gate:
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Referenced files use legacy skill path (`aias/.skills/`). Migrate to `aias-config/providers/<provider_id>/`?"
+- **Options:**
+  - `migrate`: "Migrate referenced files to aias-config/providers/"
+  - `skip`: "Skip migration"
+- **allow_multiple:** false
+
+2. If the user selects `migrate`:
    - Copy referenced files from `aias/.skills/<skill>/` to `aias-config/providers/<provider_id>/`.
    - Update `resource_files` and `*_source` paths in the corresponding `*-config.md`.
    - Do NOT delete the originals (they coexist).
    - Report migration results.
-3. If the user declines: proceed without migration.
+3. If the user selects `skip`: proceed without migration.
 
 ### Scenario E — Shortcut integrity failures
 
