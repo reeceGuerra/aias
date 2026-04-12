@@ -1205,6 +1205,11 @@ Run 'aias init' for guided onboarding.
 
 
 def main() -> int:
+    if sys.version_info < (3, 10):
+        print(f"Error: Python 3.10+ is required (found {sys.version}). "
+              "Please upgrade your Python installation.")
+        return 1
+
     args = sys.argv[1:]
 
     if not args or args[0] in ("-h", "--help"):
