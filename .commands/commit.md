@@ -39,14 +39,12 @@ This command may use **only** the following inputs:
 - Service configs:
   - `aias-config/providers/vcs-config.md`
   - `aias-config/providers/tracker-config.md`
-- **Repository resolution** (in order of precedence):
-  1. **Workspace:** current `.code-workspace` `folders` — use the path of the folder that is a git root (if `cursor.commitRoot` is set, use that folder by name or index; otherwise the first folder that is a git root).
-  2. **Fallback:** `${HOME}/.cursor/projects.json` — resolve `basePath` + `projects.<alias>.repoDir` (or `defaults.project` when no alias).
+- **Repository resolution:** current `.code-workspace` `folders` — use the path of the folder that is a git root (if `cursor.commitRoot` is set, use that folder by name or index; otherwise the first folder that is a git root).
 
 Rules:
 - Repository resolution MUST succeed before any git command is executed.
 - No inferred paths, repositories, or files are allowed.
-- If resolution fails (no workspace git root and no valid projects.json / project alias), the command must STOP.
+- If resolution fails (no workspace folder is a git root), the command MUST STOP.
 
 ---
 
@@ -141,7 +139,7 @@ This command must **NOT**:
 - Combine multiple files in a single commit (one file = one commit, always)
 - Use `git add .`, `git add -A`, or stage multiple files at once
 - Execute non-git commands (except resolved VCS/tracker provider lookups/sync)
-- Proceed if repository resolution fails (STOP: need a workspace folder that is a git root, or a valid projects.json with project alias)
+- Proceed if repository resolution fails (STOP: need a workspace folder that is a git root)
 
 ---
 
@@ -153,7 +151,7 @@ This command executes in **two internal phases**.
 
 Executed for **all modes**, including `--plan` / `--dry-run`.
 
-1. Resolve `PROJECT_ROOT`: (1) if current workspace has folders that are git roots, use the commit root (see Inputs); else (2) load and validate `${HOME}/.cursor/projects.json` and resolve project alias → `basePath` + `repoDir`.
+1. Resolve `PROJECT_ROOT`: use the workspace folder that is a git root (see Inputs § Repository resolution). If no workspace folder is a git root, STOP.
 2. **Branch safeguard**: check the current branch name. If it is `main`, `master`, or `develop`, fire the Branch Safeguard gate.
 
 #### Gate: Branch Safeguard
@@ -204,7 +202,7 @@ For each planned file, **one at a time, sequentially** (never batch):
 
 ## Notes
 
-- **Repository resolution:** See `docs/COMMIT-AND-WORKSPACE.md` for workspace-first resolution and optional `cursor.commitRoot` in `.code-workspace`.
+- **Repository resolution:** See `docs/COMMIT-AND-WORKSPACE.md` for workspace resolution and optional `cursor.commitRoot` in multi-root workspaces.
 - `--plan` and `--dry-run` are synonyms.
 - Planning mode is safe to run repeatedly.
 - Each file is committed independently in execution mode.
