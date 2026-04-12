@@ -85,6 +85,7 @@ RULE_GENERATION_SKIP = {"xctemplates-dev"}
 BASE_RULE_REQUIRED_KEYS = (
     "description",
     "role_specialty",
+    "conversation_language",
     "engineering_domain_principle",
     "security_line",
     "performance_line",
@@ -845,6 +846,7 @@ def generate_base_rule(
     required_keys = (
         "description",
         "role_specialty",
+        "conversation_language",
         "engineering_domain_principle",
         "security_line",
         "performance_line",
