@@ -49,7 +49,7 @@ Mode rules SHOULD follow these design principles:
 - Target length: **30–80 lines** (excluding frontmatter)
 - Every line MUST add value
 - Remove redundant or obvious statements
-- If a mode exceeds 80 lines, consider splitting it or moving detailed procedures to commands
+- If a mode exceeds 80 lines, SHOULD split it or move detailed procedures to commands
 
 **Conceptual Focus**
 - Focus on **"what to think"** and **principles**, not detailed steps
@@ -528,7 +528,7 @@ Mode rules SHOULD be versioned when:
 **Versioning approach:**
 - Update the `description` field to include version if needed
 - Document changes in commit messages
-- Consider backward compatibility
+- SHOULD consider backward compatibility
 
 ---
 
