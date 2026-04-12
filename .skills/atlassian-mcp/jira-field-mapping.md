@@ -22,17 +22,17 @@ Story mapping is used primarily by `/enrich` and `/brief`.
 
 | @product output | /enrich dimension | Jira field | Field key | Format |
 |---|---|---|---|---|
-| JTBD analysis, 5 Whys | **Problem statement** | Summary + Description | `summary` + `description` | Summary: plain text (one line). Description: Markdown (prefer) or ADF |
-| User Journey Analysis | **User flow** | Description (flow subsection) | `description` | Markdown (prefer) or ADF |
+| JTBD analysis, 5 Whys | **Problem statement** | Summary + Description | `summary` + `description` | Summary: plain text (one line). Description: Markdown (SHOULD) or ADF |
+| User Journey Analysis | **User flow** | Description (flow subsection) | `description` | Markdown (SHOULD) or ADF |
 | MoSCoW Prioritization | **Priority signal** | Priority | `priority` | `{ "id": "<id>" }` — see catalog |
 | JTBD + User Journey | **Acceptance criteria** | Acceptance Criteria | `customfield_10036` | Markdown (Given/When/Then list) |
 | User Journey (edge cases) | **Test criteria** | Test Steps | `customfield_10062` | Markdown (numbered steps) |
-| — | **UI specification** | Description (design subsection) | `description` | Markdown (prefer) or ADF |
-| — | **API / Data contract** | Description (API subsection) | `description` | Markdown (prefer) or ADF |
+| — | **UI specification** | Description (design subsection) | `description` | Markdown (SHOULD) or ADF |
+| — | **API / Data contract** | Description (API subsection) | `description` | Markdown (SHOULD) or ADF |
 | — | **File impact** | Local artifact only by default | — | Kept in `analysis.product.md` unless explicitly promoted |
 | — | **Dependencies** | Linked Issues + Description | `issuelinks` + `description` | Links via API; condensed list in description only when relevant |
-| — | **Non-functional requirements** | Description (constraints subsection) | `description` | Markdown (prefer) or ADF |
-| — | **Out of scope** | Description (scope subsection) | `description` | Markdown (prefer) or ADF |
+| — | **Non-functional requirements** | Description (constraints subsection) | `description` | Markdown (SHOULD) or ADF |
+| — | **Out of scope** | Description (scope subsection) | `description` | Markdown (SHOULD) or ADF |
 
 ### Story Mapping Rules
 
@@ -55,9 +55,9 @@ Bug mapping is used primarily by `/report`.
 | `RCA Determination` | RCA Determination | `customfield_10056` | `{ "id": "<option-id>" }` | `/report` |
 | `RCA Introduction Factor` | RCA Introduction Factor | `customfield_10057` | `{ "id": "<option-id>" }` | `/report` |
 | `RCA Detection Factor` | RCA Detection Factor | `customfield_10058` | `{ "id": "<option-id>" }` | `/report` |
-| `RCA Analysis` | RCA Analysis | `customfield_10059` | Markdown (prefer) or ADF | `/report` |
-| `RCA Preventive Action` | RCA Preventive Action | `customfield_10060` | Markdown (prefer) or ADF | `/report` |
-| `RCA Corrective Action` | RCA Corrective Action | `customfield_10061` | Markdown (prefer) or ADF | `/report` |
+| `RCA Analysis` | RCA Analysis | `customfield_10059` | Markdown (SHOULD) or ADF | `/report` |
+| `RCA Preventive Action` | RCA Preventive Action | `customfield_10060` | Markdown (SHOULD) or ADF | `/report` |
+| `RCA Corrective Action` | RCA Corrective Action | `customfield_10061` | Markdown (SHOULD) or ADF | `/report` |
 | Problem / Expected / Actual summary | Structured fallback comment only when equivalent RCA fields are unavailable in the provider | — | Markdown comment | `/report` |
 
 ### Bug Mapping Rules
@@ -75,9 +75,9 @@ Bug mapping is used primarily by `/report`.
 | RCA Determination | `customfield_10056` | option (radiobuttons) | `{ "id": "<id>" }` |
 | RCA Introduction Factor | `customfield_10057` | option (radiobuttons) | `{ "id": "<id>" }` |
 | RCA Detection Factor | `customfield_10058` | option (radiobuttons) | `{ "id": "<id>" }` |
-| RCA Analysis | `customfield_10059` | string (textarea) | Markdown (prefer) or ADF |
-| RCA Preventive Action | `customfield_10060` | string (textarea) | Markdown (prefer) or ADF |
-| RCA Corrective Action | `customfield_10061` | string (textarea) | Markdown (prefer) or ADF |
+| RCA Analysis | `customfield_10059` | string (textarea) | Markdown (SHOULD) or ADF |
+| RCA Preventive Action | `customfield_10060` | string (textarea) | Markdown (SHOULD) or ADF |
+| RCA Corrective Action | `customfield_10061` | string (textarea) | Markdown (SHOULD) or ADF |
 
 ### RCA Determination Catalog
 
@@ -162,10 +162,10 @@ Bug mapping is used primarily by `/report`.
 | Target Start | `customfield_10022` | date | `YYYY-MM-DD` | — |
 | Target End | `customfield_10023` | date | `YYYY-MM-DD` | — |
 | Story Points | `customfield_10028` | number (float) | Plain number | — |
-| Acceptance Criteria | `customfield_10036` | string (textarea) | Markdown (prefer) or ADF | Story workflows |
-| Test Steps | `customfield_10062` | string (textarea) | Markdown (prefer) or ADF | Story workflows |
+| Acceptance Criteria | `customfield_10036` | string (textarea) | Markdown (SHOULD) or ADF | Story workflows |
+| Test Steps | `customfield_10062` | string (textarea) | Markdown (SHOULD) or ADF | Story workflows |
 | QA Assignee | `customfield_10293` | user (userpicker) | `{ "accountId": "<id>" }` | Dynamic (user picker) |
-| Blocker Comment | `customfield_10446` | string (textarea) | Markdown (prefer) or ADF | — |
+| Blocker Comment | `customfield_10446` | string (textarea) | Markdown (SHOULD) or ADF | — |
 | Dev Estimate | `customfield_10552` | option (select) | `{ "id": "<id>" }` | See below |
 | Demo Date | `customfield_10553` | date | `YYYY-MM-DD` | — |
 
@@ -186,7 +186,7 @@ When using `atlassian-mcp` to write to Jira:
 
 - **Runtime metadata has precedence** over this document for remote writes.
 - **`editJiraIssue`** accepts Markdown for `description` — the MCP converts it to ADF.
-- **Custom textarea fields** (`customfield_10036`, `customfield_10059`, `customfield_10060`, `customfield_10061`, `customfield_10062`, `customfield_10446`): prefer Markdown string. If the instance rejects it, fall back to ADF.
+- **Custom textarea fields** (`customfield_10036`, `customfield_10059`, `customfield_10060`, `customfield_10061`, `customfield_10062`, `customfield_10446`): SHOULD use Markdown string. If the instance rejects it, fall back to ADF.
 - **Select/option fields** (`priority`, `customfield_10056`, `customfield_10057`, `customfield_10058`, `customfield_10552`): MUST use `{ "id": "<id>" }` with a value from the catalog. Free text is rejected by the API.
 - **Component fields**: MUST use `[{ "id": "<id>" }]` with IDs from the catalog. Names are not accepted.
 - **User fields** (`assignee`, `customfield_10293`): require `accountId`. Do NOT set these unless the user explicitly provides the assignee.
