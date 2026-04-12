@@ -1,5 +1,8 @@
 # Tracker Status Mapping Contract — Cursor Configuration System (v1.0)
 
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
+
 This document defines the canonical contract for tracker status mapping artifacts used by provider-specific tracker integrations.
 
 It exists to:
@@ -37,13 +40,13 @@ Legacy location (deprecated in v7.5, will be removed in a future version):
 
 - `aias/.skills/<provider-skill>/tracker-status-mapping.md`
 
-The active file must be referenced by `status_mapping_source` in `aias-config/providers/tracker-config.md` and listed in `skill_binding.resource_files`.
+The active file MUST be referenced by `status_mapping_source` in `aias-config/providers/tracker-config.md` and listed in `skill_binding.resource_files`.
 
 ---
 
 ## Mandatory Sections (Order)
 
-Each mapping file must contain these sections in this exact order:
+Each mapping file MUST contain these sections in this exact order:
 
 1. `Purpose`
 2. `Provider`
@@ -57,7 +60,7 @@ Each mapping file must contain these sections in this exact order:
 
 ## Normative Schema
 
-Each mapping must define, at minimum:
+Each mapping MUST define, at minimum:
 
 - `provider` (string, provider identifier)
 - `canonical_to_provider` (map of canonical state -> provider target)
@@ -76,7 +79,7 @@ All canonical states are mandatory keys:
 
 ### Provider target shape
 
-Each `canonical_to_provider.<state>` target must include:
+Each `canonical_to_provider.<state>` target MUST include:
 
 - `state_name` (string)
 
@@ -106,7 +109,7 @@ Canonical key format is mandatory:
 - Legacy aliases are forbidden
 - Runtime normalizers/adapters from legacy keys are forbidden
 
-Mappings may add provider-specific metadata, but cannot alter these canonical transitions or key format.
+Mappings MAY add provider-specific metadata, but MUST NOT alter these canonical transitions or key format.
 
 ---
 
@@ -127,7 +130,7 @@ When resolving tracker transitions:
 - If target canonical state has no provider mapping: abort dependent tracker transition.
 - If provider workflow has no reachable transition to mapped target: abort dependent tracker transition.
 
-Error response must include:
+Error response MUST include:
 
 - provider
 - command
