@@ -376,93 +376,6 @@ After implementation: `/commit` → `/pr` → optional `@review` + `/peer-review
 
 ---
 
-## Build & Run Flow
-
-Building and launching an app (platform-specific).
-
-### Step 1: Run App
-
-```
-/run mobilemax
-/run mobilemax -s iphone16pm
-/run mobilemax -l --log-level debug
-/run --dry-run
-```
-
-**Expected Output:**
-- Execution summary: Status, Project, Simulator, Build/Install/Launch result
-- On failure: phase where it failed + last error
-- On dry-run: resolved command without executing
-
-**Result:**
-- App built and launched on Simulator
-- Optional log streaming active
-
----
-
-## Test Flow
-
-Running tests for a configured project.
-
-### Step 1: Run Tests
-
-```
-/test rdsnetworking
-/test mobilemax -v
-/test --dry-run
-```
-
-**Expected Output:**
-- Execution summary: Status, Project, Strategy (swiftpm/xcodebuild), Result
-- On failure: failed test names if parseable, last output lines
-- On dry-run: resolved command without executing
-
-**Result:**
-- Tests executed, pass/fail summary reported
-
----
-
-## Dependency Management Flow
-
-Managing Swift Package Manager dependencies.
-
-### Step 1: SPM Management
-
-**Pin a package:**
-```
-/spm rdsui abc1234
-/spm rdsui abc1234 -b develop
-/spm rdsui abc1234 -p mobilemax
-```
-
-**Update a package:**
-```
-/spm rdsui -u
-/spm rdsui --update -b feature/x
-```
-
-**Dry-run (show plan without executing):**
-```
-/spm --dry-run rdsui abc1234
-```
-
-**Flags:**
-- `-p, --project <alias>` — project alias (default: `defaults.project`)
-- `-u, --update` — update mode (mutually exclusive with commit hash)
-- `-b, --branch <name>` — branch name
-- `--dry-run` — show JSON plan without executing
-
-**Expected Output:**
-- Execution summary: Status, Operation (pin/update), Package before/after, Artifacts
-- On failure: stop/error code, message, details
-- On dry-run: validated JSON plan displayed in chat
-
-**Result:**
-- Dependencies pinned or updated
-- `Package.resolved` reflects new state
-
----
-
 ## Integration Flow
 
 Coordinating changes across multiple repositories (MobileMax, RDSUI, RDSNetworking, RDSMacros).
@@ -834,9 +747,6 @@ Message 2:
 **Examples:**
 ```
 /commit
-/run mobilemax -l
-/test rdsnetworking
-/spm rdsui abc1234 -b develop
 /explain async/await in Swift --quiz
 ```
 
@@ -880,15 +790,6 @@ For the complete artifact catalog (suffixes, producers, and descriptions), see `
 
 **Need to transfer context into the next chat?**
 → use `/handoff` after the current step when TASK_DIR artifacts alone would benefit from an operational startup snippet
-
-**Building and running the app?**
-→ `/run` (with optional flags: `-s`, `-l`, `--log-level`)
-
-**Running tests?**
-→ `/test` (with optional project alias and `-v`)
-
-**Managing dependencies?**
-→ `/spm` (with package name + commit hash or `-u`)
 
 **CI/CD pipeline issue or setup?**
 → `@devops`
