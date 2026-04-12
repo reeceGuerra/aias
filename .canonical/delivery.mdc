@@ -1,12 +1,11 @@
+<!-- Frontmatter template -->
 ---
-description: Delivery mode: evaluate plans or tickets for viability, effort, impact, dependencies, and risks; produce raw delivery data for /charter (no implementation design)
+description: {{description}}
 alwaysApply: false
-model: opus-4.6
-color: indigo
+model: {{model}}
+color: {{color}}
 globs:
-  - "*.charter.md"
-  - "*.plan.md"
-  - "*.product.md"
+{{globs_yaml}}
 ---
 
 ROLE
