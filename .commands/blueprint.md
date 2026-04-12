@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are guiding the **systematic collection and structuring** of all data required for an implementation plan. This command consumes DoR/DoD artifacts from refinement (`/enrich`), collects raw planning data from codebase analysis and context, structures it into artifacts, and writes them to the task directory. On the first execution for a task, it triggers the canonical tracker transition `ready` -> `in_progress`.
 
@@ -81,12 +81,12 @@ Present a compact summary in chat:
 - Increment count and names
 - List of artifacts to be written
 - Target directory path
-- Assigned classification (A/B/C)
+- Assigned classification (Minor/Standard/Critical)
 - Proposed DoR/DoD amendments (if any)
 
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
-- **Prompt:** "Plan ready. <count> increments, classification <A|B|C>. Write artifacts to <TASK_DIR>?"
+- **Prompt:** "Plan ready. <count> increments, classification <minor|standard|critical>. Write artifacts to <TASK_DIR>?"
 - **Options:**
   - `write`: "Write artifacts to TASK_DIR and continue"
   - `adjust`: "Adjust the plan before writing"
@@ -138,16 +138,16 @@ Artifacts written to: <absolute_path_to_TASK_DIR>/
 
 After writing artifacts:
 1. Update `status.md`: add each artifact to the `artifacts` map with status `created` (new) or `modified` (overwrite).
-2. **Assign Plan Classification**: set `classification` in `status.md` to `A`, `B`, or `C` based on scope, impact, and complexity. See `SKILL.md` Plan Classification for criteria.
+2. **Assign Plan Classification**: set `classification` in `status.md` to `minor`, `standard`, or `critical` based on scope, impact, and complexity. See `SKILL.md` Plan Classification for criteria.
 3. Add `blueprint` to `completed_steps`, set `current_step` to `validate`.
 4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. When the bug exception generated `dor.plan.md` and `dod.plan.md`, Phase 5c publishes them automatically alongside `technical.plan.md` and `increments.plan.md`.
 
 Classification is used **only for governance** (gates in `/implement`), not for publishing decisions:
-- **Type A:** No additional governance gates in `/implement`.
-- **Type B:** MAY generate `## Governance` in `increments.plan.md` if risk warrants it.
-- **Type C:** MUST generate `## Governance` with at least one Approval gate.
+- **Minor:** No additional governance gates in `/implement`.
+- **Standard:** MAY generate `## Governance` in `increments.plan.md` if risk warrants it.
+- **Critical:** MUST generate `## Governance` with at least one Approval gate.
 
-When `refinement_validated: true` in `status.md` (set by `/enrich` after team refinement), classification-derived governance gates are relaxed (e.g., Type C does not require Pre-Implementation Approval in `/implement` if team refinement already validated the scope).
+When `refinement_validated: true` in `status.md` (set by `/enrich` after team refinement), classification-derived governance gates are relaxed (e.g., Critical does not require Pre-Implementation Approval in `/implement` if team refinement already validated the scope).
 
 ---
 
@@ -250,9 +250,9 @@ Structure the collected data into the artifact files and fire the Preview gate (
 
 After structuring increments and before the Preview gate, determine whether `increments.plan.md` requires a `## Governance` section:
 
-- **Type A:** MUST NOT generate a `## Governance` section.
-- **Type B:** MAY generate a `## Governance` section when risk assessment or cross-team dependencies warrant per-increment custom gates. If no custom gates are needed, omit the section.
-- **Type C:** MUST generate a `## Governance` section with at least one Approval gate before the first increment.
+- **Minor:** MUST NOT generate a `## Governance` section.
+- **Standard:** MAY generate a `## Governance` section when risk assessment or cross-team dependencies warrant per-increment custom gates. If no custom gates are needed, omit the section.
+- **Critical:** MUST generate a `## Governance` section with at least one Approval gate before the first increment.
 
 The `## Governance` section follows the Governance-in-Artifact Schema defined in `readme-commands.md`. Classification is assigned in Phase 5 (Status Update) and written to `status.md`, not to the governance section itself.
 
