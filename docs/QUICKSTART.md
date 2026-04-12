@@ -342,7 +342,7 @@ TASK: /implement
 ## Further Reading
 
 - **Detailed workflows:** [WORKFLOWS.md](WORKFLOWS.md) — Feature development, bug fix, enrichment, CI/CD, integration, and all other end-to-end flows
-- **Artifact catalog and protocol:** `aias/.skills/rho-aias/SKILL.md` — Artifact types, skill loading protocol, Plan Classification, one-mode-per-chat rule
+- **Artifact catalog and skill loading protocol:** `aias/.skills/rho-aias/SKILL.md` — Artifact types, skill loading protocol, Plan Classification, one-mode-per-chat rule
 - **CLI reference:** [CLI.md](CLI.md) — `aias` subcommands, flags, and examples
 - **Framework guide:** Run `/guide` for operational reference (profiles, commands, status lifecycle, artifacts)
 - **Contracts:** `aias/contracts/readme-commands.md` (commands), `readme-mode-rule.md` (modes), `readme-skill.md` (skills)
