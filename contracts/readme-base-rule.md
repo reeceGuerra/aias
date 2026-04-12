@@ -1,4 +1,7 @@
-# Base Rule Contract — Cursor Rules System
+# Base Rule Contract — Cursor Rules System (v1.0)
+
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
 
 This document defines the **canonical contract** for base rules (`.cursor/rules/base.mdc`) in the Cursor configuration system.
 
@@ -43,7 +46,7 @@ Cursor supports four types of rules based on when and how they are applied. Base
 **Description:** Apply to every chat session.
 
 **Use when:**
-- Defining foundational behavior that should always be active
+- Defining foundational behavior that SHOULD always be active
 - Setting base constraints, language preferences, or core principles
 - Creating base rules (this contract)
 
@@ -55,13 +58,13 @@ alwaysApply: true
 ---
 ```
 
-**Note:** Base rules **must** use `alwaysApply: true`. Mode rules use `alwaysApply: false` (see `readme-mode-rule.md` for mode rule types).
+**Note:** Base rules **MUST** use `alwaysApply: true`. Mode rules use `alwaysApply: false` (see `readme-mode-rule.md` for mode rule types).
 
 ---
 
 ## Contract Structure
 
-All base rules **must follow this structure and order**.
+All base rules **MUST follow this structure and order**.
 
 ### 1. Frontmatter (Required)
 
@@ -74,7 +77,7 @@ alwaysApply: true
 
 **Required fields:**
 - `description`: One-line description of what this rule defines
-- `alwaysApply: true`: Must be explicitly set to `true`
+- `alwaysApply: true`: MUST be explicitly set to `true`
 
 **Optional fields:**
 - `globs`: Array of file patterns where this rule applies (rarely used for base rules)
@@ -87,7 +90,7 @@ alwaysApply: true
 
 Define the AI's role and expertise.
 
-**Must include:**
+**MUST include:**
 - Primary role (e.g., "senior iOS architect", "Cursor System Architect")
 - Key areas of expertise
 - Thinking style or approach
@@ -102,7 +105,7 @@ You are a senior iOS mobile app architect and technical lead. You prioritize pro
 
 #### MAIN OBJECTIVES (Optional but Recommended)
 
-List the primary objectives or capabilities the AI must have.
+List the primary objectives or capabilities the AI MUST have.
 
 **Structure:**
 - Numbered list of main objectives
@@ -121,13 +124,13 @@ List the primary objectives or capabilities the AI must have.
 
 #### CONSTRAINTS (Required, but can be distributed)
 
-Define what the AI **must not** do or **must** consider.
+Define what the AI **MUST NOT** do or **MUST** consider.
 
 **Options:**
 1. **Explicit CONSTRAINTS section** — All constraints in one place
 2. **Distributed constraints** — Constraints in relevant sections (ASSUMPTIONS & AMBIGUITY, LIMITATIONS & TRUTHFULNESS, CODE PRESERVATION, etc.)
 
-**Must include (somewhere in the rule):**
+**MUST include (somewhere in the rule):**
 - Technical limitations or boundaries
 - Behavioral restrictions
 - Explicit "do not" statements
@@ -167,11 +170,11 @@ CODE PRESERVATION
 
 Instructs the agent on how to work with the agentic architecture's commands and skills.
 
-**Must include:**
-- That slash commands (`/X`) are loaded from `aias/.commands/` (framework) or `aias-config/commands/` (project) and must be followed strictly
-- That commands are NOT rules — the agent must not search rule directories for commands
+**MUST include:**
+- That slash commands (`/X`) are loaded from `aias/.commands/` (framework) or `aias-config/commands/` (project) and MUST be followed strictly
+- That commands are NOT rules — the agent MUST NOT search rule directories for commands
 - That skills referenced by modes/commands are loaded from `aias/.skills/` (framework) or `aias-config/skills/` (project)
-- That the agent must never execute a command or skill from memory
+- That the agent MUST NOT execute a command or skill from memory
 
 **Example:**
 ```
@@ -396,7 +399,7 @@ CONSTRAINTS
 
 ## Versioning
 
-Base rules should be versioned when:
+Base rules SHOULD be versioned when:
 - Behavioral changes are made
 - New constraints are added that change AI behavior
 - Role definition changes significantly
@@ -437,11 +440,11 @@ Base rules contain both **invariant** sections (shared across all focused worksp
 
 ### Invariant Sections
 
-These sections must be present in every focused workspace `base.mdc` and share the same content:
+These sections MUST be present in every focused workspace `base.mdc` and share the same content:
 
 | Section | Notes |
 |---|---|
-| LANGUAGE | Conversation vs code language rules. **Must be category-driven** (see below). |
+| LANGUAGE | Conversation vs code language rules. **MUST be category-driven** (see below). |
 | COMMANDS AND SKILLS | Agentic architecture instructions. Identical across workspaces. |
 | ENGINEERING PRINCIPLES (shared subset) | Core principles (correctness, SOLID, modularity, no unauthorized libs). |
 | CODE PRESERVATION | Do not remove/rename/refactor unrelated code. |
@@ -467,7 +470,7 @@ These sections vary per workspace and are driven by stack profile bindings (`bin
 
 ## Category-Driven Language Mandate
 
-The LANGUAGE section in every `base.mdc` **must use category-driven references** for external service providers. Hardcoding provider names (e.g., "Jira", "Confluence", "GitHub") in the LANGUAGE section violates the service abstraction established in Phase 3.
+The LANGUAGE section in every `base.mdc` **MUST use category-driven references** for external service providers. Hardcoding provider names (e.g., "Jira", "Confluence", "GitHub") in the LANGUAGE section violates the service abstraction established in Phase 3.
 
 **Correct (category-driven):**
 ```
@@ -500,7 +503,7 @@ See `readme-stack-profile.md` for the binding definitions and `readme-output-con
 
 ### COMMANDS AND SKILLS Section Updates
 
-The COMMANDS AND SKILLS section in every `base.mdc` must include:
+The COMMANDS AND SKILLS section in every `base.mdc` MUST include:
 - Reference to the **rho-aias** skill for artifact management
 - The TASK_DIR convention for task directory resolution
 - The `/publish` command for task closure and resolved knowledge-provider archival
@@ -515,7 +518,7 @@ The canonical location for generated base rules is `aias-config/rules/base.mdc`.
 
 ### Command and Skill Paths
 
-The COMMANDS AND SKILLS section must reference `aias/.commands/` (framework) and `aias-config/commands/` (project) for commands, and `aias/.skills/` (framework) and `aias-config/skills/` (project) for skills. These are the canonical locations; tool-specific paths (e.g., `~/.cursor/commands/`) are resolved by each tool's shortcut layer.
+The COMMANDS AND SKILLS section MUST reference `aias/.commands/` (framework) and `aias-config/commands/` (project) for commands, and `aias/.skills/` (framework) and `aias-config/skills/` (project) for skills. These are the canonical locations; tool-specific paths (e.g., `~/.cursor/commands/`) are resolved by each tool's shortcut layer.
 
 ---
 
