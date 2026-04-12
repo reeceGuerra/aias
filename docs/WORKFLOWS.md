@@ -599,6 +599,7 @@ profile: feature
 task_id: MAX-XXXXX
 classification: null
 refinement_validated: false
+rhoaias_update: null
 started: 2026-01-25
 status: pending_dor
 tracker_status: <provider:pending_dor_label>
@@ -628,6 +629,20 @@ artifacts:
 | `created` | Exists locally, never published to resolved knowledge provider |
 | `synced` | Matches resolved knowledge provider version |
 | `modified` | Changed since last knowledge sync |
+
+### RHOAIAS.md Freshness Tracking
+
+The `rhoaias_update` field tracks whether `RHOAIAS.md` (project context) needs updating for the current task. `/blueprint` sets this field after analyzing the plan categories against the current `RHOAIAS.md` sections.
+
+| State | Meaning |
+|-------|---------|
+| `null` | No impact detected (or field absent for backward compatibility) |
+| `required` | `/blueprint` detected structural impact — update pending |
+| `deferred` | User acknowledged at `/commit` time, chose to continue |
+| `done` | `RHOAIAS.md` was modified (auto-detected via `git status`/`git diff`) |
+| `skipped` | User consciously chose not to update at `/pr` time |
+
+Gates fire at `/commit` (once, skippable → `deferred`) and `/pr` (once, skippable → `skipped`). `/publish` reports the final state as an advisory. For accumulated drift across multiple tasks, use `/aias refresh-context`.
 
 ---
 
