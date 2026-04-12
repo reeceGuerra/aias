@@ -25,7 +25,7 @@ Usage notes:
 - Output is written directly to the task directory as separate artifact files.
 - `--fast` suppresses the Comprehension gate (Phase 0). The Preview gate always fires. All 7 categories are still collected. Use for trivial or well-understood tasks where validation gates add friction without value.
 - If TASK_DIR is set (via Structured Prompt or task id), writes to that directory. If not, creates a new directory from the task id or an agent-chosen name.
-- In the Structured Prompt, prefer `TASK ID` / `TASK DIR` (or `DIR`) over legacy `TICKET`.
+- In the Structured Prompt, SHOULD prefer `TASK ID` / `TASK DIR` (or `DIR`) over legacy `TICKET`.
 - **Strict mode:** DoR/DoD artifacts (`dor.plan.md`, `dod.plan.md`) must exist in TASK_DIR before planning can proceed, except when the bug exception applies (see Phase 0).
 
 ---
