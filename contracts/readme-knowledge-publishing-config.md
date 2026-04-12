@@ -112,6 +112,10 @@ The config MUST declare operational invariants as an explicit rules list. At min
 
 The config MUST include at least one concrete example showing the full hierarchy for a representative task.
 
+### Phase 5c Integration
+
+Publishing to the resolved knowledge provider is triggered by Phase 5c of the rho-aias skill loading protocol. Phase 5c is **unconditional** — it always publishes regardless of Plan Classification. Every artifact-producing command that writes to TASK_DIR MUST sync non-synced artifacts to the knowledge provider at Phase 5c. The publishing config defined in this contract governs how and where those artifacts are placed in the provider's hierarchy.
+
 ---
 
 ## Resolution Rules (Fail-Fast)
