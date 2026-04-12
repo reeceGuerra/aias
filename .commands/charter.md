@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type B — Procedural / Execution
+**Command Type:** Operative — Procedural / Execution
 
 You are generating a **delivery charter** — a structured assessment that determines whether planned work is ready, viable, and well-understood before execution begins. This command transforms raw delivery data from `@delivery` into a structured document written to the task directory, with readiness evaluation, effort estimation, viability analysis, impact analysis, dependency mapping, execution timeline, and a clear recommendation.
 
@@ -76,7 +76,7 @@ FILE OUTPUT CONTRACT (must follow)
 STATUS UPDATE (Phase 5)
 - Add `delivery.charter.md` to the `artifacts` map in `status.md` with status `created` or `modified`.
 - Add `charter` to `completed_steps`, set `current_step` to `closure`.
-- **Classification escalation**: if the charter's assessment reveals higher impact than the current classification (e.g., cross-team dependencies, broader org impact), escalate the classification in `status.md` (A→B or B→C). Never downgrade. Report escalation in chat.
+- **Classification escalation**: if the charter's assessment reveals higher impact than the current classification (e.g., cross-team dependencies, broader org impact), escalate the classification in `status.md` (minor→standard or standard→critical). Never downgrade. Report escalation in chat.
 - Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification (see **rho-aias** skill § Phase 5c).
 
 END-OF-RESPONSE CONFIRMATION (must follow)
