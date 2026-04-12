@@ -236,26 +236,31 @@ TRACE: instrumentation.trace.md
 
 ### Flow
 
-```
-Structured Prompt
-    |
-    v
-Mode (reasoning stance)
-    |  - Loads context: AGENTS.md, RHOAIAS.md, base rules, task artifacts
-    |  - Applies mode-specific enrichment rules
-    |  - Determines applicable commands and skills
-    |
-    v
-Command (structured execution)
-    |  - Validates inputs against command contract
-    |  - Executes defined phases/steps
-    |  - Formats output per command specification
-    |
-    v
-Artifact (traceable output)
-       - Written to task directory with tracked status
-       - Synced progressively to knowledge provider
-       - Available for consumption by subsequent modes/commands
+```mermaid
+flowchart TD
+    SP["Structured Prompt<br/><i>MODE · TASK ID · TASK DIR · CONTEXT · TASK</i>"]
+
+    SP --> Mode
+
+    Mode["Mode<br/>(reasoning stance)"]
+
+    Mode --> ModeDetails["Loads: AGENTS.md, RHOAIAS.md,<br/>base rules, task artifacts<br/>Applies mode-specific enrichment<br/>Determines commands and skills"]
+
+    ModeDetails --> Command
+
+    Command["Command<br/>(structured execution)"]
+
+    Command --> CmdDetails["Validates inputs against contract<br/>Executes defined phases/steps<br/>Formats output per specification"]
+
+    CmdDetails --> Artifact
+
+    Artifact["Artifact<br/>(traceable output)"]
+
+    Artifact --> ArtDetails["Written to TASK_DIR with tracked status<br/>Synced progressively to knowledge provider"]
+
+    ArtDetails --> NextMode["Available as context<br/>for next mode via TASK_DIR"]
+
+    NextMode -.->|"cross-chat<br/>handoff"| Mode
 ```
 
 ### Cross-Mode Handoffs
