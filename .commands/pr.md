@@ -55,6 +55,31 @@ Rules:
 - The code block **MUST start** with a Markdown heading (`#` or `##`).
 - Only one code block is allowed.
 
+### Gate: RHOAIAS Context Update
+
+**Type:** Confirmation
+**Fires:** Before any other gate, when TASK_DIR is set and `rhoaias_update` in `status.md` is `required` or `deferred`, AND `RHOAIAS.md` is NOT present in `git diff <base>..HEAD`.
+**Skippable:** Yes.
+
+**Auto-detect:** If `RHOAIAS.md` IS present in `git diff <base>..HEAD` → auto-set `rhoaias_update: done` in `status.md`, skip this gate entirely.
+
+**Context output:**
+"RHOAIAS.md update was flagged by `/blueprint` but hasn't been applied. Use `/aias refresh-context` or edit manually before creating the PR."
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "RHOAIAS.md update is pending. Stop to update, or continue without updating?"
+- **Options:**
+  - `stop`: "Stop — I'll update RHOAIAS.md and `/commit` first"
+  - `continue`: "Continue without updating"
+- **allow_multiple:** false
+
+**On response:**
+- `stop` → STOP command. User updates RHOAIAS.md, runs `/commit`, and re-invokes `/pr`.
+- `continue` → Set `rhoaias_update: skipped` in `status.md`. Proceed to Base Branch Resolution.
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
 ### Gate: Base Branch Resolution (conditional)
 
 **Type:** Input
