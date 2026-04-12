@@ -7,7 +7,7 @@ Inputs:
 - aias/.canonical/base-rule.md (canonical base rule)
 - aias/.canonical/output-contract.md (canonical output contract)
 - <repo_root>/stack-fragment.md (build system integration — one per repo)
-- aias/.canonical/delivery.mdc, devops.mdc (transversal modes — copied to output)
+- aias/.canonical/delivery.mdc, devops.mdc (transversal mode templates — rendered with defaults or stack-profile bindings)
 - <repo_root>/stack-profile.md (one per repo)
 
 Outputs (canonical — always produced):
@@ -57,11 +57,25 @@ FW_COMMANDS_DIR = ROOT / "aias" / ".commands"
 FW_SKILLS_DIR = ROOT / "aias" / ".skills"
 PROJECT_COMMANDS_DIR = ROOT / "aias-config" / "commands"
 PROJECT_SKILLS_DIR = ROOT / "aias-config" / "skills"
-TRANSVERSAL_MODES_DIR = ROOT / "aias" / ".canonical"
+TRANSVERSAL_MODES_DIR = ROOT / "aias" / ".canonical"  # kept for legacy reference only
 
-MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration")
-TRANSVERSAL_MODES = ("delivery", "devops")
+MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration", "delivery", "devops")
 TRANSVERSAL_RULES = ("continuous-improvement",)
+
+TRANSVERSAL_MODE_DEFAULTS: Dict[str, Dict[str, str]] = {
+    "delivery": {
+        "description": "Delivery mode: evaluate plans or tickets for viability, effort, impact, dependencies, and risks; produce raw delivery data for /charter (no implementation design)",
+        "model": "opus-4.6",
+        "color": "indigo",
+        "globs": "*.charter.md, *.plan.md, *.product.md",
+    },
+    "devops": {
+        "description": "DevOps mode: CI/CD pipeline configuration, private dependency resolution, build orchestration, and secrets management across any CI platform",
+        "model": "sonnet-4.6",
+        "color": "slate",
+        "globs": "*.plan.md, *.yml, *.yaml",
+    },
+}
 ALWAYS_APPLY_RULES = ("base", "output-contract", "continuous-improvement")
 
 SUPPORTED_TOOLS = ("cursor", "claude", "windsurf", "copilot", "codex")
@@ -223,16 +237,18 @@ def _gate_1_profile_discovery(
                 f"[G1] Missing binding.generation.stack_id in {profile.relative_to(ROOT)}\n"
                 f"      → Add: - `binding.generation.stack_id`: `<id>`"
             )
-        if "generation.mode_output_dir" not in bindings:
-            errors.append(
-                f"[G1] Missing binding.generation.mode_output_dir in {profile.relative_to(ROOT)}\n"
-                f"      → Add: - `binding.generation.mode_output_dir`: `<path>`"
-            )
-        elif bindings["generation.mode_output_dir"].strip() not in ("aias-config/modes", "aias/.modes"):
-            errors.append(
-                f"[G1] Invalid binding.generation.mode_output_dir in {profile.relative_to(ROOT)}\n"
-                f"      → Must be: - `binding.generation.mode_output_dir`: `aias-config/modes`"
-            )
+        if "generation.mode_output_dir" in bindings:
+            val = bindings["generation.mode_output_dir"].strip()
+            if val == "aias/.modes":
+                errors.append(
+                    f"[G1] Legacy binding.generation.mode_output_dir = 'aias/.modes' in {profile.relative_to(ROOT)}\n"
+                    f"      → Update to: `aias-config/modes` (aias/.modes is deprecated since v7.6)"
+                )
+            elif val != "aias-config/modes":
+                errors.append(
+                    f"[G1] Invalid binding.generation.mode_output_dir in {profile.relative_to(ROOT)}\n"
+                    f"      → Must be: `aias-config/modes` (fixed output directory)"
+                )
         if "generation.tools" not in bindings:
             errors.append(
                 f"[G1] Missing binding.generation.tools in {profile.relative_to(ROOT)}\n"
@@ -265,15 +281,20 @@ def _gate_1_profile_discovery(
 def _gate_2_mode_bindings(
     profile_bindings: List[Tuple[pathlib.Path, Dict[str, str]]],
 ) -> List[str]:
-    """G2: Verify all required mode bindings are present for every profile."""
+    """G2: Verify all required mode bindings are present for every profile.
+    Transversal modes (delivery, devops) have built-in defaults so missing
+    bindings are acceptable — they will use TRANSVERSAL_MODE_DEFAULTS."""
     errors: List[str] = []
 
     for profile, bindings in profile_bindings:
         rel = profile.relative_to(ROOT)
         for mode in MODE_NAMES:
+            defaults = TRANSVERSAL_MODE_DEFAULTS.get(mode, {})
             for field in MODE_FRONTMATTER_KEYS:
                 key = f"mode.{mode}.{field}"
-                if key not in bindings or not bindings[key].strip():
+                has_binding = key in bindings and bindings[key].strip()
+                has_default = field in defaults
+                if not has_binding and not has_default:
                     errors.append(
                         f"[G2] Missing binding.{key} in {rel}\n"
                         f"      → Add: - `binding.{key}`: `<value>`"
@@ -601,12 +622,16 @@ def discover_profiles() -> List[pathlib.Path]:
 
 def mode_frontmatter_from_bindings(bindings: Dict[str, str], mode: str) -> Dict[str, str]:
     required = ("description", "model", "color", "globs")
+    defaults = TRANSVERSAL_MODE_DEFAULTS.get(mode, {})
     result: Dict[str, str] = {}
     for field in required:
         key = f"mode.{mode}.{field}"
-        if key not in bindings or not bindings[key].strip():
+        if key in bindings and bindings[key].strip():
+            result[field] = bindings[key]
+        elif field in defaults:
+            result[field] = defaults[field]
+        else:
             raise KeyError(f"Missing binding key: binding.{key}")
-        result[field] = bindings[key]
     return result
 
 
@@ -661,8 +686,6 @@ def generate_modes_for_profile(
 ) -> Tuple[str, List[str]]:
     if "generation.stack_id" not in bindings:
         raise KeyError(f"Missing binding key: binding.generation.stack_id in {profile_path}")
-    if "generation.mode_output_dir" not in bindings:
-        raise KeyError(f"Missing binding key: binding.generation.mode_output_dir in {profile_path}")
     stack_id = bindings["generation.stack_id"]
 
     MODES_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -918,6 +941,11 @@ def generate_rules_for_profile(
     shared_prefix = detect_shared_prefix(bindings)
     workspace_ids = discover_rule_workspaces(bindings)
 
+    if len(workspace_ids) > 1:
+        print(f"  WARNING: {len(workspace_ids)} workspaces found ({', '.join(workspace_ids)}). "
+              f"Rules are written to flat files (base.mdc, output-contract.mdc) — "
+              f"only the last workspace ('{workspace_ids[-1]}') will be preserved (last-wins).")
+
     generated: List[str] = []
     for ws_id in workspace_ids:
         canon_base = generate_base_rule(bindings, ws_id, shared_prefix)
@@ -967,9 +995,7 @@ def _collect_mode_globs(
     all_bindings: List[Tuple[pathlib.Path, Dict[str, str]]]
 ) -> Dict[str, str]:
     """Collect globs for each mode from all profiles (use first found).
-
-    Only platform modes (MODE_NAMES) have globs — transversal modes (delivery,
-    devops) are not file-type-activated and intentionally have no globs.
+    Falls back to TRANSVERSAL_MODE_DEFAULTS for modes with built-in defaults.
     """
     mode_globs: Dict[str, str] = {}
     for _profile, bindings in all_bindings:
@@ -978,6 +1004,9 @@ def _collect_mode_globs(
                 key = f"mode.{mode}.globs"
                 if key in bindings and bindings[key].strip():
                     mode_globs[mode] = bindings[key]
+    for mode, defaults in TRANSVERSAL_MODE_DEFAULTS.items():
+        if mode not in mode_globs and "globs" in defaults:
+            mode_globs[mode] = defaults["globs"]
     return mode_globs
 
 
@@ -1270,20 +1299,6 @@ def main() -> int:
         all_mode_names = mode_names
         rule_workspaces.extend(generate_rules_for_profile(profile, bindings))
 
-    # --- Transversal modes: copy from .canonical/ to .modes/ ---
-    MODES_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    transversal_copied: List[str] = []
-    for tm in ("delivery", "devops"):
-        src = TRANSVERSAL_MODES_DIR / f"{tm}.mdc"
-        if src.is_file():
-            dst = MODES_OUTPUT_DIR / f"{tm}.mdc"
-            dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
-            transversal_copied.append(tm)
-
-    # Include transversal modes in shortcut generation and post-flight checks.
-    if transversal_copied:
-        all_mode_names.extend(transversal_copied)
-
     # --- Transversal rules: copy from .canonical/ to .rules/ ---
     RULES_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     for tr in TRANSVERSAL_RULES:
@@ -1292,9 +1307,7 @@ def main() -> int:
             dst = RULES_OUTPUT_DIR / f"{tr}.mdc"
             dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
 
-    print(f"\nMode generation completed for stacks: {', '.join(mode_stacks)}.")
-    if transversal_copied:
-        print(f"Transversal modes copied to aias-config/modes/: {', '.join(transversal_copied)}")
+    print(f"\nMode generation completed for stacks: {', '.join(mode_stacks)} ({len(MODE_NAMES)} modes).")
     print(f"Rule generation completed for workspaces: {', '.join(rule_workspaces)}.")
     print(f"Canonical output: aias-config/rules/ (flat), aias-config/modes/ (flat)")
     if RULE_GENERATION_SKIP:
@@ -1312,10 +1325,12 @@ def main() -> int:
         post_errors = postflight_validation(all_mode_names, tools)
         if post_errors:
             print(f"\n{'='*60}")
-            print(f"POST-FLIGHT WARNINGS — {len(post_errors)} issue(s)")
+            print(f"POST-FLIGHT ERRORS — {len(post_errors)} issue(s)")
             print(f"{'='*60}\n")
             for i, err in enumerate(post_errors, 1):
                 print(f"  {i}. {err}\n")
+            print("Generation produced output but post-flight validation failed.")
+            return 1
         else:
             print("  All post-flight gates passed (G6–G7).")
     else:
