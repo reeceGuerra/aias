@@ -189,6 +189,7 @@ status: pending_dor
 tracker_status: PENDING DOR
 completed_steps: [investigate]
 current_step: analyze
+refinement_validated: null
 published: null
 completed: null
 artifacts:
@@ -214,6 +215,7 @@ status: pending_dor
 tracker_status: PENDING DOR
 completed_steps: [investigate, analyze]
 current_step: assess
+refinement_validated: null
 published: null
 completed: null
 artifacts:
@@ -241,6 +243,7 @@ status: pending_dor
 tracker_status: PENDING DOR
 completed_steps: [investigate, analyze, assess]
 current_step: blueprint
+refinement_validated: null
 published: null
 completed: null
 artifacts:
@@ -428,6 +431,7 @@ status: pending_dor
 tracker_status: PENDING DOR
 completed_steps: [charter]
 current_step: closure
+refinement_validated: null
 published: null
 completed: null
 artifacts:
@@ -446,6 +450,7 @@ status: completed
 tracker_status: PENDING DOR
 completed_steps: [charter, closure]
 current_step: null
+refinement_validated: null
 published: 2026-01-25
 completed: 2026-01-25
 artifacts:
