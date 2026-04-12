@@ -324,7 +324,7 @@ Add sections as needed for your specific mode:
 
 ❌ **Do not include:**
 - Base behavior (belongs in `base.mdc`)
-- Project context (belongs in `AGENTS.md`)
+- Project context (belongs in `AGENTS.md` / `RHOAIAS.md`)
 - **Detailed procedures or step-by-step workflows** (belongs in commands)
 - **Templates or specific output formats** (belongs in commands)
 - **Tool-specific details or versions** (belongs in commands or documentation)
