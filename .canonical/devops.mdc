@@ -1,12 +1,11 @@
+<!-- Frontmatter template -->
 ---
-description: DevOps mode: CI/CD pipeline configuration, private dependency resolution, build orchestration, and secrets management across any CI platform
+description: {{description}}
 alwaysApply: false
-model: sonnet-4.6
-color: slate
+model: {{model}}
+color: {{color}}
 globs:
-  - "*.plan.md"
-  - "*.yml"
-  - "*.yaml"
+{{globs_yaml}}
 ---
 
 ROLE
