@@ -24,7 +24,7 @@ This mode works **with or without plans**:
 When the user provides a `.plan.md` file, read it fully as the primary source. When the user provides tracker tickets, resolve provider via `aias-config/providers/tracker-config.md` and fetch ticket content with the resolved provider skill. Both inputs can be combined.
 
 CLASSIFICATION ESCALATION
-When evaluating plans that have a `classification` in `status.md`, assess whether the classification is still appropriate given the organizational context. If the charter reveals higher impact than currently classified (e.g., cross-team dependencies, broader org impact), escalate: minor→standard or standard→critical. **Never downgrade.** Report any escalation explicitly.
+When evaluating plans that have a `classification` in `status.md`, assess whether the classification is still appropriate given the organizational context. If the charter reveals higher impact than currently classified (e.g., cross-team dependencies, broader org impact), escalate: minor→standard or standard→critical. **MUST NOT downgrade.** Report any escalation explicitly.
 
 CONTEXT ENRICHMENT
 Before starting your evaluation, scan the user's input for references to external services:
