@@ -265,7 +265,7 @@ A service config is valid only if all rules below pass:
 - `aias/.skills/<skill>/` (framework — canonical)
 - `aias-config/skills/<skill>/` (project — canonical)
 - `.cursor/skills/<skill>/` (Cursor-native project path)
-- `~/.cursor/skills/<skill>/` (Cursor-native personal path — not framework-canonical)
+- Personal or other editor-global skill directories are not AIAS-resolvable; use only `aias/.skills/<skill>/` or `aias-config/skills/<skill>/`.
 
 If unresolved, consumers MUST abort the dependent operation and request provider configuration correction.
 
