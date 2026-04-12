@@ -51,7 +51,7 @@ artifacts:
 ```yaml
 # status.md
 profile: feature
-classification: B
+classification: standard
 task_id: MAX-12345
 started: 2026-01-20
 status: in_progress
@@ -75,7 +75,7 @@ artifacts:
 ```yaml
 # status.md
 profile: feature
-classification: B
+classification: standard
 task_id: MAX-12345
 started: 2026-01-20
 status: in_progress
@@ -99,7 +99,7 @@ artifacts:
 ```yaml
 # status.md
 profile: feature
-classification: B
+classification: standard
 task_id: MAX-12345
 started: 2026-01-20
 status: in_progress
@@ -123,7 +123,7 @@ artifacts:
 ```yaml
 # status.md
 profile: feature
-classification: B
+classification: standard
 task_id: MAX-12345
 started: 2026-01-20
 status: in_review
@@ -142,12 +142,12 @@ artifacts:
   specs.design.md: synced
 ```
 
-### After `/publish` (Type B closure)
+### After `/publish` (Standard closure)
 
 ```yaml
 # status.md
 profile: feature
-classification: B
+classification: standard
 task_id: MAX-12345
 started: 2026-01-20
 status: completed
@@ -266,7 +266,7 @@ artifacts:
 ```yaml
 # status.md
 profile: bugfix
-classification: A
+classification: minor
 task_id: MAX-67890
 started: 2026-01-22
 status: in_progress
@@ -334,7 +334,7 @@ artifacts:
 ```yaml
 # status.md
 profile: refactor
-classification: A
+classification: minor
 task_id: MAX-11111
 started: 2026-01-23
 status: in_progress
@@ -385,12 +385,12 @@ artifacts:
   dod.plan.md: synced
 ```
 
-### After `/report` (Type A closure)
+### After `/report` (Minor closure)
 
 ```yaml
 # status.md
 profile: enrichment
-classification: A
+classification: minor
 task_id: MAX-22222
 started: 2026-01-24
 status: completed
@@ -421,7 +421,7 @@ artifacts:
 ```yaml
 # status.md
 profile: delivery
-classification: B
+classification: standard
 task_id: MAX-33333
 started: 2026-01-25
 status: pending_dor
@@ -434,12 +434,12 @@ artifacts:
   delivery.charter.md: synced
 ```
 
-### After `/publish` (Type B closure)
+### After `/publish` (Standard closure)
 
 ```yaml
 # status.md
 profile: delivery
-classification: B
+classification: standard
 task_id: MAX-33333
 started: 2026-01-25
 status: completed
@@ -512,9 +512,9 @@ Next command execution publishes all `modified` artifacts back to `synced`.
 
 ## Governance Examples by Classification
 
-### Type A — No Governance Section
+### Minor — No Governance Section
 
-`increments.plan.md` for a simple bugfix (classification A). No `## Governance` section is generated.
+`increments.plan.md` for a simple bugfix (classification minor). No `## Governance` section is generated.
 
 ```markdown
 ## Increments
@@ -535,9 +535,9 @@ Next command execution publishes all `modified` artifacts back to `synced`.
 
 `/implement` behavior: Feedback gate after each increment (baseline). No custom gates, no approval gate.
 
-### Type B — Custom Gates (optional)
+### Standard — Custom Gates (optional)
 
-`increments.plan.md` for a medium-impact feature (classification B) where cross-module dependency warrants a custom gate.
+`increments.plan.md` for a medium-impact feature (classification standard) where cross-module dependency warrants a custom gate.
 
 ```markdown
 ## Governance
@@ -560,9 +560,9 @@ Next command execution publishes all `modified` artifacts back to `synced`.
 
 `/implement` behavior: Feedback gate after Increment 1 (baseline). Custom "API Contract Verification" gate after Increment 2 (takes precedence over baseline Feedback). Feedback gate after Increment 3 (baseline).
 
-### Type C — Mandatory Approval Gate
+### Critical — Mandatory Approval Gate
 
-`increments.plan.md` for a critical architectural redesign (classification C). A `## Governance` section MUST be present with at least one Approval gate.
+`increments.plan.md` for a critical architectural redesign (classification critical). A `## Governance` section MUST be present with at least one Approval gate.
 
 ```markdown
 ## Governance
@@ -591,4 +591,4 @@ Next command execution publishes all `modified` artifacts back to `synced`.
 ...
 ```
 
-`/implement` behavior: Ready gate (structural) → Architecture Approval gate (custom, takes precedence over Type C baseline Approval) → Increment 1. After Increment 2: Migration Checkpoint gate (custom). After Increments 1, 3, 4: Feedback gate (baseline).
+`/implement` behavior: Ready gate (structural) → Architecture Approval gate (custom, takes precedence over Critical baseline Approval) → Increment 1. After Increment 2: Migration Checkpoint gate (custom). After Increments 1, 3, 4: Feedback gate (baseline).
