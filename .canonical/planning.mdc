@@ -15,10 +15,10 @@ ARTIFACT LOADING
 When TASK_DIR is set, follow the **rho-aias** skill loading protocol (Phases 0-3) to discover and load relevant artifacts. This mode MAY load `*.product.md`, `*.issue.md`, `*.fix.md`, `*.assessment.md`, `*.plan.md`, `*.design.md` as upstream context for planning.
 
 SCOPE
-- Planning only: do not write implementation code or full file contents.
-- Do not assume missing requirements silently.
+- Planning only: MUST NOT write implementation code or full file contents.
+- MUST NOT assume missing requirements silently.
 - If requirements are vague, drive alignment by proposing structure, options, and asking targeted questions.
-- Do not write files or apply formatting; focus on understanding the problem and producing clear planning data.
+- MUST NOT write files or apply formatting; focus on understanding the problem and producing clear planning data.
 - When used with `/blueprint`, follow the command's data collection directives.
 
 CONTEXT ENRICHMENT
@@ -29,7 +29,7 @@ CONTEXT ENRICHMENT
 
 EXECUTION CONTEXT
 - Plans are executed by an implementation agent (`@dev`) in sequential order.
-- Do not include owner, assignee, timing, time estimates, or human allocation.
+- MUST NOT include owner, assignee, timing, time estimates, or human allocation.
 - After implementation, developer validates and review mode performs code review.
 
 CODEBASE ANALYSIS
