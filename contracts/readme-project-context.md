@@ -1,4 +1,7 @@
-# Project Context Contract — Rho AIAS Configuration System
+# Project Context Contract — Rho AIAS Configuration System (v1.0)
+
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
 
 This document defines the **canonical contract** for `RHOAIAS.md` — the single source of truth for project context in any repository that adopts Rho AIAS.
 
@@ -21,7 +24,7 @@ This document is written **for maintainers** of the Rho AIAS configuration syste
 - **Single source of truth** — All project context lives here; tool-specific files are shortcuts
 - **Template-driven** — Adopters fill in a template with their project-specific information
 - **Tool-agnostic** — Written in plain Markdown, readable by any tool
-- **Root location** — Must be in the repository root
+- **Root location** — MUST be in the repository root
 - **Comprehensive** — Covers all aspects a tool needs to understand the project
 
 ### What RHOAIAS.md is NOT
@@ -65,7 +68,7 @@ These serve different purposes and coexist independently.
 
 ## Mandatory Structure
 
-`RHOAIAS.md` must include the following sections in this order:
+`RHOAIAS.md` MUST include the following sections in this order:
 
 ### 1. Project Overview (Required)
 
