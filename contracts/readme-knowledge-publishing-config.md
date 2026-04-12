@@ -1,5 +1,8 @@
 # Knowledge Publishing Config Contract — Cursor Configuration System (v1.0)
 
+> **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
+> See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
+
 This document defines the canonical contract for knowledge publishing configuration artifacts used by provider-specific knowledge integrations.
 
 It exists to:
@@ -28,13 +31,13 @@ Legacy location (deprecated in v7.5):
 
 - `aias/.skills/<provider-skill>/confluence-config.md`
 
-The active file must be referenced by `config_source` in `aias-config/providers/knowledge-config.md` and listed in `skill_binding.resource_files`.
+The active file MUST be referenced by `config_source` in `aias-config/providers/knowledge-config.md` and listed in `skill_binding.resource_files`.
 
 ---
 
 ## Mandatory Sections (Order)
 
-Each publishing config file must contain these sections in this exact order:
+Each publishing config file MUST contain these sections in this exact order:
 
 1. `Space`
 2. `Publishing Hierarchy`
@@ -50,7 +53,7 @@ Each publishing config file must contain these sections in this exact order:
 
 ### Space
 
-Each config must declare, at minimum:
+Each config MUST declare, at minimum:
 
 - `space_key` (string, provider space identifier)
 - `space_id_resolution` (string, description of how to resolve the numeric ID at runtime)
@@ -63,7 +66,7 @@ Optional:
 
 ### Publishing Hierarchy
 
-The config must define a hierarchy template that determines how artifacts are organized under the root page. The template must use parameterized segments.
+The config MUST define a hierarchy template that determines how artifacts are organized under the root page. The template MUST use parameterized segments.
 
 Required parameters:
 - A technology/platform grouping segment
@@ -72,21 +75,21 @@ Required parameters:
 
 ### TECH Resolution
 
-The config must define a deterministic priority-ordered resolution strategy for the technology grouping segment. At minimum:
+The config MUST define a deterministic priority-ordered resolution strategy for the technology grouping segment. At minimum:
 
 1. A primary source (e.g., tracker metadata)
 2. A fallback source (e.g., workspace metadata)
 3. A last-resort strategy (e.g., user prompt — never guess)
 
-The config must include a table of supported technology values with their mapping from each resolution source.
+The config MUST include a table of supported technology values with their mapping from each resolution source.
 
 ### Date Resolution
 
-The config must define how time-based segments are derived. The resolution must be deterministic and based on a single, unambiguous source (e.g., system date at publish time).
+The config MUST define how time-based segments are derived. The resolution MUST be deterministic and based on a single, unambiguous source (e.g., system date at publish time).
 
 ### Navigation Algorithm
 
-The config must define a `findOrCreatePage` (or equivalent) algorithm that:
+The config MUST define a `findOrCreatePage` (or equivalent) algorithm that:
 
 1. Searches existing pages before creating new ones (duplicate prevention is mandatory).
 2. Handles each level of the hierarchy sequentially.
@@ -96,7 +99,7 @@ The config must define a `findOrCreatePage` (or equivalent) algorithm that:
 
 ### Rules
 
-The config must declare operational invariants as an explicit rules list. At minimum:
+The config MUST declare operational invariants as an explicit rules list. At minimum:
 
 - Duplicate prevention rule (never create without searching first)
 - Runtime ID resolution rule (never hardcode numeric IDs that can be resolved)
@@ -107,7 +110,7 @@ The config must declare operational invariants as an explicit rules list. At min
 
 ### Example
 
-The config must include at least one concrete example showing the full hierarchy for a representative task.
+The config MUST include at least one concrete example showing the full hierarchy for a representative task.
 
 ---
 
@@ -120,7 +123,7 @@ When resolving publishing configuration:
 - If space key or root page cannot be resolved at runtime: abort dependent publishing operation.
 - If navigation algorithm cannot resolve or create a page: log warning, keep artifact sync status unchanged, do not block command execution.
 
-Error response must include:
+Error response MUST include:
 
 - provider
 - config_source path
