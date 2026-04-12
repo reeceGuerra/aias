@@ -1,6 +1,6 @@
-# Cursor Workflows — End-to-End Guide
+# Workflows — End-to-End Guide
 
-This document describes the complete workflows for common development tasks using Cursor modes and commands. It reflects the **v8.0** architecture with unified task directories, Plan Classification, tracker sync, unconditional knowledge-provider publishing, and separated refinement/planning phases.
+This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **v8.0** architecture with unified task directories, Plan Classification, tracker sync, unconditional knowledge-provider publishing, and separated refinement/planning phases.
 
 ---
 
@@ -77,7 +77,6 @@ flowchart TD
     TracePlan --> TraceImpl["@dev<br/>implement trace"]
     TraceImpl --> QA
     Trace -->|No| Debug["@debug<br/>/fix"]
-    QA --> Debug
     Debug --> Assessment{"Need feasibility gate?"}
     Assessment -->|Yes| Feasibility["/assessment"]
     Feasibility --> BugBlueprint["/blueprint<br/>bug exception<br/>pending_dor → in_progress"]
@@ -598,7 +597,7 @@ Every task directory contains a `status.md` system file that tracks progress, tr
 profile: feature
 task_id: MAX-XXXXX
 classification: null
-refinement_validated: false
+refinement_validated: null
 rhoaias_update: null
 started: 2026-01-25
 status: pending_dor
@@ -822,7 +821,7 @@ For the complete artifact catalog (suffixes, producers, and descriptions), see `
 → `@debug` → `/report`
 
 **New to the framework? Need a quick reference?**
-→ `/guide` (or `/guide feature`, `/guide commands`, `/guide prompt`, etc.)
+→ `/guide` (or `/guide feature`, `/guide bugfix`, `/guide commands`, `/guide prompt`, `/guide context`, etc.)
 
 ---
 
