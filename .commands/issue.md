@@ -19,7 +19,7 @@ Invocation:
 Usage notes:
 - This command is intended to be used **after** `@qa` mode has generated raw QA data.
 - It must not be invoked as a first step when QA information is incomplete.
-- The output will be saved to a `.issue.md` file.
+- The output will be saved to a `report.issue.md` file.
 
 ---
 
