@@ -182,6 +182,7 @@ Follow the **rho-aias** skill loading protocol to resolve TASK_DIR and load all 
 ### Phase 5: Final Status Update
 
 - All artifacts marked `synced`.
+- Add `closure` to `completed_steps`.
 - `status.md` set to `completed`.
 - No further Phase 5c sync needed (already done in Step 1).
 
