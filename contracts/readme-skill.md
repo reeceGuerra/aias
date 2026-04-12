@@ -41,7 +41,7 @@ A skill is **not** a mode, a command, a base rule, or an agent definition.
 | **Command** | How to execute; template, procedure, output format | /blueprint: "collect and structure planning data into artifacts" |
 | **Skill** | How to operate with an external resource or service | atlassian-mcp: "this is how you read a Jira ticket via MCP" |
 | **Base rule** | Always-on behavior; language, constraints, conventions | base.mdc: "respond in Spanish, code in English" |
-| **Agent (AGENTS.md)** | Project context; structure, technologies, conventions | "This is an iOS app using MVVM + Clean Architecture" |
+| **Agent (AGENTS.md / RHOAIAS.md)** | Project context; structure, technologies, conventions | "This is an iOS app using MVVM + Clean Architecture" |
 
 **Key distinction:** A mode decides *when* to use a resource (e.g., "if the user provides a Jira URL, enrich with ticket data"). A skill provides the *how* (e.g., "call `getAccessibleAtlassianResources` first to get `cloudId`, then `getJiraIssue`"). The skill never decides workflow; the mode or command that consumes it does.
 
@@ -60,7 +60,7 @@ Skills **do not**:
 - Define when to use themselves (that is the mode's or command's decision)
 - Include mode logic (role, principles, mental models)
 - Include command logic (templates, output formats, procedures)
-- Contain project-specific context (that belongs in AGENTS.md)
+- Contain project-specific context (that belongs in AGENTS.md / RHOAIAS.md)
 - Contain base behavior (that belongs in base.mdc)
 
 ---
@@ -83,7 +83,7 @@ Skills **do not**:
 - When to use this skill in a workflow (belongs in the consuming mode)
 - Role or mental model ("think as a…") (belongs in a mode)
 - Output templates or formatting (belongs in a command)
-- Project-specific details (belongs in AGENTS.md)
+- Project-specific details (belongs in AGENTS.md / RHOAIAS.md)
 - Generic constraints (belongs in base.mdc)
 - Multiple unrelated services in a single skill
 
@@ -144,7 +144,7 @@ skill-name/
 | Framework | `aias/.skills/skill-name/` | Core skills shipped with the framework (read-only) |
 | Project | `aias-config/skills/skill-name/` | Custom skills created per-project via `aias new --skill` |
 | Project | `.cursor/skills/skill-name/` | Shared with anyone using the repository |
-| Personal | `~/.cursor/skills/skill-name/` | Available across all projects for this user (Cursor-native path, not framework-canonical) |
+| Note | `aias/.skills/` / `aias-config/skills/` | Framework-canonical paths for AIAS resolution; editor-global skill directories are out of scope for contracts. |
 
 **Note:** Never create skills in `~/.cursor/skills-cursor/`. That directory is reserved for Cursor's internal built-in skills.
 
@@ -345,7 +345,7 @@ An API (Application Programming Interface) is a way for software to communicate.
 | "How do I format or structure this output?" | → **Command** |
 | "How do I interact with this external service?" | → **Skill** |
 | "What is always true in every interaction?" | → **Base rule** |
-| "What is this project and how is it structured?" | → **AGENTS.md** |
+| "What is this project and how is it structured?" | → **AGENTS.md / RHOAIAS.md** |
 
 If a piece of knowledge fits in more than one category, it probably needs to be split. Do not put mode logic in a skill or skill logic in a mode.
 
