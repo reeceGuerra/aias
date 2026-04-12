@@ -133,11 +133,11 @@ PUBLISH COMPLETE:
   Plan Delta: generated
   Knowledge target: <parent_page_link>
   Tracker comment: posted | skipped (no ticket)
-  RHOAIAS.md: updated | skipped (consider /aias refresh-context) | not required
+  RHOAIAS.md: updated | deferred (consider /aias refresh-context) | skipped (consider /aias refresh-context) | not required
   Status: completed
 ```
 
-The `RHOAIAS.md` line reads `rhoaias_update` from `status.md`: `done` → "updated", `skipped` → "skipped (consider /aias refresh-context)", `null`/absent/`deferred` → "not required". This is informational only — no gate fires.
+The `RHOAIAS.md` line reads `rhoaias_update` from `status.md`: `done` → "updated", `skipped` → "skipped (consider /aias refresh-context)", `deferred` → "deferred (consider /aias refresh-context)", `null`/absent → "not required". This is informational only — no gate fires.
 
 SERVICE RESOLUTION PSEUDOFLOW:
 
