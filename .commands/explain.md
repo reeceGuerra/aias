@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type A — Chat-Only
+**Command Type:** Advisory — Chat-Only
 
 You are generating a **structured learning response** that teaches the concepts behind a question or topic.
 This command is responsible for identifying the skill gap, explaining the underlying system, presenting alternatives with trade-offs, and MAY quiz the user — optimizing for understanding, not speed.

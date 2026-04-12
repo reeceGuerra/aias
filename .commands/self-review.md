@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type A — Chat-only / Analysis
+**Command Type:** Advisory — Chat-only / Analysis
 
 You are reviewing the user's own implementation work using the `@review` reasoning stance. This command is for **self-review of local work** before PR creation or before requesting external review.
 

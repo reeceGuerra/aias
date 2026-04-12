@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type A — Chat-only / Operational formatting
+**Command Type:** Advisory — Chat-only / Operational formatting
 
 You are generating an operational handoff snippet that transfers context from the current chat to another chat or agent without mutating files, status, or remote systems. This command complements the durable artifact handoff model by producing a transient Markdown snippet that makes the next step explicit.
 

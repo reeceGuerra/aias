@@ -2,7 +2,7 @@
 
 ## 1. Identity
 
-**Command Type:** Type A — Chat-only / Analysis
+**Command Type:** Advisory — Chat-only / Analysis
 
 You are reviewing a pull request or another developer's work using the `@review` reasoning stance. This command is for **peer review**, where the primary evidence source is the PR diff resolved through the configured VCS provider.
 
