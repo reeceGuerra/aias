@@ -81,7 +81,7 @@ Rho AIAS is not positioned as "better than" other frameworks in absolute terms. 
 
 **Compared with BMAD**
 - BMAD-style approaches can be effective for rapid agent orchestration and broad multi-agent collaboration.
-- Rho AIAS is more opinionated about deterministic boundaries: one mode per chat, contract-defined commands, and strict artifact naming/loading protocols.
+- Rho AIAS is more opinionated about deterministic boundaries: one mode per chat, contract-defined commands, and strict artifact naming conventions plus skill loading protocols.
 - The tradeoff is intentional: less free-form flexibility in exchange for lower ambiguity and higher repeatability.
 
 **Compared with Kiro**
