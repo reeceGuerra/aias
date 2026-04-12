@@ -111,7 +111,7 @@ Tip: Run `/guide <profile>` for step-by-step instructions.
 ```
 # Command Reference
 
-<table: command | type (A/B) | recommended mode | profile(s) | what it does>
+<table: command | command type (Advisory | Operative) | recommended mode | profile(s) | what it does>
 ```
 
 ### Subcommand: `prompt`
