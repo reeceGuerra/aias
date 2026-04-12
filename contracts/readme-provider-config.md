@@ -386,7 +386,7 @@ Consumers with external services MUST:
 Cross-service skills (for example `rho-aias`) MUST:
 
 - Resolve providers by category before service-dependent steps.
-- Preserve protocol ordering and semantics.
+- Preserve skill protocol ordering and semantics.
 - Apply fail-fast behavior consistently in service-dependent operations.
 
 ---
