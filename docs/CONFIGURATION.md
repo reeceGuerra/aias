@@ -234,7 +234,7 @@ CONTEXT: <describe the problem or requirement>
 TASK: <what to do>
 ```
 
-See [QUICKSTART.md § Structured Prompt](QUICKSTART.md#structured-prompt-primary-workflow) for the complete field reference including artifact references (ISSUE, FIX, ASSESSMENT, TRACE), FIGMA, PLAN, and aliases (DIR, TICKET).
+> This is a subset. See [QUICKSTART.md § Structured Prompt](QUICKSTART.md#structured-prompt-primary-workflow) for the complete field reference including PROFILE, PLAN, FIGMA, CONTEXT, artifact reference fields (ISSUE, FIX, ASSESSMENT, TRACE), and aliases (DIR, TICKET).
 
 ---
 
