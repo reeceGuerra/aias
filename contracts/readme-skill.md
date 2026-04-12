@@ -361,7 +361,7 @@ Skills SHOULD be versioned when:
 **Versioning approach:**
 - Update the `description` field to include version if needed
 - Document changes in commit messages
-- Consider backward compatibility for modes and commands that consume the skill
+- SHOULD consider backward compatibility for modes and commands that consume the skill
 
 ---
 
