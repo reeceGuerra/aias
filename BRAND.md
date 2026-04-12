@@ -34,7 +34,7 @@ Rho AIAS values are non-negotiable because each one is enforced by architecture,
 1. **Context**  
    *Without context, there is no useful power.*  
    Context turns generic model capability into useful system behavior. Without explicit context, outputs may look strong but remain unreliable in real workflows.  
-   Behavioral trace: AGENTS.md, structured prompts, artifact loading protocol, and task directories.
+   Behavioral trace: AGENTS.md, structured prompts, artifact skill loading protocol, and task directories.
 
 2. **Determinism**  
    *What does not repeat does not scale.*  
