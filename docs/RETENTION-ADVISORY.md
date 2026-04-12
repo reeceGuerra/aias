@@ -87,5 +87,5 @@ The framework's responsibility ends at publishing and synchronizing artifacts to
 ## Further Reading
 
 - `WORKFLOWS.md` — End-to-end workflow descriptions including artifact publication points
-- `rho-aias/reference.md` § Knowledge Sync Details — How Phase 5c progressive sync works
-- `readme-knowledge-publishing-config.md` — How publishing to knowledge providers is configured
+- `../.skills/rho-aias/reference.md` § Knowledge Sync Details — How Phase 5c progressive sync works
+- `../contracts/readme-knowledge-publishing-config.md` — How publishing to knowledge providers is configured
