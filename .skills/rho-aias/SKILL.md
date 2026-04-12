@@ -96,15 +96,15 @@ Every plan is classified to determine its publication and approval requirements:
 
 | Type | Scope | Publication | Approval | Closure |
 |------|-------|-------------|----------|---------|
-| A (Local/Low-Risk) | Bug fixes, small refactors, config | Unconditional (Phase 5c) | Not required | `/publish` (reconciliation + closure). `/brief`/`/report` available as lightweight alternatives |
-| B (Medium-Impact) | Features, UX/UI, internal tools | Unconditional (Phase 5c) | Not required (unless objection) | `/publish` |
-| C (Critical/Strategic) | Arch redesigns, cross-team, launches | Unconditional (Phase 5c) | Required before `/implement` | `/publish` |
+| Minor (Local/Low-Risk) | Bug fixes, small refactors, config | Unconditional (Phase 5c) | Not required | `/publish` (reconciliation + closure). `/brief`/`/report` available as lightweight alternatives |
+| Standard (Medium-Impact) | Features, UX/UI, internal tools | Unconditional (Phase 5c) | Not required (unless objection) | `/publish` |
+| Critical (Critical/Strategic) | Arch redesigns, cross-team, launches | Unconditional (Phase 5c) | Required before `/implement` | `/publish` |
 
 Classification determines governance gates, not publication. Phase 5c always publishes after every command regardless of classification.
 
-- Assigned by `/blueprint` in `status.md` (`classification: A | B | C`).
+- Assigned by `/blueprint` in `status.md` (`classification: minor | standard | critical`).
 - Validated by `/validate-plan` (gap if missing).
-- `/charter` can **escalate** (A→B, B→C) but **never downgrade**.
+- `/charter` can **escalate** (minor→standard, standard→critical) but **never downgrade**.
 
 ### Refinement and Amendment (v8.0)
 
@@ -112,19 +112,15 @@ Classification determines governance gates, not publication. Phase 5c always pub
 - **Amendment Approval**: `/validate-plan` and `/consolidate-plan` include an Amendment gate for DoR/DoD changes discovered during planning (`apply_local`/`pause`/`reject`). `apply_local` modifies locally but does not publish via Phase 5c.
 - **DoR Readiness Check**: `/enrich` includes a DoR Readiness Check gate (blocking/non-blocking classification) before writing DoR/DoD artifacts.
 
-Important terminology:
-- **Command Type A** refers to chat-only command behavior in `readme-commands.md`.
-- **Plan Classification A** refers to the low-risk lifecycle class in this skill.
-
 ### Governance in Artifacts
 
 The `## Governance` section is an optional section inside `increments.plan.md` that defines **per-increment custom gates**. It follows the Governance-in-Artifact Schema defined in `readme-commands.md`.
 
 | Classification | `## Governance` section | Behavior |
 |----------------|------------------------|----------|
-| Type A | MUST NOT be generated | No custom gates; baseline feedback after each increment |
-| Type B | MAY be generated | Custom gates only when risk or cross-team dependencies warrant them |
-| Type C | MUST be generated | At least one Approval gate before the first increment |
+| Minor | MUST NOT be generated | No custom gates; baseline feedback after each increment |
+| Standard | MAY be generated | Custom gates only when risk or cross-team dependencies warrant them |
+| Critical | MUST be generated | At least one Approval gate before the first increment |
 
 **Producer/consumer model:**
 - `/blueprint` is the **governance producer** — it writes the `## Governance` section during Phase 3 based on classification and risk assessment.
@@ -132,7 +128,7 @@ The `## Governance` section is an optional section inside `increments.plan.md` t
 
 **Precedence:** Custom gates in `## Governance` take precedence over classification baselines at their specific trigger points.
 
-**`/charter` escalation:** When `/charter` escalates classification (A→B, B→C), subsequent `/implement` runs automatically inherit the higher governance baseline. If a Type C plan lacks a `## Governance` section, `/validate-plan` flags it as a gap.
+**`/charter` escalation:** When `/charter` escalates classification (minor→standard, standard→critical), subsequent `/implement` runs automatically inherit the higher governance baseline. If a Critical plan lacks a `## Governance` section, `/validate-plan` flags it as a gap.
 
 ---
 
