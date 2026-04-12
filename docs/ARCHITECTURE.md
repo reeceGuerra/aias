@@ -90,7 +90,7 @@ Two command types:
 
 Commands are invoked within a mode context. The mode provides the reasoning; the command provides the structure. A command without a mode is syntax without semantics.
 
-The full command catalog lives in `aias/.commands/`. Current commands: `/aias`, `/assessment`, `/blueprint`, `/brief`, `/charter`, `/commit`, `/consolidate-plan`, `/copyedit`, `/enrich`, `/explain`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/run`, `/self-review`, `/spm`, `/test`, `/trace`, `/validate-plan`.
+The full command catalog lives in `aias/.commands/`. Current commands: `/aias`, `/assessment`, `/blueprint`, `/brief`, `/charter`, `/commit`, `/consolidate-plan`, `/copyedit`, `/enrich`, `/explain`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
 
 Contract: `aias/contracts/readme-commands.md`.
 
