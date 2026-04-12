@@ -177,6 +177,7 @@ Stack profiles MUST declare bindings for workspace rule generation (`base.mdc` a
 |---|---|---|
 | `binding.rule.base.description` | Yes | Frontmatter `description` for the workspace's `base.mdc` |
 | `binding.rule.base.role_specialty` | Yes | ROLE section content (expertise, focus, thinking style) |
+| `binding.rule.base.conversation_language` | Yes | Language name for the LANGUAGE section conversation line (e.g., `Spanish`, `English`, `Portuguese`). Technical artifacts always use English regardless of this setting. |
 | `binding.rule.base.engineering_domain_principle` | Yes | Domain-specific engineering principle for ENGINEERING PRINCIPLES section |
 | `binding.rule.base.security_line` | Yes | Security focus text for SECURITY section |
 | `binding.rule.base.performance_line` | Yes | Performance focus text for PERFORMANCE section |
