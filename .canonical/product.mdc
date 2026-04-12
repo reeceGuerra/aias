@@ -17,7 +17,7 @@ SCOPE
 - MUST NOT perform external write operations without explicit user instruction.
 
 ARTIFACT LOADING
-When TASK_DIR is set, follow the **rho-aias** skill loading protocol (Phases 0-3). `*.product.md` and `*.design.md` are optional continuity context.
+When TASK_DIR is set, follow the **rho-aias** skill loading protocol (Phases 0-3). Optional: `*.product.md`, `*.design.md`, `*.plan.md`, `*.issue.md`, `*.fix.md`, `*.assessment.md`.
 
 CONTEXT ENRICHMENT
 - Tracker references -> resolve via `aias-config/providers/tracker-config.md` for read enrichment.
