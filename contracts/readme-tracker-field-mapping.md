@@ -131,15 +131,22 @@ Commands that only publish comments (e.g., `/brief`) are excluded from the field
 
 ### status.md Fields Relevant to Tracker Sync
 
-The following `status.md` fields are consumed by tracker sync operations (Phase 6). Implementors SHOULD map these fields to provider-specific equivalents where supported:
+The following `status.md` fields are consumed by tracker sync operations (Phase 6). Implementors SHOULD map these fields to provider-specific equivalents where supported. Fields marked **N/A — local-only** are not tracker write targets; they are identity, cache, timestamps, or workflow flags maintained locally (see `aias/.skills/rho-aias/reference.md` § `status.md` Format).
 
 | Field | Sync relevance | Typical mapping |
 |---|---|---|
 | `profile` | Determines workflow shape (feature, bugfix, enrichment, delivery) | Issue type or label |
 | `classification` | Plan governance level (minor, standard, critical) | Priority or custom field |
-| `current_step` | Active workflow step | Status or workflow transition |
-| `completed_steps` | Audit trail of completed steps | Comment or custom field |
+| `task_id` | N/A — local-only field | Not mapped; stores the remote issue key (tracker identity), not a writable mapping target |
+| `started` | N/A — local-only field | Local task start timestamp; not pushed via field mapping |
 | `status` | Task lifecycle state (pending_dor, ready, in_progress, in_review, completed) | Workflow status mapping (see `readme-tracker-status-mapping.md`) |
+| `tracker_status` | N/A — local-only field | Cached provider label mirrored from tracker reads; derived from remote, not a push source |
+| `completed_steps` | Audit trail of completed steps | Comment or custom field |
+| `current_step` | Active workflow step | Status or workflow transition |
+| `refinement_validated` | N/A — local-only field | Local flag set by `/enrich` after publish outcome; not synced as a dedicated tracker field |
+| `rhoaias_update` | N/A — local-only field | Local RHOAIAS.md freshness tracking; not synced as a dedicated tracker field |
+| `published` | N/A — local-only field | Local closure/publish metadata; not pushed via field mapping |
+| `completed` | N/A — local-only field | Local completion timestamp/metadata; not pushed via field mapping |
 | `artifacts` | Sync state per artifact (created, modified, synced) | Attachment or linked page metadata |
 
 ---
