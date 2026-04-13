@@ -17,13 +17,13 @@ This is a **system skill** — it is referenced by every mode and every artifact
 
 Use this skill when:
 - **Creating artifacts** — `/blueprint`, `/enrich`, `/issue`, `/fix`, `/charter`, `/trace`, `/assessment`
-- **Consuming artifacts** — `/implement`, `/validate-plan`, `/pr`, `/commit`, `/consolidate-plan`, `/brief`, `/report`, `/assessment`
+- **Consuming artifacts** — `/implement`, `/validate-plan`, `/pr`, `/commit`, `/consolidate-plan`, `/report`, `/assessment`
 - **Reviewing with artifact context** — `/self-review`, `/peer-review`, `/handoff`
 - **Publishing artifacts** — `/publish`, or any command that triggers progressive knowledge sync (Phase 5)
 - **Syncing with tracker** — `/enrich`, `/blueprint`, `/pr`, `/commit` (Phase 6)
 - **Reasoning about task state** — any mode that loads from `<resolved_tasks_dir>/<TASK_ID>/` (default: `~/.cursor/plans/`)
 
-Commands that reference this skill: `/aias`, `/blueprint`, `/brief`, `/charter`, `/commit`, `/consolidate-plan`, `/enrich`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
+Commands that reference this skill: `/aias`, `/blueprint`, `/charter`, `/commit`, `/consolidate-plan`, `/enrich`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
 
 ---
 
@@ -96,7 +96,7 @@ Every plan is classified to determine its publication and approval requirements:
 
 | Type | Scope | Publication | Approval | Closure |
 |------|-------|-------------|----------|---------|
-| Minor (Local/Low-Risk) | Bug fixes, small refactors, config | Unconditional (Phase 5c) | Not required | `/publish` (reconciliation + closure). `/brief`/`/report` available as lightweight alternatives |
+| Minor (Local/Low-Risk) | Bug fixes, small refactors, config | Unconditional (Phase 5c) | Not required | `/publish` (reconciliation + closure). `/report` available as lightweight alternative |
 | Standard (Medium-Impact) | Features, UX/UI, internal tools | Unconditional (Phase 5c) | Not required (unless objection) | `/publish` |
 | Critical (Critical/Strategic) | Arch redesigns, cross-team, launches | Unconditional (Phase 5c) | Required before `/implement` | `/publish` |
 
@@ -108,7 +108,7 @@ Classification determines governance gates, not publication. Phase 5c always pub
 
 ### Refinement and Amendment (v8.0)
 
-- **Refinement validated**: `/enrich` sets `refinement_validated: true` in `status.md` after successful publish. When present, classification-based pre-implementation approval gates MAY be relaxed.
+- **Refinement validated**: `/enrich` sets `refinement_validated: true` in `status.md` when brief comment is posted AND knowledge publish succeeds (team has context for refinement). When present, classification-based pre-implementation approval gates MAY be relaxed.
 - **Amendment Approval**: `/validate-plan` and `/consolidate-plan` include an Amendment gate for DoR/DoD changes discovered during planning (`apply_local`/`pause`/`reject`). `apply_local` modifies locally but does not publish via Phase 5c.
 - **DoR Readiness Check**: `/enrich` includes a DoR Readiness Check gate (blocking/non-blocking classification) before writing DoR/DoD artifacts.
 
@@ -191,7 +191,7 @@ Phase 6 — TRACKER SYNC
   operation and report provider unavailability.
   Resolve canonical transition via provider status mapping.
   Ownership rule:
-    - /enrich owns canonical transition pending_dor -> ready
+    - pending_dor -> ready is a manual transition (team responsibility during refinement)
     - /blueprint owns canonical transition ready -> in_progress
     - /blueprint (bug exception) owns canonical transition pending_dor -> in_progress
     - /pr owns canonical transition in_progress -> in_review
