@@ -75,7 +75,7 @@ FILE OUTPUT CONTRACT (must follow)
 STATUS UPDATE (Phase 5)
 - Add `report.issue.md` to the `artifacts` map in `status.md` with status `created` or `modified`.
 - Add `investigate` to `completed_steps`, set `current_step` to `analyze`.
-- Append entry to `command_log` per Command Log rules in `reference.md`.
+- Append to `command_log`: `{command: /issue, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification (see **rho-aias** skill § Phase 5c).
 
 END-OF-RESPONSE CONFIRMATION (must follow)
