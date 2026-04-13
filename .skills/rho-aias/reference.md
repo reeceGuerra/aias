@@ -85,14 +85,14 @@ Each task follows one of five profiles. The profile determines which steps are e
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
-| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | `pending_dor` → `ready` |
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment posted) |
 | blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts + `specs.design.md` | `ready` → `in_progress` |
 | validate | Chat Planning | `@planning` | `/validate-plan` | — | — |
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
 | implement | Chat Dev | `@dev` | `/implement` | — (code changes) | — |
 | commit | Chat Dev | `@dev` | `/commit` | — | — |
 | pr | Chat Dev | `@dev` | `/pr` | — (PR created) | `in_progress` → `in_review` |
-| closure | (any) | (any) | `/publish` or `/brief`/`/report` | `delta.publish.md` | — |
+| closure | (any) | (any) | `/publish` or `/report` | `delta.publish.md` | — |
 
 ### `bugfix` — Bug investigation and fix
 
@@ -120,28 +120,28 @@ Each task follows one of five profiles. The profile determines which steps are e
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
-| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | `pending_dor` → `ready` |
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment posted) |
 | blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts | `ready` → `in_progress` |
 | validate | Chat Planning | `@planning` | `/validate-plan` | — | — |
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
 | implement | Chat Dev | `@dev` | `/implement` | — (code changes) | — |
 | commit | Chat Dev | `@dev` | `/commit` | — | — |
 | pr | Chat Dev | `@dev` | `/pr` | — (PR created) | `in_progress` → `in_review` |
-| closure | (any) | (any) | `/publish` or `/brief`/`/report` | `delta.publish.md` | — |
+| closure | (any) | (any) | `/publish` or `/report` | `delta.publish.md` | — |
 
 ### `enrichment` — Ticket enrichment only (no implementation)
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
-| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | `pending_dor` → `ready` |
-| closure | (any) | (any) | `/publish` or `/brief` | `delta.publish.md` | — |
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment posted) |
+| closure | (any) | (any) | `/publish` | `delta.publish.md` | — |
 
 ### `delivery` — Charter and viability assessment
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
 | charter | Chat Delivery | `@delivery` | `/charter` (with or without plans) | `delivery.charter.md` | — |
-| closure | (any) | (any) | `/publish` or `/brief` | `delta.publish.md` | — |
+| closure | (any) | (any) | `/publish` | `delta.publish.md` | — |
 
 ---
 
@@ -164,7 +164,7 @@ Steps are tracked in `status.md` under `completed_steps` (array) and `current_st
 | `pr` | `/pr` creates or updates PR | PR URL in context |
 | `report` | `/report` completes | Bug RCA report generated (bugfix profile, optional step) |
 | `charter` | `/charter` completes | `delivery.charter.md` written |
-| `closure` | `/publish`, `/brief`, or `/report` | Task archived per classification. `/brief` is a lightweight closure that does not produce `delta.publish.md`. |
+| `closure` | `/publish` or `/report` | Task archived per classification. |
 
 ---
 
@@ -192,7 +192,7 @@ command_log:
 ```
 
 The `classification` field is `null` until `/blueprint` assigns it (`minor`, `standard`, or `critical`). See SKILL.md for classification criteria.
-The `refinement_validated` field is `null` initially; set to `true` by `/enrich` after successful publish, `false` if publish was skipped.
+The `refinement_validated` field is `null` initially; set to `true` by `/enrich` when brief comment is posted AND knowledge publish succeeds (team has context for refinement), `false` otherwise.
 
 ### RHOAIAS.md Freshness Tracking
 
@@ -267,7 +267,7 @@ Tracker transitions are defined in canonical form and resolved through provider 
 
 Ownership rules:
 
-- `/enrich` owns canonical transition `pending_dor` -> `ready`.
+- `pending_dor → ready` is a **manual transition** (team responsibility during refinement). `/enrich` publishes artifacts and posts a brief comment but does not change tracker status.
 - `/blueprint` owns canonical transition `ready` -> `in_progress`.
 - `/blueprint` (bug exception) owns canonical transition `pending_dor` -> `in_progress`.
 - `/pr` owns canonical transition `in_progress` -> `in_review`.
@@ -284,7 +284,7 @@ Important boundary:
 | Status | Meaning | Entered when |
 |--------|---------|-------------|
 | `pending_dor` | Artifacts being created, not ready for implementation | Task directory created |
-| `ready` | All required artifacts present, validated | `/enrich` passes |
+| `ready` | All required artifacts present, validated | Manual team transition during refinement |
 | `in_progress` | Implementation underway | `/blueprint` starts (Phase 0, after DoR/DoD verification) |
 | `in_review` | PR created, awaiting feedback or approval | `/pr` creates PR |
 | `completed` | All artifacts published, task archived | `/publish` completes |
@@ -293,7 +293,7 @@ Important boundary:
 ### State transitions
 
 ```
-pending_dor → ready        (/enrich passes)
+pending_dor → ready        (manual team transition during refinement)
 ready → in_progress        (/blueprint starts)
 pending_dor → in_progress  (/blueprint bug exception — skips ready)
 in_progress → in_review    (/pr creates PR)
@@ -474,8 +474,9 @@ After every command execution:
    - For Cursor-first `*.plan.md` artifacts, the publishable body excludes only the initial YAML frontmatter block when present.
    - For non-plan artifacts, publish the full file content.
    - **Never summarize, truncate, or abbreviate** artifact content when publishing. The knowledge provider page must contain the full human-readable document body.
-5. Set artifact status to `synced` on success.
-6. On runtime provider failure: abort dependent sync operation, report provider unavailability, and keep status unchanged.
+5. After each successful artifact publish, inject a Table of Contents macro if the knowledge provider supports it (see provider publishing config). TOC injection is post-publish and non-blocking — failure does not affect artifact sync status.
+6. Set artifact status to `synced` on success.
+7. On runtime provider failure: abort dependent sync operation, report provider unavailability, and keep status unchanged.
 
 ### `/publish` closure sync
 
