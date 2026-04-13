@@ -829,8 +829,8 @@ For the complete artifact catalog (suffixes, producers, and descriptions), see `
 **Need a delivery assessment?**
 → `@delivery` + `/charter`
 
-**Need a feature brief?**
-→ `@product` + `/enrich` (posts brief comment to Jira)
+**Need a product enrichment summary?**
+→ `@product` + `/enrich` (posts enrichment brief as Jira comment)
 
 **Need a bug fix report?**
 → `@debug` → `/report`
