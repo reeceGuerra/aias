@@ -82,7 +82,12 @@ Usage notes:
 - **Refresh context**: The `refresh-context` subcommand analyzes project changes since `RHOAIAS.md` was last modified and proposes section-level updates. Flow:
   1. Read `RHOAIAS.md` and parse its sections against the mandatory structure from `readme-project-context.md`.
   2. Attempt to resolve knowledge provider from `aias-config/providers/knowledge-config.md`.
-  3. **If knowledge provider is available**: search for published plans (`technical.plan.md`, `delta.publish.md`) with `completed` date after `RHOAIAS.md`'s last modification. Extract structural changes (new modules, dependencies, pattern shifts).
+  3. **If knowledge provider is available** (delta-first strategy):
+     a. Search for published `delta.publish.md` pages by title in the task spaces.
+     b. Read each delta's content and check for the `RHOAIAS.md Context Sync` section. Select deltas where `rhoaias_synced` = `deferred` or `skipped`.
+     c. Deltas without the `RHOAIAS.md Context Sync` section (published before this feature) are ignored — they lack reliable impact information.
+     d. If matching deltas are found: read their content to identify structural changes (new modules, dependencies, pattern shifts) that caused the deferral/skip.
+     e. If no matching deltas are found: fall back to searching recent published plans (`technical.plan.md`) with `completed` date after `RHOAIAS.md`'s last modification.
   4. **If knowledge provider is not available**: fire the Refresh Source gate.
 
 #### Gate: Refresh Source
