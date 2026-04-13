@@ -146,6 +146,7 @@ Present the approved proposal summary:
 - Mark the corresponding validation todo in `technical.plan.md` as `completed`.
 - Run Phase 5: mark updated artifacts as `modified` in `status.md`, sync to resolved knowledge provider (Phase 5c always publishes, except for locally-amended DoR/DoD).
 - Add `consolidate` to `completed_steps`. Set `current_step` to `validate`.
+- Append entry to `command_log` per Command Log rules in `reference.md`.
 - Confirm in chat: "Artifact updated. Validation todo resolved." and list remaining pending validation todos.
 
 ### Step 5 — Next gap (optional)
