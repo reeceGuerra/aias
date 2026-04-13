@@ -194,7 +194,7 @@ Follow the **rho-aias** skill loading protocol to resolve TASK_DIR and load all 
 - All artifacts marked `synced`.
 - Add `closure` to `completed_steps`.
 - `status.md` set to `completed`.
-- Append entry to `command_log` per Command Log rules in `reference.md`.
+- Append to `command_log`: `{command: /publish, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - No further Phase 5c sync needed (already done in Step 1).
 
 ### Phase 6 — Tracker Boundary (No Transition)
