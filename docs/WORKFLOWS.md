@@ -615,7 +615,15 @@ published: null
 completed: null
 artifacts:
   analysis.product.md: created
+command_log:
+  - command: /enrich
+    started_at: 2026-01-25T14:30:12Z
+    ended_at: 2026-01-25T14:35:47Z
 ```
+
+### Command Log (Execution Telemetry)
+
+The `command_log` field is an append-only list recording each command execution with ISO 8601 UTC timestamps (`started_at`, `ended_at`). Every command that writes to `status.md` appends an entry. This enables cost attribution by correlating command time ranges with Cursor's usage CSV. See `reference.md` § Command Log for writing rules and backward compatibility.
 
 ### The 6 States
 
