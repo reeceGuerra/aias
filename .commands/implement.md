@@ -49,7 +49,7 @@ This command produces **code changes** directly in the codebase (not a file arti
 
 STATUS UPDATE (Phase 5 — after each increment)
 - Update `status.md`: update `current_step` to `implement` (if not already set). Do NOT modify the `status` field — it remains `in_progress` as set by `/blueprint`.
-- Append entry to `command_log` per Command Log rules in `reference.md`.
+- Append to `command_log`: `{command: /implement, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
 
 Output is delivered in **phases**, each clearly communicated in chat:
