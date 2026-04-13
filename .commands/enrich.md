@@ -232,7 +232,7 @@ After writing artifacts:
 3. Add `refinement` to `completed_steps`. Set `current_step` based on the profile: if `enrichment` → `closure`; otherwise → `blueprint`.
 4. Set `refinement_validated` in `status.md`: `true` if tracker write was confirmed and publish succeeded; `false` otherwise.
 5. Set `status` in `status.md`: `ready` if tracker transition succeeded; preserve previous value otherwise.
-6. Append entry to `command_log` per Command Log rules in `reference.md`.
+6. Append to `command_log`: `{command: /enrich, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 7. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
 
 ---
