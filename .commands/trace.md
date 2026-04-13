@@ -84,6 +84,7 @@ STATUS UPDATE (Phase 5, when TASK_DIR is set):
 - Add `instrumentation.trace.md` to the `artifacts` map with status `created` or `modified`.
 - Add `trace` to `completed_steps`.
 - Set `current_step` based on profile: if bugfix → `analyze`; otherwise preserve current value.
+- Append entry to `command_log` per Command Log rules in `reference.md`.
 - Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification (see **rho-aias** skill § Phase 5c).
 
 END-OF-RESPONSE CONFIRMATION (when file is written):
