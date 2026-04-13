@@ -150,7 +150,7 @@ The generated file uses the format `< instruction text >` for each placeholder t
 |-------|-----------|---------|--------|
 | **In-workflow** (proactive) | `/blueprint` impact analysis | Every task that goes through `/blueprint` | Sets `rhoaias_update` field in `status.md`; gates in `/commit` and `/pr` remind the user |
 | **Passive detection** | `aias health` staleness check | On-demand health check | Reports WARN when `RHOAIAS.md` is stale (age + commit activity) or contains unfilled placeholders |
-| **Manual catch-up** | `/aias refresh-context` | User invocation | Reads knowledge provider or filesystem, proposes section-level diffs with approval gate |
+| **Manual catch-up** | `/aias refresh-context` | User invocation | Delta-first: searches published `delta.publish.md` for deferred/skipped context sync; falls back to filesystem/git log. Proposes section-level diffs with approval gate |
 
 ### Drift signals
 
@@ -166,6 +166,7 @@ The following signals indicate that `RHOAIAS.md` MAY need updating:
 - `RHOAIAS.md` MUST NOT be modified without human approval. All automated flows (blueprint detection, health warnings, refresh-context proposals) operate through gates — the framework informs and proposes, the human decides.
 - The `rhoaias_update` field in `status.md` tracks freshness state per task. See `reference.md` § `status.md` Format for the field definition and valid states.
 - Tasks that bypass `/blueprint` (ad-hoc `/implement`) do not activate the in-workflow freshness flow. This is a known limitation — ad-hoc work is outside the governed workflow.
+- `/publish` records the `rhoaias_update` outcome in `delta.publish.md` as a `RHOAIAS.md Context Sync` section. This makes deltas the **primary explicit source** for `/aias refresh-context` when a knowledge provider is available — the command searches deltas with `deferred` or `skipped` status to identify tasks that impacted project context but did not update `RHOAIAS.md`. Deltas published before this feature (without the section) are ignored by `refresh-context`.
 
 ---
 
