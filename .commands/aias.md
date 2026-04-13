@@ -256,10 +256,10 @@ No templates directory is created. The contracts are the single source of truth 
 
 ## 9. `health` — Legacy Migration Assistance
 
-When the AI agent executes `/aias health` and the CLI output contains `[WARN]` entries with "Legacy" in the check name or detail:
+When the AI agent executes `/aias health` and the CLI output contains `[WARN]` entries with "Legacy" or "Deprecated" in the check name or detail:
 
-1. Parse the health output for all legacy warnings.
-2. For each detected legacy scenario, present an interactive gate and offer migration:
+1. Parse the health output for all legacy and deprecation warnings.
+2. For each detected scenario, present an interactive gate and offer migration/cleanup:
 
 ### Scenario A — Provider directory migration (`aias-providers/` → `aias-config/providers/`)
 
@@ -279,8 +279,19 @@ Triggered when `[WARN] Legacy providers` appears in health output.
    - Create `aias-config/providers/` if it does not exist.
    - Copy all contents from `aias-providers/` to `aias-config/providers/` (configs + provider subdirectories).
    - Update `resource_files` and `*_source` paths in each `*-config.md` within `aias-config/providers/` (replace `aias-providers/` with `aias-config/providers/`).
-   - Do NOT delete `aias-providers/` (coexists during v7.6).
    - Report migration results.
+   - Fire the Cleanup gate:
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Migration complete. Delete legacy `aias-providers/` directory? (coexistence period expired in v8.0)"
+- **Options:**
+  - `delete`: "Delete aias-providers/"
+  - `keep`: "Keep aias-providers/ (will continue triggering health warnings)"
+- **allow_multiple:** false
+
+   - If `delete`: remove `aias-providers/` recursively.
+   - If `keep`: warn that the legacy directory will continue triggering health warnings.
 3. If the user selects `skip`: proceed without migration.
 
 ### Scenario B — Generated rules/modes regeneration (`aias/.rules/` and `aias/.modes/`)
@@ -289,7 +300,18 @@ Triggered when `[WARN] Legacy rules` or `[WARN] Legacy modes` appears in health 
 
 1. Inform the user: "Generated rules/modes detected in legacy location inside the submodule. The fix is to re-run the generator, which now writes to `aias-config/rules/` and `aias-config/modes/`."
 2. Offer to execute: `python3 aias/.canonical/generation/aias_cli.py generate --shortcuts`
-3. The old files in `aias/.rules/` and `aias/.modes/` are harmless residuals (already `.gitignore`d in the submodule repo).
+3. After successful regeneration, fire the Cleanup gate:
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Regeneration complete. Delete legacy `aias/.rules/` and `aias/.modes/` directories? (coexistence period expired in v8.0)"
+- **Options:**
+  - `delete`: "Delete aias/.rules/ and aias/.modes/"
+  - `keep`: "Keep legacy directories (will continue triggering health warnings)"
+- **allow_multiple:** false
+
+   - If `delete`: remove `aias/.rules/` and `aias/.modes/` recursively. These are `.gitignore`d in the submodule — deletion is safe.
+   - If `keep`: warn that the legacy directories will continue triggering health warnings.
 
 ### Scenario C — Shortcuts re-targeting
 
@@ -315,11 +337,45 @@ Triggered when `[WARN] Referenced files` mentions "Legacy location: aias/.skills
 2. If the user selects `migrate`:
    - Copy referenced files from `aias/.skills/<skill>/` to `aias-config/providers/<provider_id>/`.
    - Update `resource_files` and `*_source` paths in the corresponding `*-config.md`.
-   - Do NOT delete the originals (they coexist).
    - Report migration results.
+   - Fire the Cleanup gate:
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Migration complete. Delete migrated files from legacy `aias/.skills/` location? (coexistence period expired in v8.0)"
+- **Options:**
+  - `delete`: "Delete migrated files from aias/.skills/"
+  - `keep`: "Keep legacy files (will continue triggering health warnings)"
+- **allow_multiple:** false
+
+   - If `delete`: remove only the specific files that were migrated from `aias/.skills/<skill>/`. Do NOT delete the entire `aias/.skills/` directory (it contains the active `rho-aias` skill).
+   - If `keep`: warn that the legacy paths will continue triggering health warnings.
 3. If the user selects `skip`: proceed without migration.
 
-### Scenario E — Shortcut integrity failures
+### Scenario E — Canonical output binding migration
+
+Triggered when `[WARN] Legacy canonical bindings` or `[WARN] Deprecated binding` appears in health output.
+
+1. Fire the Canonical Binding Migration gate:
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Stack profile has legacy or deprecated output bindings. Update to canonical bindings?"
+- **Options:**
+  - `update`: "Update to canonical bindings"
+  - `skip`: "Skip binding migration"
+- **allow_multiple:** false
+
+2. If the user selects `update`:
+   - If `binding.generation.canonical_mode_output_dir` has a legacy value (`aias/.modes`), replace with `aias-config/modes`.
+   - If `binding.generation.canonical_rule_output_dir` has a legacy value (`aias/.rules`), replace with `aias-config/rules`.
+   - If `binding.generation.canonical_mode_output_dir` is absent, add the line `- \`binding.generation.canonical_mode_output_dir\`: \`aias-config/modes\`` to the Generation Bindings section.
+   - If `binding.generation.canonical_rule_output_dir` is absent, add the line `- \`binding.generation.canonical_rule_output_dir\`: \`aias-config/rules\`` to the Generation Bindings section.
+   - If `binding.generation.mode_output_dir` is present, remove the line (deprecated, scheduled for removal).
+   - Report migration results and suggest re-running `/aias health` to verify.
+3. If the user selects `skip`: proceed without migration.
+
+### Scenario F — Shortcut integrity failures
 
 Triggered when `[FAIL] Shortcut integrity` appears in health output.
 
