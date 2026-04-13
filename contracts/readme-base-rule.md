@@ -179,7 +179,7 @@ Instructs the agent on how to work with the agentic architecture's commands and 
 **Example:**
 ```
 COMMANDS AND SKILLS
-- When the user invokes a slash command (e.g., `/commit`, `/brief`, `/pr`), follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
+- When the user invokes a slash command (e.g., `/commit`, `/enrich`, `/pr`), follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
 - When a mode or command references a skill by name (e.g., "use the **atlassian-mcp** skill"), follow the skill definition. Skills are loaded from `aias/.skills/` or `aias-config/skills/`.
 - Never execute a command or skill from memory. Always follow the loaded definition.
 ```
@@ -312,7 +312,7 @@ LANGUAGE
 - Code, identifiers, filenames, docstrings, and commit messages: English.
 
 COMMANDS AND SKILLS
-- When the user invokes a slash command (e.g., `/commit`, `/brief`, `/pr`), follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
+- When the user invokes a slash command (e.g., `/commit`, `/enrich`, `/pr`), follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
 - When a mode or command references a skill by name (e.g., "use the **atlassian-mcp** skill"), follow the skill definition. Skills are loaded from `aias/.skills/` or `aias-config/skills/`.
 - Never execute a command or skill from memory. Always follow the loaded definition.
 
