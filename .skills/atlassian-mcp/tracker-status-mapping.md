@@ -71,9 +71,6 @@ provider_to_canonical:
 
 ```yaml
 command_triggers:
-  /enrich:
-    from: pending_dor
-    to: ready
   /blueprint:
     from: ready
     to: in_progress
@@ -85,6 +82,8 @@ command_triggers:
     to: in_review
   /commit:
     verify: in_review
+# Note: pending_dor → ready is a manual transition (team responsibility during refinement).
+# /enrich posts a brief comment and publishes artifacts but does not change tracker status.
 ```
 
 ## Boundary Rules
@@ -113,9 +112,9 @@ canonical_to_provider:
   completed: { state_name: "DONE", container_type: "status" }
   cancelled: { state_name: "CANCELLED", container_type: "status" }
 command_triggers:
-  /enrich: { from: pending_dor, to: ready }
   /blueprint: { from: ready, to: in_progress }
   /blueprint (bug exception): { from: pending_dor, to: in_progress }
   /pr: { from: in_progress, to: in_review }
   /commit: { verify: in_review }
+  # pending_dor → ready: manual transition (team responsibility)
 ```
