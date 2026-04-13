@@ -85,10 +85,9 @@ Commands define **how to execute** and format output. They structure data from m
 - `/charter` — Structure delivery data into delivery charter (writes to task directory)
 - `/issue` — Structure QA data into bug report (writes to task directory)
 - `/fix` — Structure debug data into fix analysis (writes to task directory)
-- `/brief` — Generate feature brief
 - `/report` — Generate validated bug RCA report and publish RCA fields when requested
 - `/pr` — Generate PR description
-- `/enrich` — Analyze and refine a tracker ticket; produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md`; publishes to knowledge provider; transitions `pending_dor → ready` (use with `@product` or standalone)
+- `/enrich` — Analyze and refine a tracker ticket; produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md`; posts enrichment brief as Jira comment; publishes to knowledge provider (use with `@product` or standalone)
 - `/explain` — Concept-focused learning response (use in any mode, natural in `@product`)
 - `/trace` — Generate log instrumentation plan; writes to task directory (use with `@qa` or `@debug`)
 - `/assessment` — Evaluate fix feasibility; bridges `/fix` to `/blueprint` in bugfix flows (use with `@dev`)
@@ -234,13 +233,12 @@ TASK: Review the changes on the current branch. When done, /self-review.
 | `/implement` | Execute plan increment by increment | Plan in task directory | Code changes |
 | `/issue` | Structure bug report | `@qa` data | Task directory |
 | `/fix` | Structure fix analysis | `@debug` data | Task directory |
-| `/brief` | Feature brief | Planning context | Markdown brief |
 | `/report` | Bug RCA report | Debug context | Markdown RCA summary |
 | `/self-review` | Review your own local work | `@review` + local code / TASK_DIR | Findings + readiness verdict in chat |
 | `/peer-review` | Review a PR or third-party change | `@review` + PR URL/number | Findings + VCS-ready snippets + general review comment |
 | `/handoff` | Prepare the next chat with explicit context | Current chat context + optional TASK_DIR | Single Markdown handoff snippet |
 | `/pr` | PR description | Implementation context | PR template |
-| `/enrich` | Refine task: product analysis + DoR/DoD + publish | Task ID + `@product` context | Task directory + `pending_dor → ready` |
+| `/enrich` | Refine task: product analysis + DoR/DoD + brief comment + publish | Task ID + `@product` context | Task directory + brief comment |
 | `/explain` | Concept learning | Topic or question | Structured explanation (chat) |
 | `/trace` | Log instrumentation plan | `@qa` or `@debug` context | Task directory |
 | `/assessment` | Evaluate fix feasibility | `@dev` + fix + issue | Task directory |
