@@ -168,7 +168,7 @@ Complete parameter reference for all tools available in the Atlassian MCP server
 
 **Rho AIAS guidance:**
 - Do NOT use Jira comments to publish local filesystem paths or machine-specific references.
-- Comments remain valid for intentional tracker communications such as `/brief` or `/publish` closure notices with remote knowledge links.
+- Comments remain valid for intentional tracker communications such as `/enrich` brief comments or `/publish` closure notices with remote knowledge links.
 - For `/report`, comments are a fallback only when the tracker does not expose equivalent structured RCA fields.
 
 ### addWorklogToJiraIssue
