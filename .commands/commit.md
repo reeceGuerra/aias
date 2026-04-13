@@ -99,9 +99,10 @@ COMMIT SUMMARY:
 ```
 
 STATUS UPDATE (Phase 5 — after commits, when TASK_DIR is set):
-1. Add `commit` to `completed_steps` in `status.md`.
-2. Set `current_step` to `pr`.
-3. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
+1. Append entry to `command_log` per Command Log rules in `reference.md`.
+2. Add `commit` to `completed_steps` in `status.md`.
+3. Set `current_step` to `pr`.
+4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
 
 TRACKER SYNC (Phase 6 — after commits, execution mode only)
 - After all commits are done, resolve VCS provider from `aias-config/providers/vcs-config.md`.
