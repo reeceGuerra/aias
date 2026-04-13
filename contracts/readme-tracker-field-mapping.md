@@ -148,6 +148,7 @@ The following `status.md` fields are consumed by tracker sync operations (Phase 
 | `published` | N/A — local-only field | Local closure/publish metadata; not pushed via field mapping |
 | `completed` | N/A — local-only field | Local completion timestamp/metadata; not pushed via field mapping |
 | `artifacts` | Sync state per artifact (created, modified, synced) | Attachment or linked page metadata |
+| `command_log` | N/A — local-only field | Execution telemetry (command name, start/end timestamps); used for cost attribution, not synced to tracker |
 
 ---
 
