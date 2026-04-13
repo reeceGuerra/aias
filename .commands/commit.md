@@ -99,7 +99,7 @@ COMMIT SUMMARY:
 ```
 
 STATUS UPDATE (Phase 5 — after commits, when TASK_DIR is set):
-1. Append entry to `command_log` per Command Log rules in `reference.md`.
+1. Append to `command_log`: `{command: /commit, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 2. Add `commit` to `completed_steps` in `status.md`.
 3. Set `current_step` to `pr`.
 4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification.
