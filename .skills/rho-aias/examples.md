@@ -515,7 +515,7 @@ command_log:
     ended_at: 2026-03-01T11:07:18Z
 ```
 
-### After `/brief` (Minor closure)
+### After `/publish` (Enrichment closure)
 
 ```yaml
 # status.md
@@ -538,7 +538,7 @@ command_log:
   - command: /enrich
     started_at: 2026-03-01T11:00:00Z
     ended_at: 2026-03-01T11:07:18Z
-  - command: /brief
+  - command: /publish
     started_at: 2026-03-01T11:15:00Z
     ended_at: 2026-03-01T11:17:45Z
 ```
