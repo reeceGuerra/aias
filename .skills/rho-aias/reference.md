@@ -85,7 +85,7 @@ Each task follows one of five profiles. The profile determines which steps are e
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
-| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment posted) |
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment if `--brief`) |
 | blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts + `specs.design.md` | `ready` → `in_progress` |
 | validate | Chat Planning | `@planning` | `/validate-plan` | — | — |
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
@@ -120,7 +120,7 @@ Each task follows one of five profiles. The profile determines which steps are e
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
-| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment posted) |
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment if `--brief`) |
 | blueprint | Chat Planning | `@planning` | `/blueprint` | plan artifacts | `ready` → `in_progress` |
 | validate | Chat Planning | `@planning` | `/validate-plan` | — | — |
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
@@ -133,7 +133,7 @@ Each task follows one of five profiles. The profile determines which steps are e
 
 | Step | Chat | Mode | Command | Artifacts produced | Tracker transition (canonical) |
 |------|------|------|---------|--------------------|-----------------|
-| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment posted) |
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md`, `dod.plan.md` | — (brief comment if `--brief`) |
 | closure | (any) | (any) | `/publish` | `delta.publish.md` | — |
 
 ### `delivery` — Charter and viability assessment
@@ -192,7 +192,7 @@ command_log:
 ```
 
 The `classification` field is `null` until `/blueprint` assigns it (`minor`, `standard`, or `critical`). See SKILL.md for classification criteria.
-The `refinement_validated` field is `null` initially; set to `true` by `/enrich` when brief comment is posted AND knowledge publish succeeds (team has context for refinement), `false` otherwise.
+The `refinement_validated` field is `null` initially; set to `true` by `/enrich --brief` when brief comment is posted AND knowledge publish succeeds (team has context for refinement); `false` otherwise. Without `--brief`, `/enrich` always sets `refinement_validated: false`.
 
 ### RHOAIAS.md Freshness Tracking
 
@@ -267,7 +267,7 @@ Tracker transitions are defined in canonical form and resolved through provider 
 
 Ownership rules:
 
-- `pending_dor → ready` is a **manual transition** (team responsibility during refinement). `/enrich` publishes artifacts and posts a brief comment but does not change tracker status.
+- `pending_dor → ready` is a **manual transition** (team responsibility during refinement). `/enrich` publishes artifacts to the knowledge provider and optionally posts a brief comment (`--brief`) but does not change tracker status.
 - `/blueprint` owns canonical transition `ready` -> `in_progress`.
 - `/blueprint` (bug exception) owns canonical transition `pending_dor` -> `in_progress`.
 - `/pr` owns canonical transition `in_progress` -> `in_review`.
