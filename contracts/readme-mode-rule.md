@@ -109,7 +109,7 @@ Understanding when to use a mode rule vs a command is critical for maintaining a
 - "Question assumptions explicitly"
 
 **Command (`/enrich`):**
-- "Analyze task completeness, generate artifacts, post enrichment brief"
+- "Analyze task completeness, generate artifacts, optionally post enrichment brief (`--brief`)"
 - "Use the output contract template"
 - "Structure the output as JSON for processing"
 
