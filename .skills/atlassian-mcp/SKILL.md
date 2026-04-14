@@ -245,7 +245,7 @@ Before any write command (`/enrich`, `/report`) pushes content to Jira fields, t
    2. **Mapping document** (`Format` column in the loaded `jira-field-mapping.md`) — second priority.
    3. **Default** (ADF for custom textarea fields, Markdown for `description`) — lowest priority.
 3. **Record `decision_source`** for each field: `runtime`, `mapping`, or `default`.
-4. **Build write plan**: Assemble the resolved format per field. Include in the command's confirmation gate (Tracker Write Preview for `/enrich`, Tracker Publish for `/report`).
+4. **Build write plan**: Assemble the resolved format per field. Include in the command's confirmation gate (Tracker Write Preview for `/enrich --fields`, Tracker Publish for `/report`).
 5. **Execute writes** using resolved formats only. Never assume a format without resolution.
 
 If runtime metadata contradicts the mapping, use runtime metadata for the write and report mapping drift to the user.
