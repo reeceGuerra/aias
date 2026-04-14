@@ -6,7 +6,7 @@
 
 ## Feature Flow: Directory State Evolution
 
-### After `/enrich MAX-12345`
+### After `/enrich MAX-12345 --brief`
 
 ```
 <resolved_tasks_dir>/MAX-12345/
@@ -404,7 +404,7 @@ command_log:
 
 ## Refactor Flow: Directory State Evolution
 
-### After `/enrich MAX-11111`
+### After `/enrich MAX-11111 --brief`
 
 ```
 <resolved_tasks_dir>/MAX-11111/
@@ -482,7 +482,7 @@ command_log:
 
 ## Enrichment Flow: Directory State Evolution
 
-### After `/enrich MAX-22222`
+### After `/enrich MAX-22222 --brief`
 
 ```
 <resolved_tasks_dir>/MAX-22222/
