@@ -85,6 +85,7 @@ Resolve the knowledge provider from `aias-config/providers/knowledge-config.md`:
 Apply generic knowledge sync algorithm:
 - Resolve target hierarchy/namespace for `<TASK_ID>` using provider parameters.
 - For each artifact marked `created` or `modified`, perform provider-specific upsert.
+- After each successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c).
 - Mark artifact as `synced` on success.
 - Keep artifact state unchanged on failure and continue (non-blocking).
 
@@ -114,7 +115,7 @@ Generate `delta.publish.md` comparing planned artifacts vs actual implementation
   ```
   Mapping: `done` → "updated", `deferred` → "deferred", `skipped` → "skipped", `null`/absent → "not required". This section enables `/aias refresh-context` to locate tasks that deferred or skipped context updates.
 
-Write `delta.publish.md` to TASK_DIR and publish it as a child artifact/page in the resolved knowledge provider.
+Write `delta.publish.md` to TASK_DIR and publish it as a child artifact/page in the resolved knowledge provider. After successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c).
 
 ### Step 3: Closure
 
