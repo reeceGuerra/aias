@@ -474,7 +474,7 @@ After every command execution:
    - For Cursor-first `*.plan.md` artifacts, the publishable body excludes only the initial YAML frontmatter block when present.
    - For non-plan artifacts, publish the full file content.
    - **Never summarize, truncate, or abbreviate** artifact content when publishing. The knowledge provider page must contain the full human-readable document body.
-5. After each successful artifact publish, inject a Table of Contents macro if the knowledge provider supports it (see provider publishing config). TOC injection is post-publish and non-blocking — failure does not affect artifact sync status.
+5. After each successful artifact publish, inject a Table of Contents macro as defined in the resolved provider publishing config (MANDATORY when the config includes a Table of Contents section; see `readme-knowledge-publishing-config.md`). Read the published page in the provider's native format, insert the TOC element per the injection algorithm defined in the config, and update the page. This step is non-blocking — failure does not affect artifact sync status.
 6. Set artifact status to `synced` on success.
 7. On runtime provider failure: abort dependent sync operation, report provider unavailability, and keep status unchanged.
 
