@@ -47,7 +47,7 @@ Rules:
 - **Proposals** must be presented in the chat as plain Markdown. Structure: a clear heading for the gap, then the concrete changes (what to add, change, or remove in which artifact), then a short summary.
 - **Refinement:** Replies in chat; no fixed template. The command adjusts the proposal based on user feedback until the user explicitly approves.
 - **After artifact update:** Confirm in chat: which validation todo was resolved, which artifact(s) were updated, and list remaining pending validation todos.
-- **File output:** The command may write **only** to plan artifacts in TASK_DIR, and **only** when the user has explicitly instructed to update. After updating, run Phase 5 to mark artifacts as `modified` and sync to resolved knowledge provider (Phase 5c always publishes — it is NOT conditioned by plan classification). Exception: DoR/DoD artifacts modified via the Amendment gate remain local and are excluded from Phase 5c until reconciled via `/publish`.
+- **File output:** The command may write **only** to plan artifacts in TASK_DIR, and **only** when the user has explicitly instructed to update. After updating, run Phase 5 to mark artifacts as `modified` and sync to resolved knowledge provider (Phase 5c always publishes — it is NOT conditioned by plan classification; after each successful publish, inject TOC per resolved provider config). Exception: DoR/DoD artifacts modified via the Amendment gate remain local and are excluded from Phase 5c until reconciled via `/publish`.
 
 ---
 
@@ -144,7 +144,7 @@ Present the approved proposal summary:
 
 - Apply the **approved** proposal to the relevant artifact file(s) in TASK_DIR.
 - Mark the corresponding validation todo in `technical.plan.md` as `completed`.
-- Run Phase 5: mark updated artifacts as `modified` in `status.md`, sync to resolved knowledge provider (Phase 5c always publishes, except for locally-amended DoR/DoD).
+- Run Phase 5: mark updated artifacts as `modified` in `status.md`, sync to resolved knowledge provider (Phase 5c always publishes, except for locally-amended DoR/DoD; after each successful publish, inject TOC per resolved provider config).
 - Add `consolidate` to `completed_steps`. Set `current_step` to `validate`.
 - Append to `command_log`: `{command: /consolidate-plan, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - Confirm in chat: "Artifact updated. Validation todo resolved." and list remaining pending validation todos.
