@@ -119,7 +119,7 @@ STATUS UPDATE (Phase 5)
 - When plan passes and gate confirmed: update `status.md` — add `validate` to `completed_steps`, set `current_step` to `implement`. Do NOT modify the `status` field (it remains `in_progress` as set by `/blueprint`).
 - When amendments are applied locally: mark `dor.plan.md`/`dod.plan.md` as `modified` in `status.md` artifacts map.
 - When gaps exist: set `current_step` to `consolidate` and mark `technical.plan.md` as `modified` in `status.md` if validation todos were written or refreshed.
-- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. Exception: DoR/DoD artifacts marked as locally amended (via Amendment gate `apply_local`) are excluded from Phase 5c until reconciled via `/publish`.
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. After each successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c). Exception: DoR/DoD artifacts marked as locally amended (via Amendment gate `apply_local`) are excluded from Phase 5c until reconciled via `/publish`.
 
 Rules:
 - Do NOT structure the rest of the chat output as a formatted document.
