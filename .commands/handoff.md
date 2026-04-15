@@ -66,14 +66,15 @@ Rules:
 - Any assumption or inferred destination MUST be declared inside the snippet.
 - This command MUST distinguish operational handoff from durable artifact handoff: it summarizes the next-step context, but does not replace TASK_DIR artifacts as the source of truth.
 - Extra sections beyond the required base MUST come only from the closed contextual mappings defined in Section 6.
-- **Path resolution:** Before emitting the snippet, resolve the shortcut path for MODE and COMMAND based on the primary tool (first entry) in `binding.generation.tools` from `stack-profile.md`. Use the tool adapter mapping:
+- **Path resolution:** Before emitting the snippet, resolve the shortcut path for MODE and COMMAND based on the primary tool (first entry) in `binding.generation.tools` from `stack-profile.md`. The resolved path MUST always be the **installed shortcut location** — never a framework internal path (`aias/.commands/`, `aias/.modes/`). Use the tool adapter mapping:
   - `cursor`: `.cursor/rules/<mode>.mdc`, `.cursor/commands/<command>.md`
-  - `claude`: `.claude/rules/<mode>.md`, command not supported (emit canonical: `aias/.commands/<command>.md`)
+  - `claude`: `.claude/rules/<mode>.md`, `.claude/commands/<command>.md`
   - `copilot`: `.github/instructions/<mode>.instructions.md`, `.github/agents/<command>.md`
-  - `codex`: mode not supported (emit canonical: `aias-config/modes/<mode>.mdc`), `.codex/commands/<command>.md`
-  - If tool is unknown or `binding.generation.tools` is missing, emit the canonical path as fallback (`aias-config/modes/<mode>.mdc`, `aias/.commands/<command>.md`).
-  - Always verify the resolved path exists before emitting. If missing, fall back to canonical.
-  - Path resolution applies only to framework commands (`aias/.commands/`). Project-specific commands in `aias-config/commands/` are out of scope for handoff resolution.
+  - `codex`: `.codex/modes/<mode>.mdc`, `.codex/commands/<command>.md`
+  - If a tool does not generate shortcuts for a given type (mode or command), resolve to the **primary tool's shortcut path** anyway (the receiving chat uses the same tool). If the shortcut does not exist on disk, fall back to `aias-config/modes/<mode>.mdc` for modes or `aias-config/commands/<command>.md` for commands — never to `aias/.commands/` or `aias/.modes/`.
+  - If `binding.generation.tools` is missing or the tool is unknown, emit `aias-config/modes/<mode>.mdc` for modes and `aias-config/commands/<command>.md` for commands.
+  - Always verify the resolved path exists before emitting. If missing, fall back to the `aias-config/` path as described above.
+  - Path resolution applies to both MODE and COMMAND for framework-defined entries (source: `aias/.commands/`, `aias-config/modes/`). Project-specific commands in `aias-config/commands/` are out of scope for handoff resolution.
 
 ---
 
