@@ -124,6 +124,7 @@ python3 aias/.canonical/generation/aias_cli.py health
 | # | Check | OK | WARN | FAIL |
 |---|---|---|---|---|
 | 1 | `RHOAIAS.md` exists | Exists | — | Not found |
+| 1b | `RHOAIAS.md` freshness | Modified N days ago (N commits since) | Unfilled placeholders / stale (>60 days, >30 commits) | — |
 | 2 | `stack-profile.md` exists | Exists | — | Not found |
 | 3 | `stack-fragment.md` exists | Exists | — | Not found |
 | 4 | `aias/` structure | Framework directories present | Some missing | `aias/` not found |
@@ -131,26 +132,31 @@ python3 aias/.canonical/generation/aias_cli.py health
 | 5 | Contracts exist | >= 10 files | — | Not found |
 | 6 | Generator exists | Present | — | Not found |
 | 7 | Shortcuts up to date | Counts match canonical (scoped to selected tools) | Divergence / no tools binding | — |
+| 7b | Shortcut integrity | G6/G7 passed | Cannot import generator module | Issues found |
 | 8 | Context symlinks | Expected symlinks → `RHOAIAS.md` (scoped to selected tools) | Missing, broken, or no tools binding | — |
 | 9 | Provider configs | Config(s) present in `aias-config/providers/` | Missing or empty | — |
 | 9b | Legacy providers | — | `aias-providers/` exists at root | — |
 | 9c | Legacy rules/modes | — | `.mdc` files in `aias/.rules/` or `aias/.modes/` | — |
 | 9d | Legacy shortcuts | — | Symlinks point to `aias/.rules/` or `aias/.modes/` | — |
-| 10 | Referenced files | All `resource_files` paths exist | Legacy paths (`aias/.skills/`, `aias-providers/`) | Missing `resource_files` key or missing files |
+| 9e | Legacy canonical bindings | — | `canonical_mode_output_dir` or `canonical_rule_output_dir` points to legacy location | — |
+| 9f | Deprecated binding | — | `binding.generation.mode_output_dir` still present | — |
+| 10 | Referenced files | All `resource_files` paths exist | Legacy paths (`aias-providers/`) | Missing `resource_files` key or missing files |
+| 10b | Sections (`<type>`) | All mandatory sections present | TOC cross-reference inconsistency | Missing mandatory sections |
 | 11 | Tasks directory | `binding.generation.tasks_dir` present and directory exists | Directory does not exist yet | Binding missing |
 
 Each check reports a specific corrective action message (not a generic "Run aias init").
 
-#### Legacy detection
+#### Legacy detection and repair
 
-Legacy checks (9b, 9c, 9d, and legacy paths in check 10) detect pre-v7.6 file locations. These produce `[WARN]` — not a hard failure, and do not block "All checks passed". When the AI agent runs `/aias health` and detects these warnings, it offers interactive migration gates (see `/aias` command § 9):
+Legacy checks (9b, 9c, 9d, 9e, 9f, and legacy paths in check 10) detect pre-v7.6 file locations and deprecated bindings. Section validation (10b) detects missing mandatory sections in referenced provider files. These produce `[WARN]` or `[FAIL]`. When the AI agent runs `/aias health` and detects these issues, it offers interactive migration and repair gates (see `/aias` command § 9):
 
-| Legacy scenario | Detection | Migration |
+| Scenario | Detection | Action |
 |---|---|---|
 | `aias-providers/` at root | Check 9b | Copy to `aias-config/providers/`, update paths in configs |
 | `.mdc` files in `aias/.rules/` or `aias/.modes/` | Check 9c | Re-run `aias generate --shortcuts` |
 | Shortcuts pointing to `aias/.rules/` or `aias/.modes/` | Check 9d | Re-run `aias generate --shortcuts` |
-| `resource_files` with `aias/.skills/` or `aias-providers/` prefix | Check 10 | Copy files to `aias-config/providers/<provider>/`, update configs |
+| `resource_files` with `aias-providers/` prefix | Check 10 | Copy files to `aias-config/providers/<provider>/`, update configs |
+| Missing mandatory sections in referenced files | Check 10b | Agent reads governing contract and patches missing sections (Scenario F) |
 
 #### Post-submodule update flow
 
