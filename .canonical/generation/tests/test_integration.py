@@ -194,6 +194,10 @@ class TestShortcutsPerTool(_IntegrationTestBase):
         all_tools = list(gen.SUPPORTED_TOOLS)
         counts = gen.generate_shortcuts(self.mode_names, self._all_bindings(), all_tools)
         for tool in all_tools:
+            if tool == "gemini":
+                # Gemini is context-only (GEMINI.md symlink via CLI init), no shortcuts here.
+                self.assertEqual(counts[tool], 0)
+                continue
             self.assertGreater(counts[tool], 0, f"No shortcuts for {tool}")
         self.assertTrue((self.root / ".cursor" / "rules" / "base.mdc").exists())
         self.assertTrue((self.root / ".claude" / "rules" / "base.md").is_file())

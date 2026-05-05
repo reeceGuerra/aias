@@ -371,6 +371,19 @@ class TestResolveTools(unittest.TestCase):
         self.assertEqual(result, list(gen.SUPPORTED_TOOLS))
 
 
+class TestGeminiSupportConsistency(unittest.TestCase):
+    """BL-S48b — Gemini consistency in SUPPORTED_TOOLS + TOOL_CONTEXT_MAP."""
+
+    def test_gemini_in_supported_tools(self):
+        self.assertIn("gemini", gen.SUPPORTED_TOOLS)
+
+    def test_gemini_context_mapping(self):
+        self.assertEqual(aias_cli.TOOL_CONTEXT_MAP.get("GEMINI.md"), ("gemini",))
+
+    def test_supported_tools_single_source_of_truth(self):
+        self.assertIs(aias_cli.SUPPORTED_TOOLS, gen.SUPPORTED_TOOLS)
+
+
 # ---------------------------------------------------------------------------
 # 1b — Functions with minimal I/O (tempfile)
 # ---------------------------------------------------------------------------
