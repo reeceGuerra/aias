@@ -125,3 +125,27 @@ This command **MUST NOT**:
 - **Adaptive teaching**: if the user says they don't understand, change strategy — use an analogy, a simpler example, or rebuild the abstraction step by step.
 - **Success criterion**: the user SHOULD feel "I understand how this works and why" — not "I applied a fix."
 - This command pairs well with `@product` for deep conceptual exploration, and with `@dev` when the user needs to understand a pattern before implementing it.
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Explanation directly addresses the user question with evidence from allowed inputs.
+- [ ] No file writes or external mutation side effects were performed.
+- [ ] Any uncertainty or missing data is explicit.
+- [ ] Terminal state line was emitted with canonical advisory token.
+
+## 9. Halt Discipline
+
+- Pause only at declared preconditions/blockers.
+- Do not add ad-hoc confirmations between deterministic explanation steps.
+- If blocked, report blocker and required input.
+
+## Terminal State Emission
+
+`[STATE: delivered | inconclusive]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Chain invocation MUST keep advisory/read-only behavior with no semantic divergence.

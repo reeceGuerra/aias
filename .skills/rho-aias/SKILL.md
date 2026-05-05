@@ -1,6 +1,8 @@
 ---
 name: rho-aias
 description: Canonical skill protocol for artifact-driven development workflows. Use when the user works on a task that produces or consumes artifacts under <resolved_tasks_dir>/<TASK_ID>/ (default ~/.cursor/plans/) — including planning, implementation, enrichment, publishing, or any command that reads/writes task artifacts.
+category: knowledge
+version: 5.0.0
 ---
 
 # Agentic-Driven Development
@@ -139,6 +141,8 @@ Every command that interacts with artifacts MUST follow this 7-phase skill proto
 ```
 Phase 0 — DIRECTORY RESOLUTION
   Resolve TASK_DIR from context (Structured Prompt, user input, or directory listing).
+  Resolve project context via walk-up (`cwd` -> root) to discover nearest
+  `RHOAIAS.md`; merge with root context when nested context files exist.
   If TASK_DIR does not exist and command is a producer: create it.
   If TASK_DIR does not exist and command is a consumer: abort.
 

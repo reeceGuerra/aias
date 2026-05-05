@@ -204,6 +204,17 @@ The `rhoaias_update` field tracks whether `RHOAIAS.md` needs updating for the cu
 | `required` | `/blueprint` | Impact detected — RHOAIAS.md should be updated before PR |
 | `deferred` | `/commit` gate | User acknowledged the need but chose to continue; silent in subsequent commits |
 | `done` | Auto-detected by `/commit` or `/pr` | RHOAIAS.md was modified (present in `git status` or `git diff`) |
+
+### Nested Context Discovery (v1.1)
+
+When repositories provide nested `RHOAIAS.md` files, commands resolve context by walking up from current working directory to root:
+
+1. Discover nearest `RHOAIAS.md` in current directory ancestry.
+2. Discover root `RHOAIAS.md` (mandatory baseline).
+3. Merge context with section-level precedence (deeper file wins on overlap).
+4. Keep root-only sections (for example `Rho AIAS Integration`) from root baseline.
+
+This preserves local specificity without duplicating full context in every subdirectory.
 | `skipped` | `/pr` gate | User consciously chose not to update |
 
 **Backward compatibility:** If the field is absent in an existing `status.md`, all commands MUST treat it as `null`. This field is not relevant to tracker sync and does not require an entry in `readme-tracker-field-mapping.md`.

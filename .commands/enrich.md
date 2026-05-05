@@ -456,3 +456,28 @@ This command must **NOT**:
 - Write artifacts outside TASK_DIR
 - Define **how** to implement tests (that is `/blueprint` Cat 9 responsibility); DoR Test criteria only define **what** must be tested
 - Read the codebase to determine architecture or file structure for DoR Technical constraints (that is `/blueprint` responsibility); DoR Technical constraints only capture what is known from the product/ticket perspective
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] DoR/DoD and enrichment artifacts were written as expected in TASK_DIR.
+- [ ] `status.md` and `command_log` updates were applied when state changed.
+- [ ] Optional tracker writes were executed only when flag/gate path required them.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Avoid ad-hoc confirmation pauses between normal enrichment steps.
+- If blocked, report blocker and required input to resume.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MAY skip duplicate chain gates only when already resolved, without changing semantic output.

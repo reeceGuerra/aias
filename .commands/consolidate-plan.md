@@ -164,3 +164,28 @@ This command must **NOT**:
 - Execute external commands or scripts (except reading/writing artifacts in TASK_DIR).
 - Perform deep reasoning beyond proposing and refining artifact text.
 - Write artifacts outside TASK_DIR.
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Consolidation updates were written only to intended plan artifacts.
+- [ ] `status.md` / `command_log` updates were applied when state changed.
+- [ ] No out-of-scope files were modified.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Avoid ad-hoc "continue?" pauses between deterministic steps.
+- If blocked, report blocker and required resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT change semantic consolidation output.

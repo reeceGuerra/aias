@@ -1,4 +1,4 @@
-# Skill Contract — Cursor Configuration System (v1.1)
+# Skill Contract — Cursor Configuration System (v1.2)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -108,6 +108,23 @@ Examples:
 - `atlassian-mcp` — Read Jira issues, Confluence pages
 - `figma-mcp` — Read design context, screenshots
 - `github-mcp` — Read PRs, create PRs
+- `xcode-mcp` — Build/test/search in Xcode via MCP
+
+### Knowledge Skills
+
+Skills that teach reusable domain or framework knowledge that is not bound to a single MCP server.
+
+Characteristics:
+- Do not depend on a single MCP provider surface
+- Encode canonical reusable procedures and decision frameworks
+- Can be referenced by multiple commands/modes as shared protocol or writing/decomposition guidance
+- Evolve with framework doctrine, not with external API drift
+
+Examples:
+- `rho-aias` — Artifact protocol and task lifecycle coordination
+- `technical-writing` — Canonical writing patterns for technical artifacts
+- `incremental-decomposition` — Canonical increment decomposition rules
+- `cross-repo-integration` — Cross-repository integration workflow guidance
 
 ### Tool Skills (future)
 
@@ -154,6 +171,13 @@ skill-name/
 ---
 name: skill-name
 description: Brief description of what this skill does and when the agent should use it. Include trigger terms.
+category: mcp | knowledge | tool
+# Required when category = mcp
+# tested_against:
+#   mcp_server: server-name@YYYY-MM-DD
+#   tools_count: 0
+# Required when category = knowledge
+# version: 1.0.0
 ---
 ```
 
@@ -163,6 +187,16 @@ description: Brief description of what this skill does and when the agent should
 |-------|-------|---------|
 | `name` | Max 64 chars, lowercase letters/numbers/hyphens only | Unique identifier |
 | `description` | Max 1024 chars, non-empty, third person, includes WHAT and WHEN | Agent uses this to decide when to apply the skill |
+| `category` | MUST be exactly one of `mcp`, `knowledge`, `tool` | Classifies governance, versioning, and maintenance policy |
+
+**Category-conditional fields:**
+
+| Category | Field | Rules | Purpose |
+|----------|-------|-------|---------|
+| `mcp` | `tested_against.mcp_server` | SHOULD be `<server-name>@<YYYY-MM-DD>` (non-binding annotation) | Trace which MCP server surface the skill was last validated against |
+| `mcp` | `tested_against.tools_count` | SHOULD be integer >= 0 (non-binding annotation) | Indicates reviewed MCP tool catalog size at validation time |
+| `knowledge` | `version` | SHOULD follow SemVer (`X.Y.Z`) | Tracks doctrine evolution for non-provider skills |
+| `tool` | `version` | MAY be omitted until first concrete tool-skill use case is ratified | Reserved for future tool-skill rollout |
 
 **Description rules:**
 - Write in **third person** (the description is injected into the system prompt)
@@ -351,17 +385,39 @@ If a piece of knowledge fits in more than one category, it probably needs to be 
 
 ---
 
-## Versioning
+## Frontmatter Versioning Policy
 
-Skills SHOULD be versioned when:
-- The underlying MCP or API changes (new parameters, deprecated operations, changed sequences)
-- Operations are added or removed
-- Safety rules change
+Versioning and freshness metadata are governed by skill category:
 
-**Versioning approach:**
-- Update the `description` field to include version if needed
-- Document changes in commit messages
-- SHOULD consider backward compatibility for modes and commands that consume the skill
+### MCP Skills (`category: mcp`)
+
+- MCP skills SHOULD include `tested_against` in frontmatter.
+- `tested_against` is **non-binding** metadata for traceability; its absence MUST NOT break execution.
+- Recommended structure:
+
+```yaml
+tested_against:
+  mcp_server: atlassian@2026-05-05
+  tools_count: 18
+```
+
+- Update `tested_against` when:
+  - The MCP server tool surface changes
+  - A drift-refresh sweep is completed
+  - A security/compliance-triggered skill update is performed
+
+### Knowledge Skills (`category: knowledge`)
+
+- Knowledge skills SHOULD include semantic versioning in `version`.
+- `version` tracks doctrine/protocol evolution and SHOULD bump as:
+  - PATCH (`X.Y.Z+1`) for editorial clarifications with no semantic change
+  - MINOR (`X.Y+1.0`) for additive guidance
+  - MAJOR (`X+1.0.0`) for incompatible behavioral/protocol changes
+
+### Tool Skills (`category: tool`, future)
+
+- Tool skills MAY defer frontmatter version policy until the first concrete tool-skill is ratified in backlog/contract scope.
+- Until then, tool skills remain a reserved category.
 
 ---
 
@@ -394,9 +450,9 @@ When in doubt, ask: "Does this teach the agent how to operate with a specific ex
 
 ## v5 Conventions
 
-### System Skill Type
+### System Skill as Knowledge Skill
 
-The `rho-aias` skill is a **system skill** — it is referenced by every mode and every artifact-producing or artifact-consuming command. Unlike MCP skills (which interact with external APIs) or tool skills (which provide domain knowledge), a system skill defines the **shared skill protocol** that all other artifacts follow.
+The `rho-aias` skill is a **system skill** and belongs to the `knowledge` category. It is referenced by every mode and every artifact-producing or artifact-consuming command. Unlike MCP skills (which interact with external APIs), a system skill defines the shared skill protocol that all other artifacts follow.
 
 System skills are characterized by:
 - **Universal reference** — every mode and command references them

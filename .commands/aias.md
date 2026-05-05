@@ -420,3 +420,28 @@ The generator reads `binding.generation.tools` from `stack-profile.md` to determ
 After `init`, invoke the generator with `--shortcuts` as the final step.
 
 If the generator fails, report the errors to the user. Do NOT modify the stack profile to attempt to fix errors — the user must resolve incomplete bindings manually or by running `/aias new --stack-profile` again.
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Expected files/symlinks for the selected subcommand were created or explicitly skipped with reason.
+- [ ] No unintended writes outside declared command scope were performed.
+- [ ] Any provider/configuration blocker was reported with actionable next step.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates, missing-precondition stops, or explicit user stop.
+- Do not pause for ad-hoc confirmations between normal procedural steps.
+- If blocked, report the exact blocker and required input to resume.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone is the default behavior.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or immediate predecessor evidence in `status.md`.
+- Invocation mode MAY relax duplicate gates but MUST NOT alter semantic effects.

@@ -214,3 +214,28 @@ This command must **NOT**:
 - Proceed without a resolvable TASK_DIR
 - Delete or remove any artifacts
 - Overwrite artifact content (only publish and update sync status)
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] `delta.publish.md` was produced/updated as expected.
+- [ ] Knowledge provider publication/sync side effects completed or were reported as blocked.
+- [ ] `status.md` / `command_log` updates were applied.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- No ad-hoc pauses between deterministic publish phases.
+- If blocked, report blocker and required resume action.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT alter publish semantics.

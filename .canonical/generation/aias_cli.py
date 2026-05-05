@@ -172,6 +172,60 @@ def run_generator(shortcuts: bool = True) -> int:
     return result.returncode
 
 
+def _parse_max_depth(args: List[str], default: int = 0) -> int:
+    """Parse --max-depth <int> option from args."""
+    value = default
+    for i, arg in enumerate(args):
+        if arg == "--max-depth":
+            if i + 1 >= len(args):
+                raise ValueError("--max-depth requires an integer value")
+            try:
+                value = int(args[i + 1])
+            except ValueError as exc:
+                raise ValueError("--max-depth must be an integer") from exc
+            if value < 0:
+                raise ValueError("--max-depth must be >= 0")
+    return value
+
+
+def _discover_rhoaias_files(max_depth: int) -> List[pathlib.Path]:
+    """Discover RHOAIAS.md files from ROOT up to max_depth."""
+    results: List[pathlib.Path] = []
+    for current_root, dirs, files in os.walk(ROOT):
+        current_path = pathlib.Path(current_root)
+        rel = current_path.relative_to(ROOT)
+        depth = 0 if str(rel) == "." else len(rel.parts)
+        if depth > max_depth:
+            dirs[:] = []
+            continue
+        if "RHOAIAS.md" in files:
+            results.append(current_path / "RHOAIAS.md")
+    return sorted(results, key=lambda p: str(p))
+
+
+def _ensure_context_symlinks_for_rhoaias(
+    rhoaias_files: List[pathlib.Path], selected_tools: List[str]
+) -> int:
+    """Ensure tool context symlinks for each discovered RHOAIAS.md."""
+    created = 0
+    for rhoaias_target in rhoaias_files:
+        base_dir = rhoaias_target.parent
+        for filename, required_tools in TOOL_CONTEXT_MAP.items():
+            if selected_tools and not any(t in selected_tools for t in required_tools):
+                continue
+            link_path = base_dir / filename
+            if link_path.is_symlink():
+                current = (link_path.parent / os.readlink(link_path)).resolve()
+                if current == rhoaias_target.resolve():
+                    continue
+            if link_path.is_file():
+                # Non-destructive in non-interactive contexts: leave regular files untouched.
+                continue
+            _create_symlink(link_path, rhoaias_target)
+            created += 1
+    return created
+
+
 def existing_names(directory: pathlib.Path, suffix: str = ".mdc") -> List[str]:
     if not directory.is_dir():
         return []
@@ -798,7 +852,7 @@ def _init_providers() -> None:
 # init
 # ---------------------------------------------------------------------------
 
-def cmd_init() -> None:
+def cmd_init(args: List[str]) -> None:
     print("=" * 60)
     print("  Rho AIAS — Project Onboarding")
     print("=" * 60)
@@ -838,24 +892,35 @@ def cmd_init() -> None:
         new_stack_fragment()
 
     # Step 5: Context symlinks (→ RHOAIAS.md, scoped by tool selection)
+    try:
+        max_depth = _parse_max_depth(args, default=0)
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)
     selected_tools = _read_tools_from_profile()
     print("\nCreating context symlinks → RHOAIAS.md...")
-    rhoaias_target = ROOT / "RHOAIAS.md"
-    for filename, required_tools in TOOL_CONTEXT_MAP.items():
-        if selected_tools and not any(t in selected_tools for t in required_tools):
-            continue
-        link_path = ROOT / filename
-        if link_path.is_symlink():
-            current = (link_path.parent / os.readlink(link_path)).resolve()
-            if current == rhoaias_target.resolve():
-                print(f"  [ok] {filename} → RHOAIAS.md (already a valid symlink)")
+    rhoaias_files = _discover_rhoaias_files(max_depth=max_depth)
+    for rhoaias_target in rhoaias_files:
+        context_dir = rhoaias_target.parent
+        rel_dir = context_dir.relative_to(ROOT)
+        prefix = "." if str(rel_dir) == "." else str(rel_dir)
+        for filename, required_tools in TOOL_CONTEXT_MAP.items():
+            if selected_tools and not any(t in selected_tools for t in required_tools):
                 continue
-        if link_path.is_file():
-            if not confirm(f"  '{filename}' exists as a regular file. Replace with symlink?", default_yes=True):
-                print(f"  Skipped: {filename}")
-                continue
-        _create_symlink(link_path, rhoaias_target)
-        print(f"  Created: {filename} → RHOAIAS.md")
+            link_path = context_dir / filename
+            if link_path.is_symlink():
+                current = (link_path.parent / os.readlink(link_path)).resolve()
+                if current == rhoaias_target.resolve():
+                    print(f"  [ok] {prefix}/{filename} → RHOAIAS.md (already a valid symlink)")
+                    continue
+            if link_path.is_file():
+                rel_file = link_path.relative_to(ROOT)
+                if not confirm(f"  '{rel_file}' exists as a regular file. Replace with symlink?", default_yes=True):
+                    print(f"  Skipped: {rel_file}")
+                    continue
+            _create_symlink(link_path, rhoaias_target)
+            rel_file = link_path.relative_to(ROOT)
+            print(f"  Created: {rel_file} → {rhoaias_target.relative_to(ROOT)}")
 
     # Step 5b: Ensure aias-config/ structure
     for d in (AIAS_CONFIG_DIR, RULES_DIR, MODES_DIR, PROVIDERS_DIR):
@@ -952,15 +1017,27 @@ def cmd_new(args: List[str]) -> None:
 def cmd_generate(args: List[str]) -> None:
     shortcuts = any(a in ("-s", "--shortcuts") for a in args)
     tools_arg = None
+    max_depth = 0
     for i, a in enumerate(args):
         if a in ("-t", "--tools") and i + 1 < len(args):
             tools_arg = args[i + 1]
+    try:
+        max_depth = _parse_max_depth(args, default=0)
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)
     cmd = [sys.executable, str(GENERATOR)]
     if shortcuts:
         cmd.append("--shortcuts")
     if tools_arg:
         cmd.extend(["--tools", tools_arg])
     result = subprocess.run(cmd, cwd=str(ROOT))
+    if result.returncode == 0 and shortcuts:
+        selected_tools = _read_tools_from_profile()
+        rhoaias_files = _discover_rhoaias_files(max_depth=max_depth)
+        created = _ensure_context_symlinks_for_rhoaias(rhoaias_files, selected_tools)
+        if created:
+            print(f"Created {created} nested context symlink(s).")
     sys.exit(result.returncode)
 
 
@@ -1014,6 +1091,24 @@ def cmd_health() -> None:
             "context updates from published deltas"))
     else:
         results.append(("RHOAIAS.md", "FAIL", "Not found"))
+
+    nested_rhoaias = [p for p in _discover_rhoaias_files(max_depth=5) if p != rhoaias]
+    if nested_rhoaias:
+        stale_nested = 0
+        import datetime
+        for nested in nested_rhoaias:
+            try:
+                age_days = (datetime.datetime.now().timestamp() - nested.stat().st_mtime) / 86400
+            except Exception:
+                age_days = 0
+            if age_days >= 30:
+                stale_nested += 1
+        if stale_nested:
+            results.append(("Nested RHOAIAS.md freshness", "WARN",
+                f"{stale_nested}/{len(nested_rhoaias)} nested context file(s) older than 30 days"))
+        else:
+            results.append(("Nested RHOAIAS.md freshness", "OK",
+                f"{len(nested_rhoaias)} nested context file(s) within freshness threshold"))
 
     # 2. stack-profile.md
     profile = ROOT / "stack-profile.md"
@@ -1317,9 +1412,9 @@ Rho AIAS CLI — scaffolding, generation, and health checks.
 Usage: aias <subcommand> [options]
 
 Subcommands:
-  init                  Full project onboarding (interactive)
+  init [--max-depth N]  Full project onboarding (interactive)
   new <flag> [name]     Create a new artifact (mode, rule, command, skill, etc.)
-  generate [--shortcuts] Run the canonical generator (alias: gen)
+  generate [--shortcuts] [--max-depth N] Run the canonical generator (alias: gen)
   health                Verify setup health
 
 Run 'aias new' for artifact creation flags.
@@ -1343,7 +1438,7 @@ def main() -> int:
     rest = args[1:]
 
     if subcmd == "init":
-        cmd_init()
+        cmd_init(rest)
     elif subcmd == "new":
         cmd_new(rest)
     elif subcmd in ("generate", "gen"):

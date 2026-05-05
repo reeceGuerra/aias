@@ -390,3 +390,28 @@ tracker = resolve(tracker-config) or abort(missing/invalid tracker config)
 design = resolve(design-config) or abort(missing/invalid design config)
 knowledge = resolve(knowledge-config) or abort(missing/invalid knowledge config)
 ```
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Required planning artifacts were written to TASK_DIR (or abort path documented).
+- [ ] `status.md` was updated with classification/progress data and `command_log` entry.
+- [ ] Expected tracker/knowledge side effects were executed or explicitly reported as blocked.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates, preconditions, or blocking failures.
+- Avoid ad-hoc confirmation pauses between mandatory phases.
+- If blocked, report blocker + exact required input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone is default.
+- Pipeline mode MAY be inferred via `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MAY skip duplicate interactive checks already resolved in same chain, without changing artifact semantics.

@@ -104,3 +104,27 @@ This command must **NOT**:
 - Replace `@review` with implementation behavior
 - Pretend a PR review happened when only local work was reviewed
 - Emit VCS-ready review comments as if a remote diff existed
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Findings are severity-ordered and anchored to reviewed evidence.
+- [ ] No file writes or remote review mutations were performed.
+- [ ] Open questions/assumptions are explicit.
+- [ ] Terminal state line was emitted with canonical advisory token.
+
+## 9. Halt Discipline
+
+- Pause only at declared preconditions/blockers.
+- Do not add ad-hoc pauses between deterministic review steps.
+- If blocked, report blocker and required input.
+
+## Terminal State Emission
+
+`[STATE: delivered | inconclusive]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Chain invocation MUST preserve advisory/read-only semantics.

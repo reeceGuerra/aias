@@ -236,3 +236,28 @@ For each planned file, **one at a time, sequentially** (never batch):
 - Each file is committed independently in execution mode.
 - Untracked or unchanged files are skipped with a reason.
 - Behavior is identical regardless of project type (ios-app, android-app, swift-package, etc.); only the resolved `PROJECT_ROOT` matters for git.
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Planned git write side effects (stage/commit) completed or were reported as blocked.
+- [ ] `status.md` and `command_log` were updated when task state changed.
+- [ ] Tracker synchronization checks/updates were executed per contract.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared safeguards/gates/preconditions.
+- Do not introduce ad-hoc confirmations between normal git steps.
+- If blocked, report blocker and required human action.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection may skip already-resolved chain gates but never change commit semantics.

@@ -230,3 +230,28 @@ This command must **NOT**:
 - Suggest alternative fixes
 - Execute commands or scripts
 
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Report artifact/output was produced as requested.
+- [ ] Optional tracker/publication side effects executed only through declared gate paths.
+- [ ] `status.md` / `command_log` updates were applied when state changed.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Avoid ad-hoc pauses between deterministic report steps.
+- If blocked, report blocker and exact resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT alter report semantics.
+

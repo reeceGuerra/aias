@@ -245,3 +245,27 @@ This command MUST **NOT**:
 - `/guide` is designed for onboarding new team members and as a quick reference during active work.
 - Pair with `/explain` when the user needs conceptual depth beyond operational guidance.
 - The main menu intentionally fits in one screen to reduce cognitive load.
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Response used current `rho-aias` skill sources (not memorized content).
+- [ ] Output stays chat-only with no file/provider mutation.
+- [ ] Invalid subcommands are handled with valid fallback guidance.
+- [ ] Terminal state line was emitted with canonical advisory token.
+
+## 9. Halt Discipline
+
+- Pause only at declared preconditions/blockers.
+- Do not add ad-hoc confirmation pauses between deterministic guide steps.
+- If blocked, report blocker and required input.
+
+## Terminal State Emission
+
+`[STATE: delivered | inconclusive]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Chain invocation MUST preserve advisory/read-only semantics.

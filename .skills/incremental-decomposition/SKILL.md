@@ -1,6 +1,8 @@
 ---
 name: incremental-decomposition
 description: Standardize how work is broken into self-contained, shippable increments. Use when a command produces, consumes, estimates, or executes increments — ensuring consistent decomposition criteria across the planning-to-implementation pipeline.
+category: knowledge
+version: 1.0.0
 ---
 
 # Incremental Decomposition

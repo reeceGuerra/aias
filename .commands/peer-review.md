@@ -131,3 +131,27 @@ This command must **NOT**:
 - Publish to knowledge provider
 - Post comments or approvals unless the user explicitly requests a separate action
 - Pretend that a VCS-ready snippet was anchored when no diff context exists
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Findings are severity-ordered and evidence-linked.
+- [ ] No file writes, no comment posting, and no remote mutation were performed.
+- [ ] Open questions/assumptions are explicit and non-speculative.
+- [ ] Terminal state line was emitted with canonical advisory token.
+
+## 9. Halt Discipline
+
+- Pause only at declared preconditions/blockers.
+- Do not add ad-hoc pauses between deterministic review steps.
+- If blocked, report blocker and required input.
+
+## Terminal State Emission
+
+`[STATE: delivered | inconclusive]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Chain invocation MUST preserve advisory/read-only semantics.

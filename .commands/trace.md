@@ -197,3 +197,28 @@ This command must **NOT**:
 - Include `Log.resetClock()` more than once per flow
 - Log sensitive data (passwords, tokens, PII) in message strings
 - Add explanatory prose or teaching content inside the code block
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Trace artifact/output was produced as requested.
+- [ ] `status.md` / `command_log` updates were applied when task state changed.
+- [ ] No out-of-scope file/code modifications were introduced.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- No ad-hoc pauses between deterministic trace steps.
+- If blocked, report blocker and required resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT alter trace semantics.

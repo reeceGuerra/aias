@@ -152,3 +152,27 @@ This command must **NOT**:
 - Hide uncertainty behind confident wording
 - Infer a destination command when the user explicitly supplied only a mode and the command remains open
 - Replace TASK_DIR artifacts as the durable handoff layer between chats
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Output includes required handoff fields and explicit uncertainty where evidence is incomplete.
+- [ ] No file mutations or external write operations were performed.
+- [ ] Any read-only provider lookups were correctly attributed.
+- [ ] Terminal state line was emitted with canonical advisory token.
+
+## 9. Halt Discipline
+
+- Pause only at declared preconditions/blockers.
+- Do not add ad-hoc confirmation pauses between deterministic formatting steps.
+- If blocked, report blocker and required resume input.
+
+## Terminal State Emission
+
+`[STATE: delivered | inconclusive]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- If invoked in a chain, behavior remains advisory/read-only; no semantic divergence is allowed.

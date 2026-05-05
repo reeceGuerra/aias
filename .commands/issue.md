@@ -157,3 +157,28 @@ This command MUST **NOT**:
 - Suggest refactors or architectural changes
 - Execute commands or scripts
 - Assign blame or make subjective judgments
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] `report.issue.md` write outcome was confirmed in TASK_DIR.
+- [ ] `status.md` / `command_log` updates were applied when state changed.
+- [ ] Evidence scope remained explicit; no out-of-scope writes occurred.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- No ad-hoc pauses between deterministic issue-analysis steps.
+- If blocked, report blocker and exact resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT alter semantic output.

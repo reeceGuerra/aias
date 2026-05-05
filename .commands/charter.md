@@ -245,3 +245,28 @@ This command must **NOT**:
 - Execute commands or scripts
 - Generate code snippets or implementation details
 - Fetch data from external services (tracker/design/vcs providers); `@delivery` already did that
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] `delivery.charter.md` write outcome was confirmed in TASK_DIR.
+- [ ] `status.md` and `command_log` updates were applied when this command mutated task state.
+- [ ] Any external side effect was confirmed or reported as blocked.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- No ad-hoc confirmation pauses between normal steps.
+- Report blocker + resume requirement when halted.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT alter semantic outputs.

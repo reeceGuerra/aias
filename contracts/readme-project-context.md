@@ -1,4 +1,4 @@
-# Project Context Contract — Rho AIAS Configuration System (v1.0)
+# Project Context Contract — Rho AIAS Configuration System (v1.1)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -24,7 +24,7 @@ This document is written **for maintainers** of the Rho AIAS configuration syste
 - **Single source of truth** — All project context lives here; tool-specific files are shortcuts
 - **Template-driven** — Adopters fill in a template with their project-specific information
 - **Tool-agnostic** — Written in plain Markdown, readable by any tool
-- **Root location** — MUST be in the repository root
+- **Root location** — Primary `RHOAIAS.md` MUST be in the repository root
 - **Comprehensive** — Covers all aspects a tool needs to understand the project
 
 ### What RHOAIAS.md is NOT
@@ -111,6 +111,46 @@ This project uses [Rho AIAS](https://github.com/rho-aias/aias) for AI-assisted d
 
 > This file is the single source of truth for project context. All tool-specific config files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `codex.md`) are shortcuts to this file.
 ```
+
+---
+
+## Nested Context (v1.1)
+
+Nested `RHOAIAS.md` files are supported for repositories that contain independently-scoped subdomains (for example: monorepo with frontend/backend/libs, multi-package workspace, or platform-specific modules).
+
+### When nested context is warranted
+
+- Root-only context SHOULD be used by default.
+- Nested context MAY be introduced when a subdirectory has conventions, build/test commands, or architecture constraints that differ materially from root context.
+- Nested context MUST narrow or specialize root context, never contradict it.
+
+### Precedence and merge rules
+
+- Context resolution walks up from current working directory to repository root.
+- If multiple `RHOAIAS.md` files are discovered, deeper file wins for overlapping sections.
+- Non-overlapping sections are merged (nested additions + root baseline).
+- The root file remains the canonical baseline and MUST exist.
+
+### Mandatory structure in nested files
+
+- Nested `RHOAIAS.md` MAY contain only diverging sections (partial structure is allowed).
+- `Rho AIAS Integration` remains root-only and MUST NOT be duplicated in nested files.
+- Nested files SHOULD explicitly document only the delta from root context.
+
+### Freshness lifecycle for nested files
+
+- Freshness checks apply per discovered context file (root + nested), filesystem-based.
+- `aias health` SHOULD report stale nested contexts independently.
+- `/aias refresh-context` remains section-gated by human approval; nested updates follow the same gate model.
+
+### Tool shortcuts for nested files
+
+- `aias init` and `aias generate --shortcuts` MAY auto-create tool context symlinks for nested `RHOAIAS.md` using `--max-depth <N>`.
+- Symlinks are generated in the same directory as each discovered nested `RHOAIAS.md`.
+
+### Explicit out-of-scope boundary
+
+Multi-repository integration workspaces (`*.code-workspace` that aggregate peer repos) are **out of scope** for nested context semantics. They are peer workspaces, not a parent/child nested context hierarchy.
 
 ---
 

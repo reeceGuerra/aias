@@ -72,6 +72,7 @@ Output is delivered in **phases**, each clearly communicated in chat:
 - Follow all `@dev` mode rules (quality bar, feasibility checks, safeguards).
 - **Review Resolution:** When the chat opening message contains a self-review handoff, convert findings into fix items ordered by severity (blocking → major → minor). Each fix item is executed as a mini-increment with the same gate protocol. Open questions / assumptions from the review MUST NOT be auto-executed — present them to the user for decision.
 - **Full test suite mandatory:** Verification MUST use `RunAllTests`. Using `RunSomeTests` or any subset is **forbidden** during `/implement` verification. The full test suite MUST run after every increment to detect collateral impact on tests outside the modified scope.
+- **Lint/type delta discipline (implement-only):** At command start, capture a baseline lint/type snapshot. After each increment, run the same checks and verify no new issues were introduced versus baseline. Existing legacy issues MAY remain; regressions are forbidden.
 
 ---
 
@@ -422,3 +423,30 @@ This command must **NOT**:
 - Proceed past any phase without completing the previous one
 - Continue after a feedback gate without user confirmation
 - Run only a subset of tests during verification (always run the full suite via `RunAllTests`)
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Increment changes were applied only to files in current increment scope.
+- [ ] Full test suite verification (`RunAllTests`) was executed and outcome reported.
+- [ ] Baseline-at-start lint/type state was captured before edits.
+- [ ] Post-increment lint/type checks introduced no new issues vs baseline.
+- [ ] `status.md` / `command_log` updates were applied for increment progression.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Do not pause ad-hoc between deterministic increment steps.
+- If blocked, report blocker and exact resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MAY skip duplicate already-resolved chain gates without altering increment semantics.

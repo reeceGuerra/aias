@@ -1,4 +1,4 @@
-# Cursor Commands – System Contract (v6.0)
+# Cursor Commands – System Contract (v6.2)
 
 > **Keyword convention**: This contract defines and uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY). See section "RFC-2119 Keyword Policy" below for definitions.
 
@@ -224,6 +224,19 @@ Notes:
 - Even if a command takes no arguments, this section MUST exist.
 - This marks the command as **operational**, not conversational.
 
+#### Invocation Mode Detection (chain-aware pattern)
+
+Commands that can be invoked as part of a pipeline SHOULD declare invocation mode detection:
+
+1. `--from-pipeline` flag in `$ARGUMENTS` (highest priority)
+2. caller tag in `$ARGUMENTS` (for example `--invoked-by /enrich`)
+3. `status.md` evidence of predecessor completion in the same turn-window
+
+Rules:
+- Invocation mode detection MAY relax interactive ergonomics (for example skip duplicate already-resolved confirmation gates).
+- Invocation mode detection MUST NOT change semantic command behavior or output contract.
+- If mode cannot be determined unambiguously, command MUST default to standalone behavior.
+
 ---
 
 ### 3. Inputs
@@ -257,6 +270,17 @@ Rules:
 - This section MUST be **structurally identical** across all commands
 - Only the values change, not the shape
 - This is where consistency is enforced
+
+#### Terminal State Contract (required closing line)
+
+Every command response MUST close with a terminal state line:
+
+- Operative commands: `[STATE: completed | partial | blocked | failed]` + one-line summary
+- Advisory commands: `[STATE: delivered | inconclusive]` + one-line summary
+
+Forbidden endings:
+- Vague closures without state token (for example "Done", "All set", "Pipeline complete")
+- Missing terminal state on partial execution
 
 ---
 
@@ -308,6 +332,48 @@ Purpose:
 - Reduce overreach
 - Prevent scope creep
 - Make boundaries unambiguous
+
+---
+
+### 8. Self-Verification Checklist
+
+Self-verification validates command side effects observable in the current execution.
+
+Rules:
+- Operative commands MUST include a self-verification checklist.
+- Advisory commands SHOULD include a lightweight self-verification checklist.
+- Checklist scope is **Level A only** (functional side effects produced by the command itself).
+- Level B/C/D quality checks belong to dedicated owners (`/validate-plan`, incremental-decomposition skill, review rubric skill).
+
+Required verification dimensions for Operative commands:
+- Expected artifact writes (when applicable)
+- Expected `status.md` updates (when applicable)
+- Expected external sync transitions declared by command
+- Terminal state emission present and consistent
+
+Lint/type checks:
+- Lint/type delta verification applies to `/implement` only.
+- `/implement` MUST baseline lint/type state at command start and MUST verify it did not introduce new issues in the increment.
+- Other commands MUST NOT introduce global lint/type obligations.
+
+---
+
+### 9. Halt Discipline / Autonomous Execution Contract
+
+Commands must continue autonomously unless a declared gate or blocker requires a stop.
+
+Legitimate pause points:
+1. Declared interactive gates (Governance section)
+2. Declared preconditions/failure blockers
+3. Explicit user-requested stop
+
+Forbidden pauses:
+- Ad-hoc "shall I proceed?" prompts between normal procedural steps
+- Pauses introduced only by agent uncertainty when contract already defines next step
+
+Pause behavior:
+- If a legitimate pause fires, command MUST state why and what input is required to resume.
+- If no legitimate pause fires, command MUST proceed to completion and emit terminal state.
 
 ---
 
@@ -729,13 +795,17 @@ Artifacts remain the **durable handoff layer** between chats. The `/handoff` com
 
 ## v6 Conventions
 
+### Deliberative Promotion Reference
+
+Command-contract evolution and scope decisions are governed by the **Deliberative Protocol for Contract Promotion** declared in `.cursor/rules/base.mdc` and mirrored in `AGENTS.md`.
+
 ### Governance Section
 
 The **Governance** section (above) is the canonical source for all gate behavior, enforcement language, and contextual governance rules. Commands MUST comply with the Gate Invocation Protocol, use the Canonical Gate Section Pattern for gate definitions, and follow the Command Gate Requirements for their priority tier.
 
 ### Contract Version
 
-This contract is version **v6**. The Governance section is new in v6. All prior conventions (v5, v5.1) remain in effect unless explicitly superseded by the Governance section.
+This contract is version **v6.2**. The Governance section is new in v6. v6.2 adds Invocation Mode Detection (section 2), Terminal State Contract (section 4), Self-Verification Checklist (section 8), and Halt Discipline (section 9). All prior conventions (v5, v5.1) remain in effect unless explicitly superseded.
 
 ### Backward Compatibility
 

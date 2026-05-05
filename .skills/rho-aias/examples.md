@@ -726,6 +726,21 @@ Step 2 — /blueprint (10 days later, same chat hypothetically)
 
 ---
 
+## Nested Context Discovery Example (Phase 0)
+
+Scenario:
+- Repository has root `RHOAIAS.md`
+- `packages/mobile/RHOAIAS.md` exists with package-specific conventions
+- Command runs from `packages/mobile/`
+
+Expected behavior:
+1. Walk-up finds nearest `packages/mobile/RHOAIAS.md`
+2. Root `RHOAIAS.md` is also loaded as baseline
+3. Overlapping sections use nested values; non-overlapping sections stay from root
+4. `Rho AIAS Integration` remains root-defined
+
+---
+
 ## Governance Examples by Classification
 
 ### Minor — No Governance Section

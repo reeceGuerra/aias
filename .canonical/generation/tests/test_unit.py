@@ -633,5 +633,51 @@ class TestValidateSections(unittest.TestCase):
             self.assertEqual(inconsistencies, [], f"Unexpected inconsistency for {fname}")
 
 
+class TestNestedContextHelpers(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmpdir.name)
+        self.orig_root = aias_cli.ROOT
+        aias_cli.ROOT = self.root
+
+    def tearDown(self):
+        aias_cli.ROOT = self.orig_root
+        self.tmpdir.cleanup()
+
+    def test_parse_max_depth(self):
+        self.assertEqual(aias_cli._parse_max_depth(["--max-depth", "5"]), 5)
+        self.assertEqual(aias_cli._parse_max_depth([], default=0), 0)
+        with self.assertRaises(ValueError):
+            aias_cli._parse_max_depth(["--max-depth", "-1"])
+
+    def test_discover_rhoaias_files_with_depth(self):
+        (self.root / "RHOAIAS.md").write_text("root", encoding="utf-8")
+        nested = self.root / "packages" / "mobile"
+        nested.mkdir(parents=True, exist_ok=True)
+        (nested / "RHOAIAS.md").write_text("nested", encoding="utf-8")
+
+        depth0 = aias_cli._discover_rhoaias_files(max_depth=0)
+        depth5 = aias_cli._discover_rhoaias_files(max_depth=5)
+
+        self.assertEqual(len(depth0), 1)
+        self.assertEqual(len(depth5), 2)
+
+    def test_ensure_context_symlinks_for_nested_rhoaias(self):
+        (self.root / "RHOAIAS.md").write_text("root", encoding="utf-8")
+        nested_dir = self.root / "packages" / "mobile"
+        nested_dir.mkdir(parents=True, exist_ok=True)
+        nested_ctx = nested_dir / "RHOAIAS.md"
+        nested_ctx.write_text("nested", encoding="utf-8")
+
+        created = aias_cli._ensure_context_symlinks_for_rhoaias(
+            [nested_ctx], ["cursor", "claude", "codex", "gemini"]
+        )
+        self.assertGreaterEqual(created, 1)
+        self.assertTrue((nested_dir / "AGENTS.md").is_symlink())
+        self.assertTrue((nested_dir / "CLAUDE.md").is_symlink())
+        self.assertTrue((nested_dir / "codex.md").is_symlink())
+        self.assertTrue((nested_dir / "GEMINI.md").is_symlink())
+
+
 if __name__ == "__main__":
     unittest.main()

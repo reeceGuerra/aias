@@ -1,6 +1,8 @@
 ---
 name: technical-writing
 description: Standardize the quality of written content in technical artifacts (plans, issues, fixes, reports, charters, PRs, enriched tickets). Use when a command produces a prose artifact that benefits from consistent problem framing, acceptance criteria, root cause descriptions, risk articulation, or increment goal definitions.
+category: knowledge
+version: 1.0.0
 ---
 
 # Technical Writing

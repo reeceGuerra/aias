@@ -185,3 +185,28 @@ This command must **NOT**:
 - Modify `analysis.fix.md` or `report.issue.md`
 - Write artifacts outside TASK_DIR
 - Execute commands or scripts beyond reading the codebase
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] `feasibility.assessment.md` write outcome was confirmed in TASK_DIR.
+- [ ] `status.md` and `command_log` updates were applied when this command mutated task state.
+- [ ] Declared side effects were executed or explicitly reported as blocked.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Do not introduce ad-hoc "continue?" pauses between normal steps.
+- If blocked, report the blocker and exact resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Invocation mode MUST NOT change semantic output.

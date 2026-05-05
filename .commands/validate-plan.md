@@ -201,3 +201,28 @@ This command must **NOT**:
 - Modify the `status` field in `status.md` (it remains `in_progress` as set by `/blueprint`)
 - Trigger any tracker status transition (tracker transitions are owned by `/blueprint`, `/pr` (owns `in_progress → in_review`), and `/commit` (verifies `in_review`))
 - Publish locally-amended DoR/DoD artifacts via Phase 5c (those are reconciled via `/publish`)
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Validation output/gaps reflect current TASK_DIR artifact state.
+- [ ] Any `status.md` / `command_log` update was applied when state changed.
+- [ ] No out-of-scope file modifications were introduced.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Avoid ad-hoc pauses between deterministic validation phases.
+- If blocked, report blocker and required resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MAY skip duplicate already-resolved chain prompts without changing validation semantics.

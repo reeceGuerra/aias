@@ -170,3 +170,28 @@ This command must **NOT**:
 - Execute commands or scripts unrelated to file editing
 - Modify files other than the target document
 - Attempt to edit code or structured configuration files
+
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] Target document edits were applied as requested and limited to approved scope.
+- [ ] No out-of-scope files were modified.
+- [ ] `status.md` / `command_log` updates were written when required by workflow.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- Do not pause ad-hoc between deterministic edit steps.
+- If blocked, report exact blocker and required resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MUST NOT alter semantic edits.

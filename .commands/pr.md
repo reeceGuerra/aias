@@ -254,3 +254,28 @@ This command must **NOT**:
 - Suggest alternative approaches
 - Transition tracker to any status other than IN REVIEW
 
+---
+
+## 8. Self-Verification Checklist
+
+- [ ] PR preparation/write side effects were completed or reported as blocked.
+- [ ] Tracker transition semantics were respected and recorded.
+- [ ] `status.md` / `command_log` updates were applied.
+- [ ] Terminal state line was emitted with canonical state token.
+
+## 9. Halt Discipline
+
+- Pause only at declared gates/preconditions/blockers.
+- No ad-hoc confirmation pauses between deterministic PR steps.
+- If blocked, report blocker and exact resume input.
+
+## Terminal State Emission
+
+`[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+## Invocation Mode Detection
+
+- Standalone default.
+- Pipeline mode MAY be inferred from `--from-pipeline`, `--invoked-by`, or predecessor evidence in `status.md`.
+- Detection MAY skip duplicate chain gates only when already resolved, without changing PR semantics.
+
