@@ -142,6 +142,45 @@ Phase 0 — DIRECTORY RESOLUTION
   If TASK_DIR does not exist and command is a producer: create it.
   If TASK_DIR does not exist and command is a consumer: abort.
 
+Phase 0b — CONVERSATION CACHE CHECK (optimization, not correctness)
+  Before Phases 1–3 execute below — and before re-loading
+  RHOAIAS.md, base-rule, mode-rule, output-contract, or any
+  referenced skill — inspect the current conversation context.
+  If a Read tool call earlier in the same agent session covered
+  the same path with content that matches the current file, SKIP
+  the re-Read and reference the already-loaded content.
+
+  The cache check is an OPTIMIZATION HEURISTIC, never a correctness
+  contract. When in doubt, re-Read.
+
+  MUST re-Read triggers (override the cache):
+    (i)   Any Write tool call against the same path occurred
+          earlier in the same conversation (cached content is
+          stale by definition).
+    (ii)  Any user message indicates a manual edit to the file
+          (e.g., "I just edited X").
+    (iii) Predecessor command in the current chain updated
+          status.md (status.md is high-volatility — always
+          re-Read; signal: a Write tool call against the
+          status.md path earlier in the session).
+    (iv)  RHOAIAS.md staleness gates fire per the freshness
+          lifecycle in readme-project-context.md — freshness
+          wins over cache regardless of cache state.
+
+  Forbidden:
+    - Optimistic skip without freshness re-check on RHOAIAS.md
+      when staleness gates apply.
+    - Cross-agent cache sharing (each agent's context is
+      independent).
+    - Caching agent memory across sessions (the cache IS the
+      current chat context, ephemeral by design — agent-fresh
+      invariant).
+
+  Future hook: cost-report aggregation MAY include a "cache-hit
+  ratio" metric once cost reconciliation tooling ships,
+  providing measured savings per task and per sprint.
+  Instrumentation deferred until that tooling lands.
+
 Phase 1 — ARTIFACT DISCOVERY
   Glob by suffix inside TASK_DIR.
   Build inventory of present artifacts.

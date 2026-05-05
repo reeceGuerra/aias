@@ -660,6 +660,72 @@ Next command execution publishes all `modified` artifacts back to `synced`.
 
 ---
 
+## Conversation Cache Check Examples (Phase 0b)
+
+Demonstrates how Phase 0b's conversation cache check applies in chained commands within the same agent session. The check is an optimization heuristic; correctness wins over cache when any MUST re-Read trigger fires.
+
+### Cache-hit path: chained `/enrich → /blueprint`
+
+Same agent session, no Write tool calls between commands except `status.md`, no user-indicated manual edits, no staleness gate firing on RHOAIAS.md.
+
+```
+Step 1 — /enrich (just executed)
+  Read tool calls recorded in session:
+    - RHOAIAS.md
+    - base-rule.md
+    - product.mdc (mode rule)
+    - <TASK_DIR>/status.md
+  Phase 5 — Write tool call against <TASK_DIR>/status.md
+    (status update with completed_steps: [refinement])
+
+Step 2 — /blueprint (next command in same chat)
+  Phase 0b cache check:
+    - RHOAIAS.md     → in context, no Write since,
+                        no staleness gate fired → SKIP re-Read
+    - base-rule.md   → in context, no Write since
+                        → SKIP re-Read
+    - planning.mdc   → not yet loaded (mode change product → planning)
+                        → must Read
+    - status.md      → /enrich's Phase 5 wrote status.md
+                        → MUST re-Read (trigger iii)
+  Result: /blueprint avoids redundant Read of RHOAIAS.md and
+  base-rule; loads planning.mdc fresh; re-Reads status.md per
+  trigger iii.
+```
+
+### Cache-miss path: status.md trigger fires
+
+```
+Step 1 — /enrich (just executed)
+  Phase 5 — Write tool call against <TASK_DIR>/status.md
+  (status update with completed_steps: [refinement])
+
+Step 2 — /blueprint
+  Phase 0b cache check on status.md:
+    - Earlier session contains Write tool call against status.md
+      → MUST re-Read (trigger iii — status.md is high-volatility)
+  Result: status.md re-Read; updated state available to /blueprint
+  before Phase 0 directory resolution proceeds.
+```
+
+### Cache-miss path: RHOAIAS.md staleness gate fires
+
+```
+Step 1 — /enrich (just executed)
+  Read RHOAIAS.md; content shows last_refreshed_at = 2026-04-01.
+
+Step 2 — /blueprint (10 days later, same chat hypothetically)
+  Phase 0b cache check on RHOAIAS.md:
+    - Already in context, no Write since
+    - BUT freshness lifecycle (readme-project-context.md)
+      defines staleness threshold; threshold has elapsed
+      → MUST re-Read (trigger iv — freshness wins over cache)
+  Result: RHOAIAS.md re-Read; staleness gate cleared per
+  current state; /blueprint proceeds with fresh project context.
+```
+
+---
+
 ## Governance Examples by Classification
 
 ### Minor — No Governance Section
