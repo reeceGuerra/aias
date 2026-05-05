@@ -18,7 +18,7 @@ Rho AIAS treats this as an architectural problem. Instead of chasing better prom
 
 | Layer | Component | Purpose |
 |---|---|---|
-| 1 | **AGENTS.md** | Explicit project context |
+| 1 | **RHOAIAS.md** | Explicit project context |
 | 2 | **Base Rules** | Universal agent behavior |
 | 3 | **Modes** | Specialized reasoning stances |
 | 4 | **Commands** | Deterministic execution |
@@ -33,7 +33,7 @@ Each layer shields the development process from a specific class of failure. Con
 ```mermaid
 flowchart LR
     U[User / Team] --> SP[Structured Prompt]
-    SP --> Ctx[Project Context<br/>AGENTS.md + RHOAIAS.md]
+    SP --> Ctx[Project Context<br/>RHOAIAS.md]
     Ctx --> M[Modes]
     M --> Cmd[Commands]
     Cmd --> Skill[Skills]

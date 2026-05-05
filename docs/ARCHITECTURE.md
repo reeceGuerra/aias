@@ -20,18 +20,22 @@ For brand identity, origin story, and positioning, see [BRAND.md](../BRAND.md).
 | 6 | **Contracts** | Canonical standards governing every artifact type |
 | 7 | **Artifacts** | Verified, traceable outputs stored in task directories |
 
-### Layer 1 — Project Context (AGENTS.md / RHOAIAS.md)
+### Layer 1 — Project Context (RHOAIAS.md)
 
 Project context is the first layer because everything downstream depends on it. Without explicit context, the agent fills gaps with assumptions — and assumptions compound across steps.
 
-Two files carry this responsibility:
+`RHOAIAS.md` is the **single source of truth** for project context. It declares project structure, conventions, key technologies, stack, repositories, plans base directory, service bindings, and team conventions. It is maintained manually by the team and changes when the project changes, not when the framework changes.
 
-- **`AGENTS.md`** — The IDE-native context file (Cursor, Claude Code, Windsurf). Declares project structure, conventions, key technologies, and related documentation. Read automatically by the agent at session start.
-- **`RHOAIAS.md`** — The framework-specific project context file. Declares stack, repositories, plans base directory, service bindings, and team conventions. Consumed by the `rho-aias` system skill during the skill loading protocol.
+Tool-specific context files are **symlinks** to `RHOAIAS.md` — not independent files. Each tool reads the full project context via filesystem resolution:
 
-Release metadata is intentionally kept outside this layer: `aias/CHANGELOG.md` is the versioned source of truth for framework version and release history, while `AGENTS.md` remains focused on operational context for the agent.
+- **`AGENTS.md`** → `RHOAIAS.md` — Cursor, Windsurf, GitHub Copilot
+- **`CLAUDE.md`** → `RHOAIAS.md` — Claude Code
+- **`GEMINI.md`** → `RHOAIAS.md` — Gemini (context-only; no rules, modes, or commands generated)
+- **`codex.md`** → `RHOAIAS.md` — Codex
 
-Both files are maintained manually by the team. They change when the project changes, not when the framework changes.
+Symlinks are created by `aias init` and scoped by the tools declared in `stack-profile.md`. No content is duplicated across tools.
+
+Release metadata is intentionally kept outside this layer: `aias/CHANGELOG.md` is the versioned source of truth for framework version and release history.
 
 Contract: `aias/contracts/readme-project-context.md`.
 
@@ -160,7 +164,7 @@ flowchart LR
     SP --> TaskDir[TASK_DIR]
 
     subgraph Governance["Framework Governance"]
-        Context[AGENTS.md / RHOAIAS.md]
+        Context[RHOAIAS.md<br/>via tool shortcuts]
         Rules[Base Rules]
         Contracts[Contracts]
     end
@@ -244,7 +248,7 @@ flowchart TD
 
     Mode["Mode<br/>(reasoning stance)"]
 
-    Mode --> ModeDetails["Loads: AGENTS.md, RHOAIAS.md,<br/>base rules, task artifacts<br/>Applies mode-specific enrichment<br/>Determines commands and skills"]
+    Mode --> ModeDetails["Loads: RHOAIAS.md (via AGENTS.md),<br/>base rules, task artifacts<br/>Applies mode-specific enrichment<br/>Determines commands and skills"]
 
     ModeDetails --> Command
 

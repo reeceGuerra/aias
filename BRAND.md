@@ -13,7 +13,7 @@ The name draws from two sources:
 
 | Layer | Component | Purpose |
 |---|---|---|
-| 1 | **AGENTS.md** | Explicit project context |
+| 1 | **RHOAIAS.md** | Explicit project context (tool shortcuts: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `codex.md`) |
 | 2 | **Base Rules** | Universal agent behavior |
 | 3 | **Modes** | Specialized reasoning stances |
 | 4 | **Commands** | Deterministic execution |
@@ -34,7 +34,7 @@ Rho AIAS values are non-negotiable because each one is enforced by architecture,
 1. **Context**  
    *Without context, there is no useful power.*  
    Context turns generic model capability into useful system behavior. Without explicit context, outputs may look strong but remain unreliable in real workflows.  
-   Behavioral trace: AGENTS.md, structured prompts, artifact skill loading protocol, and task directories.
+   Behavioral trace: RHOAIAS.md (accessed via tool shortcuts such as AGENTS.md), structured prompts, artifact skill loading protocol, and task directories.
 
 2. **Determinism**  
    *What does not repeat does not scale.*  
@@ -175,7 +175,7 @@ For favicons, badges, social profile images, and constrained contexts:
 
 | Logo Feature | Origin Reference | Architectural Layer |
 |---|---|---|
-| Seven petals | Fate/Stay Night Rho Aias (seven-layer barrier) | All 7 layers (AGENTS.md through Artifacts) |
+| Seven petals | Fate/Stay Night Rho Aias (seven-layer barrier) | All 7 layers (RHOAIAS.md through Artifacts) |
 | Radial symmetry | Shield geometry — defense radiates from center | Core architecture radiating to outputs |
 | Pointed oval petals | Vesica piscis — intersection of two circles | Overlap: human governance and agent execution |
 | Violet-blue palette | Jacaranda blooms filtering light | Structural color — vivid, not decorative |
