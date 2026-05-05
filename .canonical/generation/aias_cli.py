@@ -218,6 +218,9 @@ def _ensure_context_symlinks_for_rhoaias(
                 current = (link_path.parent / os.readlink(link_path)).resolve()
                 if current == rhoaias_target.resolve():
                     continue
+                _create_symlink(link_path, rhoaias_target)
+                created += 1
+                continue
             if link_path.is_file():
                 # Non-destructive in non-interactive contexts: leave regular files untouched.
                 continue

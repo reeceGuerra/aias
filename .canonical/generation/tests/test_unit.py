@@ -678,6 +678,30 @@ class TestNestedContextHelpers(unittest.TestCase):
         self.assertTrue((nested_dir / "codex.md").is_symlink())
         self.assertTrue((nested_dir / "GEMINI.md").is_symlink())
 
+    def test_ensure_context_symlinks_replaces_stale_symlink(self):
+        stale_target = self.root / "old" / "RHOAIAS.md"
+        stale_target.parent.mkdir(parents=True, exist_ok=True)
+        stale_target.write_text("old", encoding="utf-8")
+
+        nested_dir = self.root / "packages" / "mobile"
+        nested_dir.mkdir(parents=True, exist_ok=True)
+        nested_ctx = nested_dir / "RHOAIAS.md"
+        nested_ctx.write_text("nested", encoding="utf-8")
+
+        link_path = nested_dir / "AGENTS.md"
+        link_path.symlink_to(os.path.relpath(stale_target, nested_dir))
+
+        created = aias_cli._ensure_context_symlinks_for_rhoaias(
+            [nested_ctx], ["cursor"]
+        )
+
+        self.assertEqual(created, 1)
+        self.assertTrue(link_path.is_symlink())
+        self.assertEqual(
+            (link_path.parent / os.readlink(link_path)).resolve(),
+            nested_ctx.resolve(),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
