@@ -22,6 +22,8 @@ import sys
 import textwrap
 from typing import Dict, List, Tuple
 
+from generate_modes_and_rules import SUPPORTED_TOOLS
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CANONICAL_DIR = ROOT / "aias" / ".canonical"
@@ -60,12 +62,11 @@ EXPECTED_SECTIONS: Dict[str, Dict[str, List[str]]] = {
     },
 }
 
-SUPPORTED_TOOLS = ("cursor", "claude", "windsurf", "copilot", "codex")
-
 TOOL_CONTEXT_MAP: Dict[str, Tuple[str, ...]] = {
     "AGENTS.md": ("cursor", "windsurf", "copilot"),
     "CLAUDE.md": ("claude",),
     "codex.md": ("codex",),
+    "GEMINI.md": ("gemini",),
 }
 
 

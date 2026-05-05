@@ -95,7 +95,7 @@ TRANSVERSAL_MODE_DEFAULTS: Dict[str, Dict[str, str]] = {
 }
 ALWAYS_APPLY_RULES = ("base", "output-contract", "continuous-improvement")
 
-SUPPORTED_TOOLS = ("cursor", "claude", "windsurf", "copilot", "codex")
+SUPPORTED_TOOLS = ("cursor", "claude", "windsurf", "copilot", "codex", "gemini")
 
 RULE_GENERATION_SKIP = {"xctemplates-dev"}
 
