@@ -1,6 +1,10 @@
 ---
 name: atlassian-mcp
 description: Read and write Jira issues and Confluence pages via the Atlassian MCP. Use when the user provides a Jira ticket URL, Jira key (e.g. PROJ-123), Confluence page URL, or asks to interact with Jira or Confluence.
+category: mcp
+tested_against:
+  mcp_server: user-Atlassian@2026-05-05
+  tools_count: 31
 ---
 
 # Atlassian MCP
@@ -186,6 +190,172 @@ If this call fails or returns no results: **abort** and ask the user to check At
 
 ---
 
+### Cross-Surface Search (Rovo)
+
+**When:** User asks to find content across Jira and Confluence without specifying JQL or CQL. This is the preferred general-purpose search.
+
+**Call:**
+`search(query)` — no `cloudId` needed; derived automatically from the token.
+
+**When NOT to use:** If the user explicitly provides JQL syntax, use `searchJiraIssuesUsingJql` instead. If the user provides CQL, use `searchConfluenceUsingCql` instead.
+
+---
+
+### Fetch by ARI
+
+**When:** You have an Atlassian Resource Identifier (ARI) — a universal ID for any Atlassian resource — and need to retrieve the associated Jira issue or Confluence page.
+
+**Call:**
+`fetch(id)` — where `id` is the ARI string.
+
+**Note:** Use this only when you have an ARI. For standard issue keys (e.g. `PROJ-123`) use `getJiraIssue`. For page IDs use `getConfluencePage`.
+
+---
+
+### Add Worklog to Jira Issue
+
+**When:** User **explicitly asks** to log time on a Jira issue.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `addWorklogToJiraIssue(cloudId, issueIdOrKey, timeSpent, ...)` → adds or updates worklog
+
+**Required parameters:**
+- `cloudId`, `issueIdOrKey`, `timeSpent` (e.g. `"2h"`, `"30m"`)
+
+**Optional parameters:**
+- `worklogId` (string): if provided, updates that worklog instead of creating a new one
+- `commentBody` (string): worklog comment
+- `started` (string): ISO 8601 date-time when work started (defaults to now)
+- `visibility` (object): `{ type: "group"|"role", value: "..." }` to restrict visibility
+
+---
+
+### Get Issue Field Metadata
+
+**When:** Need to discover which fields are available for a specific issue type before creating or editing an issue with custom fields.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `getJiraIssueTypeMetaWithFields(cloudId, projectIdOrKey, issueTypeId, ...)` → returns available fields and constraints
+
+---
+
+### Get Remote Issue Links
+
+**When:** Need to see external (non-Jira) links attached to a Jira issue (e.g., links to GitHub PRs, Confluence pages, or other external systems).
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `getJiraIssueRemoteIssueLinks(cloudId, issueIdOrKey)` → returns remote links
+
+---
+
+### Create Confluence Page
+
+**When:** User **explicitly asks** to create a new Confluence page or blog post.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `getConfluenceSpaces(cloudId)` → obtain `spaceId` (if not already known)
+3. `createConfluencePage(cloudId, spaceId, body, ...)` → creates the page
+
+**Required parameters:**
+- `cloudId`, `spaceId`, `body`
+
+**Optional parameters:**
+- `title` (string): page title
+- `contentType` (string): `"page"` (default) or `"blog"`
+- `parentId` (string): parent page ID for nesting
+- `status` (string): `"current"` (published, default) or `"draft"`
+- `contentFormat` (string): `"markdown"` or `"adf"` (default: ADF)
+- `isPrivate` (boolean): make private
+
+---
+
+### Update Confluence Page
+
+**When:** User **explicitly asks** to update an existing Confluence page.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `updateConfluencePage(cloudId, pageId, body, ...)` → updates the page
+
+**Required parameters:**
+- `cloudId`, `pageId`, `body`
+
+**Optional parameters:**
+- `title` (string): new title
+- `contentFormat` (string): `"markdown"` or `"adf"` (default: ADF)
+- `versionMessage` (string): change description
+- `status` (string): `"current"` or `"draft"`
+- `parentId` (string): reparent the page
+
+---
+
+### Get Confluence Spaces
+
+**When:** Need to discover available Confluence spaces (to resolve a `spaceId` for page creation or navigation).
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `getConfluenceSpaces(cloudId, ...)` → returns list of spaces with their IDs and keys
+
+**Optional filters:** `keys` (array of space keys), `type` (`"global"` | `"personal"`), `status`, `favourite`
+
+---
+
+### Get Pages in Confluence Space
+
+**When:** Need to list pages or blog posts in a known space.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `getPagesInConfluenceSpace(cloudId, spaceId, ...)` → returns pages in the space
+
+**Optional parameters:** `contentType` (`"page"` | `"blog"`), `limit`, `cursor`, `status`, `title` (filter), `sort`
+
+---
+
+### Get Confluence Page Descendants
+
+**When:** Need to explore the child page hierarchy under a given Confluence page.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. `getConfluencePageDescendants(cloudId, pageId, ...)` → returns child pages
+
+**Optional parameters:** `depth` (max depth to traverse), `limit`, `cursor`
+
+---
+
+### Read Confluence Page Comments
+
+**When:** Need to read comments left on a Confluence page.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. For footer comments: `getConfluencePageFooterComments(cloudId, pageId)` → returns footer comments
+3. For inline comments: `getConfluencePageInlineComments(cloudId, pageId)` → returns inline comments
+
+---
+
+### Create Confluence Page Comment
+
+**When:** User **explicitly asks** to add a comment to a Confluence page.
+
+**Call sequence:**
+1. `getAccessibleAtlassianResources` → obtain `cloudId`
+2. For a footer comment: `createConfluenceFooterComment(cloudId, body, pageId, ...)` → adds footer comment
+3. For an inline comment on highlighted text: `createConfluenceInlineComment(cloudId, body, pageId, inlineCommentProperties, ...)` → adds inline comment
+
+**Inline comment `inlineCommentProperties`:**
+- `textSelection` (string, required): the text to anchor the comment to
+- `textSelectionMatchCount` (number, required): total occurrences of that text on the page
+- `textSelectionMatchIndex` (number, required): which occurrence to highlight (0-based)
+
+---
+
 ## CONTENT FORMAT
 
 Most Confluence and Jira tools accept a `contentFormat` or `responseContentFormat` parameter:
@@ -266,3 +436,4 @@ If runtime metadata contradicts the mapping, use runtime metadata for the write 
 **Data integrity:**
 - Never invent or assume ticket content, status, or fields that the API did not return.
 - If a field is missing from the response, report it as unknown; do not fill in defaults.
+

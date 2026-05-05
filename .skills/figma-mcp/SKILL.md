@@ -1,6 +1,10 @@
 ---
 name: figma-mcp
 description: Get design context, screenshots, and metadata from Figma via the Figma MCP. Use when the user provides a Figma URL, mentions a Figma file or node, or asks to reference a design.
+category: mcp
+tested_against:
+  mcp_server: user-Figma@2026-05-05
+  tools_count: 19
 ---
 
 # Figma MCP
@@ -134,6 +138,156 @@ If the user provides a `nodeId` directly (e.g. `"123:456"` or `"123-456"`), norm
 
 ---
 
+### Search Design System
+
+**When:** User needs to find specific components, variables (e.g. color tokens, spacing), or styles from design libraries.
+
+**Call:**
+`search_design_system(query, fileKey)`
+
+**Required parameters:**
+- `query` (string): text search (e.g. `"primary button"`, `"brand-red"`)
+- `fileKey` (string): file key to determine which libraries to search
+
+**Optional parameters:**
+- `includeComponents` (boolean): default true
+- `includeVariables` (boolean): default true
+- `includeStyles` (boolean): default true
+- `includeLibraryKeys` (array): restrict to specific library keys
+- `disableCodeConnect` (boolean): disable Code Connect enrichment
+
+---
+
+### Get Libraries
+
+**When:** Need to discover which design libraries are subscribed to a Figma file, or which libraries are available to add.
+
+**Call:**
+`get_libraries(fileKey)`
+
+**Returns:** Two lists — libraries currently added to the file, and libraries available to add (community UI kits + organization libraries). Organization libraries list is paginated via `offset`.
+
+---
+
+### Generate Diagram (FigJam)
+
+**When:** User asks to create a flowchart, decision tree, Gantt chart, sequence diagram, state diagram, or entity relationship diagram. Output is created in FigJam.
+
+**Call:**
+`generate_diagram(name, mermaidSyntax, ...)`
+
+**Required parameters:**
+- `name` (string): short, descriptive title for the diagram
+- `mermaidSyntax` (string): valid Mermaid.js code for the diagram
+
+**Optional parameters:**
+- `planKey` (string): team/org key for the destination FigJam file
+- `fileKey` (string): key of an existing FigJam file to add the diagram to
+- `userIntent` (string): natural language description of what the diagram should convey
+
+**Note:** Write operation — only call when the user explicitly requests it. Supported diagram types: flowchart, decision tree, Gantt, sequence, state, ER. NOT supported: class diagrams, timelines, Venn diagrams.
+
+---
+
+### Write to Figma Canvas (`use_figma`)
+
+**When:** User asks to create, edit, delete, or inspect Figma objects directly (frames, components, variants, variables, styles, text, images, etc.).
+
+**IMPORTANT:** You MUST load the `figma-use` skill **before** calling this tool. Never call `use_figma` without loading that skill first.
+
+**Call:**
+`use_figma(fileKey, code, description, ...)`
+
+**Required parameters:**
+- `fileKey` (string): target Figma file key
+- `code` (string): JavaScript code using the Figma Plugin API (`figma` global)
+- `description` (string): concise description of what the code does
+
+**Optional parameters:**
+- `skillNames` (string): comma-separated skill names being followed (e.g. `"figma-use"`)
+
+**Note:** This is the general-purpose write tool for Figma canvas operations. Load the `figma-use` skill first for correct API usage patterns.
+
+---
+
+### Generate Figma Design from Web Page
+
+**When:** User wants to capture a web page (live URL or localhost) and import it into Figma as a design.
+
+**Call:**
+`generate_figma_design(outputMode, ...)`
+
+**Required parameters:**
+- `outputMode` (string): `"newFile"` (create a new Figma file) or `"existingFile"` (add to existing)
+
+**Optional parameters (for `newFile`):**
+- `fileName` (string): name for the new Figma file
+- `planKey` (string): team/org key for destination
+
+**Optional parameters (for `existingFile`):**
+- `fileKey` (string): target file key
+- `nodeId` (string): node where design should be added
+
+**Polling:** The tool may return a `captureId` before completion. If so, call it again with `captureId` to poll for the result.
+
+**Note:** Write operation — only call when user explicitly requests it.
+
+---
+
+### Upload Assets
+
+**When:** User wants to upload images or other assets into a Figma file (e.g. to set as a fill on an existing node or create new image frames).
+
+**Call:**
+`upload_assets(fileKey, count, ...)`
+
+**Required parameters:**
+- `fileKey` (string): target Figma file key
+- `count` (number): number of upload URLs to obtain (1–5, default 1)
+
+**Returns:** Single-use upload URLs. POST raw asset bytes to each URL with the correct `Content-Type` header (e.g. `image/png`, `image/jpeg`).
+
+**Optional parameters:**
+- `nodeId` (string): if provided, sets the uploaded asset as a fill on that existing node (only when `count: 1`)
+- `scaleMode` (string): fill mode — default: `FILL`
+
+**Note:** Write operation — only call when user explicitly requests it.
+
+---
+
+### Create New Figma File
+
+**When:** User asks to create a new blank Figma design file or FigJam board.
+
+**IMPORTANT:** Load the `figma-create-new-file` skill before calling this tool if it exists.
+
+**Call:**
+`create_new_file(fileName, planKey, editorType, ...)`
+
+**Required parameters:**
+- `fileName` (string): name for the new file
+- `planKey` (string): team/org key — obtain from `whoami`
+- `editorType` (string): `"design"` for a design file, `"figjam"` for a FigJam board
+
+**Optional parameters:**
+- `projectId` (string): place the file inside a specific project (folder)
+
+**Note:** Write operation — only call when user explicitly requests it.
+
+---
+
+### Code Connect — Get Suggestions and Send Mappings
+
+**When:** User wants to set up Code Connect mappings using AI-suggested strategies.
+
+**Workflow:**
+1. `get_code_connect_suggestions(nodeId, fileKey, ...)` → get AI-suggested strategy (review with user before saving)
+2. `send_code_connect_mappings(nodeId, fileKey, mappings, ...)` → save approved mappings in bulk
+
+**Note:** `get_context_for_code_connect(nodeId, fileKey)` provides structured component metadata (properties, variants, descendant tree) for building Code Connect template files manually — use before `send_code_connect_mappings` when you need the full component structure.
+
+---
+
 ## AVAILABLE RESOURCES
 
 The Figma MCP also exposes read-only documentation resources that can be fetched:
@@ -168,3 +322,4 @@ For complete parameter details, types, and return values for every tool, see [re
 **Data integrity:**
 - Never invent design data, measurements, or colors that the API did not return.
 - If a response is empty or truncated, report it as such.
+

@@ -120,17 +120,137 @@ Complete parameter reference for all tools and resources available in the Figma 
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| Parameters similar to `get_design_context` | — | — | — |
+| `name` | string | Yes | Short descriptive title for the diagram |
+| `mermaidSyntax` | string | Yes | Mermaid.js code for the diagram |
+| `userIntent` | string | No | Description of what the diagram should convey |
+| `planKey` | string | No | Team/org key for destination FigJam file |
+| `fileKey` | string | No | Key of an existing FigJam file to add the diagram to |
+| `useArchitectureLayoutCode` | string | No | Mermaid code for software architecture layout |
 
-> **Write operation** — only call when the user explicitly requests it.
+> **Write operation** — only call when the user explicitly requests it. Supported: flowchart, decision tree, Gantt, sequence, state, ER diagrams only.
 
 ### create_design_system_rules
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| Parameters similar to `get_design_context` | — | — | — |
+| `nodeId` | string | Yes | Node ID in the Figma document |
+| `fileKey` | string | Yes | Figma file key |
+| `clientLanguages` | string | No | Same as `get_design_context` |
+| `clientFrameworks` | string | No | Same as `get_design_context` |
 
 > **Write operation** — only call when the user explicitly requests it.
+
+---
+
+## Design System Discovery
+
+### search_design_system
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | Yes | Text query (e.g. `"primary button"`, `"brand-red"`) |
+| `fileKey` | string | Yes | File key to determine which libraries to search |
+| `includeComponents` | boolean | No | Include components (default: true) |
+| `includeVariables` | boolean | No | Include variables (default: true) |
+| `includeStyles` | boolean | No | Include styles (default: true) |
+| `includeLibraryKeys` | array | No | Restrict to specific library keys |
+| `disableCodeConnect` | boolean | No | Disable Code Connect enrichment |
+
+### get_libraries
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `fileKey` | string | Yes | File key to get libraries for |
+| `offset` | number | No | Pagination offset for `libraries_available_to_add` |
+
+**Returns:** `{ subscribed: [...], libraries_available_to_add: [...] }`
+
+---
+
+## Canvas Write
+
+### use_figma
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `fileKey` | string | Yes | Target Figma file key |
+| `code` | string | Yes | JavaScript code using the Figma Plugin API (`figma` global) |
+| `description` | string | Yes | Concise description of what the code does |
+| `skillNames` | string | No | Comma-separated skill names being followed (e.g. `"figma-use"`) |
+
+> **Write operation** — load the `figma-use` skill before calling. General-purpose Figma canvas write tool.
+
+### upload_assets
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `fileKey` | string | Yes | Target Figma file key |
+| `count` | number | No | Number of upload URLs to obtain (1–5, default 1) |
+| `nodeId` | string | No | Set uploaded asset as fill on this existing node (only when `count: 1`) |
+| `scaleMode` | string | No | Fill mode (`FILL`, `FIT`, `CROP`, `TILE`). Default: `FILL` |
+
+**Usage:** Call with `count` → receive single-use upload URLs → POST raw bytes with correct `Content-Type`.
+
+### create_new_file
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `fileName` | string | Yes | Name for the new file |
+| `planKey` | string | Yes | Team/org key (obtain from `whoami`) |
+| `editorType` | string | Yes | `"design"` for design file, `"figjam"` for FigJam board |
+| `projectId` | string | No | Place file inside this project/folder ID |
+
+### generate_figma_design
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `outputMode` | string | Yes | `"newFile"` or `"existingFile"` |
+| `captureId` | string | No | Returned from initial call; pass to poll for completion |
+| `fileName` | string | No | Name for new file (newFile mode only) |
+| `planKey` | string | No | Team/org key (newFile mode only) |
+| `fileKey` | string | No | Target file key (existingFile mode only) |
+| `nodeId` | string | No | Target node in existing file (existingFile mode only) |
+
+**Note:** May return `captureId` before completion. Re-call with `captureId` to poll.
+
+---
+
+## Code Connect (Extended)
+
+### get_context_for_code_connect
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `nodeId` | string | Yes | Node ID of the component or component set |
+| `fileKey` | string | Yes | Figma file key |
+| `clientLanguages` | string | No | Same as `get_design_context` |
+| `clientFrameworks` | string | No | Same as `get_design_context` |
+
+**Returns:** Property definitions with types/variants + descendant tree. Use for building Code Connect template files manually.
+
+### get_code_connect_suggestions
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `nodeId` | string | Yes | Node ID |
+| `fileKey` | string | Yes | Figma file key |
+| `clientLanguages` | string | No | Same as `get_design_context` |
+| `clientFrameworks` | string | No | Same as `get_design_context` |
+| `excludeMappingPrompt` | boolean | No | Exclude prompt text/images, return lightweight list only |
+
+**Workflow:** call → review with user → call `send_code_connect_mappings` to save approved mappings.
+
+### send_code_connect_mappings
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `nodeId` | string | Yes | Node ID |
+| `fileKey` | string | Yes | Figma file key |
+| `mappings` | array | Yes | Array of approved Code Connect mappings to save |
+| `clientLanguages` | string | No | Same as `get_design_context` |
+| `clientFrameworks` | string | No | Same as `get_design_context` |
+
+> **Write operation** — use only after reviewing `get_code_connect_suggestions` output with the user.
 
 ---
 

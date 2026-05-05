@@ -1,6 +1,10 @@
 ---
 name: github-mcp
 description: Interact with GitHub repositories, issues, pull requests, branches, releases, and code via the GitHub MCP. Use when the user provides a GitHub URL, mentions a PR number, asks to create or review a PR, or needs repository information.
+category: mcp
+tested_against:
+  mcp_server: user-GitHub@2026-05-05
+  tools_count: 37
 ---
 
 # GitHub MCP
@@ -222,6 +226,177 @@ Extract `owner` and `repo` from GitHub URLs:
 
 ---
 
+### Update Pull Request
+
+**When:** User **explicitly asks** to update an existing PR's title, body, state, or base branch.
+
+**Call:**
+`update_pull_request(owner, repo, pullNumber, ...)`
+
+**Optional parameters:**
+- `title` (string): new PR title
+- `body` (string): new description
+- `state` (string): `"open"` | `"closed"`
+- `base` (string): new base branch
+- `draft` (boolean): mark as draft or ready for review
+- `maintainer_can_modify` (boolean)
+- `reviewers` (array): GitHub usernames to request reviews from
+
+---
+
+### Update Pull Request Branch
+
+**When:** User **explicitly asks** to sync a PR branch with the latest changes from its base branch (rebases the PR head).
+
+**Call:**
+`update_pull_request_branch(owner, repo, pullNumber)`
+
+**Optional parameter:**
+- `expectedHeadSha` (string): expected SHA of the PR's HEAD ref (for safety check)
+
+---
+
+### Merge Pull Request
+
+**When:** User **explicitly asks** to merge a pull request.
+
+**Call:**
+`merge_pull_request(owner, repo, pullNumber, ...)`
+
+**Optional parameters:**
+- `merge_method` (string): `"merge"` | `"squash"` | `"rebase"`
+- `commit_title` (string): title for the merge commit
+- `commit_message` (string): additional detail for the merge commit
+
+---
+
+### Push Multiple Files
+
+**When:** User **explicitly asks** to push several files to a repository in a single commit.
+
+**Call:**
+`push_files(owner, repo, branch, files, message)`
+
+**Required parameters:**
+- `branch` (string): target branch
+- `files` (array): array of `{ path: string, content: string }` objects
+- `message` (string): commit message
+
+---
+
+### Add Comment to Issue or PR
+
+**When:** User **explicitly asks** to add a comment to an issue or pull request.
+
+**Call:**
+`add_issue_comment(owner, repo, issue_number, body)`
+
+**Note:** Works for both issues and PRs — pass the PR number as `issue_number` for PRs.
+
+---
+
+### Sub-Issue
+
+**When:** User **explicitly asks** to create a parent-child relationship between issues.
+
+**Call:**
+`sub_issue_write(owner, repo, issue_number, method, sub_issue_id, ...)`
+
+**Required parameters:**
+- `issue_number` (number): parent issue number
+- `method` (string): `"add"` | `"remove"` | `"reprioritize"`
+- `sub_issue_id` (number): ID of the sub-issue (not the issue number)
+
+**Optional parameters:**
+- `after_id` / `before_id` (number): ordering relative to other sub-issues
+- `replace_parent` (boolean): replace the sub-issue's current parent (use with `"add"`)
+
+---
+
+### Search Users
+
+**When:** User needs to find GitHub users by username, name, location, or other profile attributes.
+
+**Call:**
+`search_users(query, ...)`
+
+**Required parameter:**
+- `query` (string): search query (e.g. `"john smith"`, `"location:seattle"`, `"followers:>100"`)
+
+**Optional parameters:** `sort`, `order`, `page`, `perPage`
+
+---
+
+### Search Repositories
+
+**When:** User needs to find repositories by name, description, topics, or other metadata.
+
+**Call:**
+`search_repositories(query)`
+
+---
+
+### Labels
+
+**Get label:** `get_label(owner, repo, name)` — retrieve a specific label's details.
+
+---
+
+### Create Repository
+
+**When:** User **explicitly asks** to create a new GitHub repository.
+
+**Call:**
+`create_repository(name, ...)`
+
+**Required parameter:**
+- `name` (string): repository name
+
+**Optional parameters:**
+- `organization` (string): create in an org instead of personal account
+- `description` (string)
+- `private` (boolean)
+- `autoInit` (boolean): initialize with a README
+
+---
+
+### Fork Repository
+
+**When:** User **explicitly asks** to fork a repository.
+
+**Call:**
+`fork_repository(owner, repo, ...)`
+
+**Optional parameter:**
+- `organization` (string): fork into an organization instead of personal account
+
+---
+
+### Delete File
+
+**When:** User **explicitly asks** to delete a file from a repository.
+
+**Call:**
+`delete_file(owner, repo, path, message, branch)`
+
+---
+
+### Copilot — Request Review / Assign to Issue
+
+**When:** User asks to get automated Copilot feedback on a PR, or to assign Copilot to resolve an issue.
+
+**Request Copilot PR review:**
+`request_copilot_review(owner, repo, pullNumber)` — requests automated feedback before a human review.
+
+**Assign Copilot to resolve an issue:**
+`assign_copilot_to_issue(owner, repo, issue_number, ...)` — Copilot will attempt to open a PR with source code changes to resolve the issue.
+
+**Optional parameters for `assign_copilot_to_issue`:**
+- `base_ref` (string): branch for Copilot to start from (defaults to default branch)
+- `custom_instructions` (string): additional guidance beyond the issue body
+
+---
+
 ## REFERENCE
 
 For complete parameter details, types, and return values for every tool, see [reference.md](reference.md).
@@ -242,3 +417,4 @@ For complete parameter details, types, and return values for every tool, see [re
 - Never invent commit SHAs, PR numbers, issue content, or file contents.
 - If a field is missing from the response, report it as unknown.
 - When creating PRs, always search for and use PR templates when available.
+

@@ -271,6 +271,143 @@ Complete parameter reference for all tools available in the GitHub MCP server.
 
 ---
 
+## Pull Request Management (Extended)
+
+### update_pull_request
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `pullNumber` | number | Yes | PR number to update |
+| `title` | string | No | New title |
+| `body` | string | No | New description |
+| `state` | enum | No | `"open"` \| `"closed"` |
+| `base` | string | No | New base branch |
+| `draft` | boolean | No | Mark as draft or ready for review |
+| `maintainer_can_modify` | boolean | No | Allow maintainer edits |
+| `reviewers` | array | No | GitHub usernames to request reviews from |
+
+### update_pull_request_branch
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `pullNumber` | number | Yes | PR number |
+| `expectedHeadSha` | string | No | Expected SHA of the PR's HEAD (safety check) |
+
+### merge_pull_request
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `pullNumber` | number | Yes | PR number |
+| `merge_method` | enum | No | `"merge"` \| `"squash"` \| `"rebase"` |
+| `commit_title` | string | No | Merge commit title |
+| `commit_message` | string | No | Additional merge commit detail |
+
+### request_copilot_review
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `pullNumber` | number | Yes | PR number |
+
+---
+
+## Issues (Extended)
+
+### add_issue_comment
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `issue_number` | number | Yes | Issue or PR number |
+| `body` | string | Yes | Comment content (Markdown) |
+
+### sub_issue_write
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `issue_number` | number | Yes | Parent issue number |
+| `method` | enum | Yes | `"add"` \| `"remove"` \| `"reprioritize"` |
+| `sub_issue_id` | number | Yes | ID of the sub-issue (not the issue number) |
+| `after_id` | number | No | Prioritize after this sub-issue ID |
+| `before_id` | number | No | Prioritize before this sub-issue ID |
+| `replace_parent` | boolean | No | Replace existing parent (use with `"add"`) |
+
+### assign_copilot_to_issue
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `issue_number` | number | Yes | Issue number |
+| `base_ref` | string | No | Branch for Copilot to start from |
+| `custom_instructions` | string | No | Additional guidance beyond the issue body |
+
+---
+
+## Repository Management
+
+### create_repository
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | Yes | Repository name |
+| `organization` | string | No | Create in an org instead of personal account |
+| `description` | string | No | Repository description |
+| `private` | boolean | No | Private repository (default: false) |
+| `autoInit` | boolean | No | Initialize with README |
+
+### fork_repository
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `organization` | string | No | Fork into this organization |
+
+### push_files
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `branch` | string | Yes | Target branch |
+| `files` | array | Yes | Array of `{ path: string, content: string }` objects |
+| `message` | string | Yes | Commit message |
+
+---
+
+## Labels and Users
+
+### get_label
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `owner` | string | Yes | Repository owner |
+| `repo` | string | Yes | Repository name |
+| `name` | string | Yes | Label name |
+
+### search_users
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | Yes | User search query (e.g. `"john smith"`, `"location:seattle"`) |
+| `sort` | string | No | Sort by `"followers"`, `"repositories"`, or `"joined"` |
+| `order` | enum | No | `"asc"` \| `"desc"` |
+| `page` | number | No | Page number |
+| `perPage` | number | No | Results per page (max 100) |
+
+---
+
 ## Typical Call Flows
 
 ### Read issue or PR

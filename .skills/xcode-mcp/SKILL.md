@@ -1,6 +1,10 @@
 ---
 name: xcode-mcp
 description: Build, test, preview, search, and manage files in Xcode projects via the Xcode Tools MCP. Use when the user asks to build, run tests, render previews, check build errors, search Apple docs, or manipulate files within an Xcode project structure.
+category: mcp
+tested_against:
+  mcp_server: user-xcode-tools@2026-05-05
+  tools_count: 20
 ---
 
 # Xcode Tools MCP
@@ -211,3 +215,4 @@ For complete parameter details, types, and return values for every tool, see [re
 - Never invent file paths, test names, or build results that the API did not return.
 - File paths must use Xcode project organization format, not filesystem paths.
 - When editing files, `oldString` must exist in the file; do not guess content.
+
