@@ -8,15 +8,15 @@ Quick reference for getting started with the Rho AIAS configuration system.
 
 ### Prerequisites (Bootstrapping)
 
-The framework ships the `/aias` chat command at `aias/.commands/aias.md`, but your IDE doesn't know about it until you make it available. Before running `/aias init` in a chat agent, choose one of these paths:
+The framework ships the `/aias` skill at `aias/.skills/aias/SKILL.md`, but your IDE doesn't know about it until you make it available. Before running `/aias init` in a chat agent, choose one of these paths:
 
 | Path | When to use | Steps |
 |---|---|---|
-| **A. Copy the command** | Your IDE supports custom commands (e.g., Cursor) | Copy `aias/.commands/aias.md` → `.cursor/commands/aias.md` (or equivalent path for your tool). After `aias init` generates shortcuts, this manual copy is no longer needed for future commands. |
-| **B. Use the CLI directly** | Your IDE does not support custom commands, or you prefer the terminal | Run `python3 aias/.canonical/generation/aias_cli.py init` — no command registration required. |
-| **C. Follow instructions manually** | You want full control | Open `aias/.commands/aias.md`, read the command definition, and follow its steps in a chat agent conversation. |
+| **A. Copy the skill** | Your IDE supports custom skills or commands (e.g., Cursor) | Copy `aias/.skills/aias/SKILL.md` → `.cursor/skills/aias/SKILL.md` (or equivalent path for your tool). After `aias init` generates shortcuts, this manual copy is no longer needed for future skills. |
+| **B. Use the CLI directly** | Your IDE does not support custom skills, or you prefer the terminal | Run `python3 aias/.canonical/generation/aias_cli.py init` — no skill registration required. |
+| **C. Follow instructions manually** | You want full control | Open `aias/.skills/aias/SKILL.md`, read the skill definition, and follow its steps in a chat agent conversation. |
 
-> **Why is this necessary?** The `/aias` command bootstraps the entire workspace — but it cannot register itself. Once `aias init` completes and generates shortcuts (step 6–7), all other commands, modes, rules, and skills are available automatically via symlinks.
+> **Why is this necessary?** The `/aias` skill bootstraps the entire workspace — but it cannot register itself. Once `aias init` completes and generates shortcuts (step 6–7), all other commands (as advisory/operative skills), modes, rules, and skills are available automatically via symlinks.
 
 ### Running Init
 
@@ -343,4 +343,4 @@ TASK: /implement
 - **Artifact catalog and skill loading protocol:** `aias/.skills/rho-aias/SKILL.md` — Artifact types, skill loading protocol, Plan Classification, one-mode-per-chat rule
 - **CLI reference:** [CLI.md](CLI.md) — `aias` subcommands, flags, and examples
 - **Framework guide:** Run `/guide` for operational reference (profiles, commands, status lifecycle, artifacts)
-- **Contracts:** `aias/contracts/readme-commands.md` (commands), `readme-mode-rule.md` (modes), `readme-skill.md` (skills)
+- **Contracts:** `aias/contracts/readme-commands.md` (behavioral contract for advisory/operative skills), `readme-mode-rule.md` (modes), `readme-skill.md` (all five skill categories), `readme-multi-agent-review.md` (multi-agent review protocol)

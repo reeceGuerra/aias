@@ -94,21 +94,24 @@ Two command types:
 
 Commands are invoked within a mode context. The mode provides the reasoning; the command provides the structure. A command without a mode is syntax without semantics.
 
-The full command catalog lives in `aias/.commands/`. Current commands: `/aias`, `/assessment`, `/blueprint`, `/charter`, `/commit`, `/consolidate-plan`, `/copyedit`, `/enrich`, `/explain`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
+Commands are implemented as **directory-form skills** with `category: advisory` or `category: operative` and `disable-model-invocation: true`. The full command catalog lives in `aias/.skills/`. Current commands: `/aias`, `/assessment`, `/blueprint`, `/charter`, `/commit`, `/consolidate-plan`, `/copyedit`, `/enrich`, `/explain`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
 
-Contract: `aias/contracts/readme-commands.md`.
+Behavioral contract: `aias/contracts/readme-commands.md` (governs structure and quality criteria for advisory and operative skills).
 
 ### Layer 5 — Skills
 
 Skills are reusable packages of operational knowledge. They encapsulate how to interact with a specific domain or service so that modes and commands remain provider-agnostic.
 
-Two skill categories:
+Five skill categories:
 
-- **MCP skills** — Wrap Model Context Protocol servers for external service interaction. Each skill is single-domain, stateless, and provider-specific. Current MCP skills: `atlassian-mcp`, `figma-mcp`, `github-mcp`, `xcode-mcp`.
-- **Non-MCP skills** — Encode reusable reasoning patterns without external service dependencies. Current non-MCP skills: `technical-writing` (6 writing patterns), `incremental-decomposition` (6 decomposition rules).
+- **MCP skills** — Wrap Model Context Protocol servers for external service interaction. Each skill is single-domain, stateless, and provider-specific. Current MCP skills: `atlassian-mcp`, `figma-mcp`, `firebase-mcp`, `github-mcp`, `xcode-mcp`.
+- **Knowledge skills** — Encode reusable reasoning patterns and domain knowledge without external service dependencies. Examples: `technical-writing` (writing patterns), `incremental-decomposition` (decomposition rules), `review-rubric` (multi-agent review criteria).
+- **Tool skills** — Encapsulate reusable shortcut-level adapter knowledge for specific tools (e.g., `cross-repo-integration`).
+- **Advisory skills** — Commands that produce structured analysis in the chat. No side effects. Invoked with `disable-model-invocation: true`. Examples: `/explain`, `/guide`, `/peer-review`.
+- **Operative skills** — Commands that perform side effects: write artifacts, call external services, or trigger multi-step workflows. Invoked with `disable-model-invocation: true`. Examples: `/blueprint`, `/implement`, `/publish`.
 - **System skill** — `rho-aias` is the framework's own skill. It defines the artifact catalog, skill loading protocol (7 phases), status lifecycle, workflow profiles, and sync behavior.
 
-Skills live in `aias/.skills/`. They are consumed by modes and commands but never invoked directly by the user.
+Skills live in `aias/.skills/`. Advisory and operative skills (commands) are invoked by the user via tool-specific shortcuts generated from their `SKILL.md`. MCP, knowledge, and tool skills are loaded by modes and other skills as needed.
 
 Immutability rule: MCP service skills only change on validated API, MCP, or security triggers — not on framework version bumps.
 
@@ -116,15 +119,16 @@ Contract: `aias/contracts/readme-skill.md`.
 
 ### Layer 6 — Contracts
 
-Contracts are the single source of truth for every artifact type in the framework. There are 14 contracts in `aias/contracts/`, each governing a specific artifact family:
+Contracts are the single source of truth for every artifact type in the framework. There are 15 contracts in `aias/contracts/`, each governing a specific artifact family:
 
 | Contract | Governs |
 |---|---|
-| `readme-commands.md` | Command definitions (Advisory and Operative) |
+| `readme-commands.md` | Behavioral contract for advisory and operative skills (structure, quality criteria, self-verification) |
 | `readme-base-rule.md` | Base rules (invariant/parametrizable taxonomy) |
 | `readme-output-contract.md` | Output contract rules (build system fragments) |
 | `readme-mode-rule.md` | Mode rules (reasoning stance definitions) |
-| `readme-skill.md` | Skills (MCP and non-MCP) |
+| `readme-skill.md` | Skills (five categories: mcp, knowledge, tool, advisory, operative) |
+| `readme-multi-agent-review.md` | Multi-agent review protocol (dimensions, dispatch, severity gates, sub-agent manifest) |
 | `readme-provider-config.md` | Service provider configuration and fail-fast resolution |
 | `readme-tracker-status-mapping.md` | Tracker status mappings and trigger naming |
 | `readme-tracker-field-mapping.md` | Tracker field mapping (traceability, catalogs, format resolution) |

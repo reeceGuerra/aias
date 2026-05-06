@@ -46,12 +46,14 @@ python3 aias/.canonical/generation/aias_cli.py new <flag> [name]
 |---|---|---|---|
 | `-m`, `--mode` | Mode rule | Yes (kebab-case) | `aias-config/modes/<name>.mdc` |
 | `-r`, `--rule` | Always-apply rule | Yes (kebab-case) | `aias-config/rules/<name>.mdc` |
-| `-c`, `--command` | Command definition | Yes (kebab-case) | `aias/.commands/<name>.md` |
-| `-s`, `--skill` | Skill | Yes (kebab-case) | `aias/.skills/<name>/SKILL.md` |
+| `-s`, `--skill` | Skill (any category) | Yes (kebab-case) | `aias/.skills/<name>/SKILL.md` |
 | `-P`, `--provider` | Provider config | Yes (category) | `aias-config/providers/<category>-config.md` |
 | `-C`, `--context` | RHOAIAS.md | No | `RHOAIAS.md` |
 | `-p`, `--stack-profile` | Stack profile | No | `stack-profile.md` |
 | `-f`, `--stack-fragment` | Stack fragment | No | `stack-fragment.md` |
+| `--migrate-commands` | Migrate custom commands | No | `aias-config/skills/` |
+
+> **`--command` / `-c` is deprecated.** Commands are now advisory/operative skills. Use `aias new --skill <name>` and select category `advisory` or `operative` when prompted. The `--command` flag still works but prints a deprecation warning and redirects to `--skill`. To migrate existing project custom commands from `aias-config/commands/` to `aias-config/skills/`, run `aias new --migrate-commands`.
 
 **Naming:** All artifact names must be kebab-case (`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`).
 
@@ -68,14 +70,16 @@ python3 aias/.canonical/generation/aias_cli.py new --mode code-review
 # Create a new rule
 python3 aias/.canonical/generation/aias_cli.py new --rule security-policy
 
-# Create a new command
-python3 aias/.canonical/generation/aias_cli.py new -c deploy
+# Create a new advisory skill (replaces: aias new --command)
+python3 aias/.canonical/generation/aias_cli.py new --skill deploy
+# → prompts for category; select "advisory" or "operative"
 
-# Create the canonical handoff command
-python3 aias/.canonical/generation/aias_cli.py new -c handoff
+# Create a new MCP skill
+python3 aias/.canonical/generation/aias_cli.py new --skill slack-mcp
+# → prompts for category; select "mcp"
 
-# Create a new skill
-python3 aias/.canonical/generation/aias_cli.py new -s slack-mcp
+# Migrate existing project custom commands to skills
+python3 aias/.canonical/generation/aias_cli.py new --migrate-commands
 
 # Create a provider config
 python3 aias/.canonical/generation/aias_cli.py new -P tracker

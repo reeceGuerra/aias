@@ -75,28 +75,38 @@ python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 
 ---
 
-## Creating a New Command
+## Creating a New Command (Advisory or Operative Skill)
 
-1. Read the contract: `aias/contracts/readme-commands.md`.
+Commands are now implemented as directory-form skills with `category: advisory` or `category: operative` and `disable-model-invocation: true`. The `aias new --command` flag is deprecated — use `aias new --skill` instead.
+
+1. Read the contracts:
+   - `aias/contracts/readme-skill.md` — Skill structure and category rules.
+   - `aias/contracts/readme-commands.md` — Behavioral contract governing structure, quality criteria, and self-verification for advisory and operative skills.
 2. Determine the category:
-   - **Advisory** — Chat-only. Produces output in the conversation (analysis, reports, explanations).
+   - **Advisory** — Chat-only. Produces output in the conversation (analysis, reports, explanations). No side effects, no file writes.
    - **Operative** — Procedural/execution. Performs side effects (file writes, API calls, artifact creation).
-3. Create the command definition in `aias/.commands/<name>.md` (framework) or `aias-config/commands/<name>.md` (project), or use the CLI:
+3. Create the skill using the CLI:
 
 ```bash
-python3 aias/.canonical/generation/aias_cli.py new --command <name>
+python3 aias/.canonical/generation/aias_cli.py new --skill <name>
+# → select "advisory" or "operative" when prompted for category
 ```
+
+This creates `aias/.skills/<name>/SKILL.md` (framework) or `aias-config/skills/<name>/SKILL.md` (project) with the correct frontmatter, including `disable-model-invocation: true`.
 
 4. Follow these rules:
    - Commands are **deterministic** — same input produces same behavior.
    - Commands are **procedural** — they execute steps, they do not perform deep reasoning (that is the mode's job).
    - Commands **do not infer missing intent** — if required input is absent, they halt and ask.
+   - Each command must include a **self-verification checklist** of observable, mechanically verifiable side-effects.
 
 5. Run the generator to produce shortcuts for all configured tools:
 
 ```bash
 python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 ```
+
+> **Migrating existing project custom commands?** Run `aias new --migrate-commands` for an interactive migration from `aias-config/commands/` to `aias-config/skills/`.
 
 ---
 

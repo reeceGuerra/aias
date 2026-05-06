@@ -11,7 +11,7 @@ Generic modes that apply to any platform:
 
 **Generated modes** (technology-specific roles and references) are produced by the generator and committed to `aias-config/modes/`.
 
-Commands (`/blueprint`, `/issue`, `/fix`, etc.) live in **aias/.commands/** (framework) and **aias-config/commands/** (project custom) and are platform-agnostic.
+Commands (`/blueprint`, `/issue`, `/fix`, etc.) are advisory/operative skills and live in **aias/.skills/** (framework) and **aias-config/skills/** (project custom). They are platform-agnostic and carry `disable-model-invocation: true` in their frontmatter.
 
 ## Mode Templates (Phase 2)
 
