@@ -98,11 +98,11 @@ Every plan is classified to determine its publication and approval requirements:
 
 | Type | Scope | Publication | Approval | Closure |
 |------|-------|-------------|----------|---------|
-| Minor (Local/Low-Risk) | Bug fixes, small refactors, config | Unconditional (Phase 5c) | Not required | `/publish` (reconciliation + closure). `/report` available as lightweight alternative |
-| Standard (Medium-Impact) | Features, UX/UI, internal tools | Unconditional (Phase 5c) | Not required (unless objection) | `/publish` |
-| Critical (Critical/Strategic) | Arch redesigns, cross-team, launches | Unconditional (Phase 5c) | Required before `/implement` | `/publish` |
+| Minor (Local/Low-Risk) | Bug fixes, small refactors, config | Conditional (Phase 5c — tracker-gated) | Not required | `/publish` (reconciliation + closure). `/report` available as lightweight alternative |
+| Standard (Medium-Impact) | Features, UX/UI, internal tools | Conditional (Phase 5c — tracker-gated) | Not required (unless objection) | `/publish` |
+| Critical (Critical/Strategic) | Arch redesigns, cross-team, launches | Conditional (Phase 5c — tracker-gated) | Required before `/implement` | `/publish` |
 
-Classification determines governance gates, not publication. Phase 5c always publishes after every command regardless of classification.
+Classification determines governance gates, not publication. Phase 5c fires only when a valid tracker ticket exists for the TASK_ID — see Phase 5c preconditions below.
 
 - Assigned by `/blueprint` in `status.md` (`classification: minor | standard | critical`).
 - Validated by `/validate-plan` (gap if missing).
@@ -204,7 +204,15 @@ Phase 4 — EXECUTION
 Phase 5 — STATUS UPDATE + ARTIFACT TRACKING + KNOWLEDGE SYNC
   5a. Update completed_steps / current_step in status.md
   5b. Set artifact sync status (created/modified) for written artifacts
-  5c. UNCONDITIONAL KNOWLEDGE SYNC
+  5c. CONDITIONAL KNOWLEDGE SYNC (tracker-gated)
+      Preconditions — ALL THREE must be satisfied; if any fails, skip Phase 5c silently
+      and leave artifacts in created/modified state (they will be reconciled by /publish):
+        P1. task_id in status.md is present and non-empty.
+        P2. Tracker provider resolves successfully from aias-config/providers/tracker-config.md
+            (service_category, active_provider, provider enabled, skill binding valid).
+        P3. The tracker ticket identified by task_id is reachable and exists in the
+            resolved tracker provider (verified via tracker MCP read call).
+      If preconditions are met, publish all non-synced artifacts:
       Publish the full publishable content of all non-synced artifacts to resolved knowledge provider.
       Read each artifact file and publish its complete publishable Markdown body — never summarize.
       For Cursor-first `*.plan.md` artifacts, strip only the initial YAML frontmatter block before publishing.

@@ -154,7 +154,7 @@ TRACKER SYNC (Phase 6 — after PR creation):
 STATUS UPDATE (Phase 5, when TASK_DIR is set):
 - Append to `command_log`: `{command: /pr, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - Update `status.md`: set `status: in_review`, add `pr` to `completed_steps`, set `current_step` based on profile: if bugfix → `report`; otherwise → `closure`.
-- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. After each successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c).
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config.
 
 PUBLISH NUDGE:
 - If any artifacts in `status.md` have sync status `created` or `modified`, append after the code block:

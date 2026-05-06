@@ -86,7 +86,7 @@ STATUS UPDATE (Phase 5)
 - Add `feasibility.assessment.md` to the `artifacts` map in `status.md` with status `created` or `modified`.
 - Add `assess` to `completed_steps`, set `current_step` to `blueprint`.
 - Append to `command_log`: `{command: /assessment, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
-- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. After each successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c).
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config.
 
 END-OF-RESPONSE CONFIRMATION (must follow)
 - After writing, print: `Saved assessment to: <absolute_path>`

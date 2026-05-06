@@ -285,7 +285,7 @@ After writing local artifacts:
 1. Create TASK_DIR and `status.md` if they do not exist (profile: infer from context, default `feature`; if only enrichment is planned, use `enrichment`).
 2. Add `analysis.product.md`, `dor.plan.md`, and `dod.plan.md` to `artifacts` map with status `created` or `modified`.
 3. Add `refinement` to `completed_steps`. Set `current_step` based on the profile: if `enrichment` → `closure`; otherwise → `blueprint`.
-4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c always publishes — it is NOT conditioned by plan classification. After each successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c).
+4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config.
 5. Set `refinement_validated` in `status.md`: `true` if `--brief` was used, brief comment was posted, AND knowledge publish succeeded (team has context for refinement); `false` otherwise. This evaluation happens **after** Phase 5c and after the brief comment (if `--brief`).
 6. Append to `command_log`: `{command: /enrich, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 
