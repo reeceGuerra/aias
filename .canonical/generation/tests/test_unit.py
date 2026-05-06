@@ -784,5 +784,169 @@ class TestNestedContextHelpers(unittest.TestCase):
         )
 
 
+class TestCommandSkillFrontmatter(unittest.TestCase):
+    """BL-S36: advisory/operative skills are correctly identified as command-shaped."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.skill_dir = pathlib.Path(self.tmpdir.name)
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def _make_skill(self, category: str, dmi: str) -> pathlib.Path:
+        d = self.skill_dir / f"skill-{category}"
+        d.mkdir()
+        (d / "SKILL.md").write_text(
+            f"---\nname: test\ncategory: {category}\ndisable-model-invocation: {dmi}\n---\n",
+            encoding="utf-8",
+        )
+        return d
+
+    def test_advisory_is_command_skill(self):
+        d = self._make_skill("advisory", "true")
+        self.assertTrue(gen._is_command_skill(d))
+
+    def test_operative_is_command_skill(self):
+        d = self._make_skill("operative", "true")
+        self.assertTrue(gen._is_command_skill(d))
+
+    def test_mcp_not_command_skill(self):
+        d = self._make_skill("mcp", "false")
+        self.assertFalse(gen._is_command_skill(d))
+
+    def test_knowledge_not_command_skill(self):
+        d = self._make_skill("knowledge", "false")
+        self.assertFalse(gen._is_command_skill(d))
+
+    def test_advisory_with_dmi_false_not_command_skill(self):
+        d = self._make_skill("advisory", "false")
+        self.assertFalse(gen._is_command_skill(d))
+
+    def test_read_skill_frontmatter_parses_fields(self):
+        d = self._make_skill("operative", "true")
+        fm = gen._read_skill_frontmatter(d / "SKILL.md")
+        self.assertEqual(fm.get("category"), "operative")
+        self.assertEqual(fm.get("disable-model-invocation"), "true")
+
+    def test_missing_skill_md_returns_empty(self):
+        d = self.skill_dir / "empty-dir"
+        d.mkdir()
+        self.assertFalse(gen._is_command_skill(d))
+
+
+class TestLegacyCommandShortcutDetection(unittest.TestCase):
+    """BL-S36: aias health detects shortcuts still pointing to retired aias/.commands/."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmpdir.name)
+        self.orig_root = aias_cli.ROOT
+        aias_cli.ROOT = self.root
+
+    def tearDown(self):
+        aias_cli.ROOT = self.orig_root
+        self.tmpdir.cleanup()
+
+    def _run_checks(self, selected_tools):
+        results = []
+        aias_cli._check_shortcut_runtime_integrity(selected_tools, results)
+        return {name: (status, detail) for name, status, detail in results}
+
+    def test_no_legacy_shortcuts_ok(self):
+        (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Legacy command shortcuts"][0], "OK")
+
+    def test_legacy_shortcut_detected(self):
+        legacy_dir = self.root / "aias" / ".commands"
+        legacy_dir.mkdir(parents=True, exist_ok=True)
+        legacy_file = legacy_dir / "blueprint.md"
+        legacy_file.write_text("legacy", encoding="utf-8")
+
+        cmds_dir = self.root / ".cursor" / "commands"
+        cmds_dir.mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
+        rel = os.path.relpath(legacy_file, cmds_dir)
+        (cmds_dir / "blueprint.md").symlink_to(rel)
+
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Legacy command shortcuts"][0], "WARN")
+        self.assertIn("aias/.commands", checks["Legacy command shortcuts"][1])
+
+
+class TestReviewSubagentIntegrity(unittest.TestCase):
+    """BL-S53: aias health validates sub-agent presence and frontmatter invariants."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmpdir.name)
+        self.orig_root = aias_cli.ROOT
+        aias_cli.ROOT = self.root
+        self.fw_agents = self.root / "aias" / ".cursor" / "agents"
+        self.fw_agents.mkdir(parents=True, exist_ok=True)
+        self.cursor_agents = self.root / ".cursor" / "agents"
+        self.cursor_agents.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self):
+        aias_cli.ROOT = self.orig_root
+        self.tmpdir.cleanup()
+
+    def _write_subagent(self, name: str, readonly: str = "true", is_background: str = "false") -> None:
+        content = (
+            f"---\nname: {name}\nreadonly: {readonly}\nis_background: {is_background}\n---\n"
+            f"# {name}\n"
+        )
+        (self.cursor_agents / name).write_text(content, encoding="utf-8")
+
+    def _run_checks(self):
+        results = []
+        aias_cli._check_review_subagent_integrity(results)
+        return {name: (status, detail) for name, status, detail in results}
+
+    def test_all_present_and_valid(self):
+        for agent_name in aias_cli.REVIEW_SUBAGENTS:
+            self._write_subagent(agent_name)
+        checks = self._run_checks()
+        self.assertEqual(checks["Review sub-agents presence"][0], "OK")
+        self.assertEqual(checks["Review sub-agents invariants"][0], "OK")
+
+    def test_missing_subagent_warns(self):
+        # Create only 5 of 6 sub-agents
+        for agent_name in list(aias_cli.REVIEW_SUBAGENTS)[:-1]:
+            self._write_subagent(agent_name)
+        checks = self._run_checks()
+        self.assertEqual(checks["Review sub-agents presence"][0], "WARN")
+
+    def test_wrong_readonly_fails_invariant(self):
+        for agent_name in aias_cli.REVIEW_SUBAGENTS:
+            self._write_subagent(agent_name, readonly="false")
+        checks = self._run_checks()
+        self.assertEqual(checks["Review sub-agents invariants"][0], "FAIL")
+        self.assertIn("readonly", checks["Review sub-agents invariants"][1])
+
+    def test_wrong_is_background_fails_invariant(self):
+        for agent_name in aias_cli.REVIEW_SUBAGENTS:
+            self._write_subagent(agent_name, is_background="true")
+        checks = self._run_checks()
+        self.assertEqual(checks["Review sub-agents invariants"][0], "FAIL")
+        self.assertIn("is_background", checks["Review sub-agents invariants"][1])
+
+    def test_symlink_to_valid_subagent_passes(self):
+        # Create source files in fw_agents and symlinks in cursor_agents
+        for agent_name in aias_cli.REVIEW_SUBAGENTS:
+            src = self.fw_agents / agent_name
+            content = (
+                f"---\nname: {agent_name}\nreadonly: true\nis_background: false\n---\n"
+            )
+            src.write_text(content, encoding="utf-8")
+            rel = os.path.relpath(src, self.cursor_agents)
+            (self.cursor_agents / agent_name).symlink_to(rel)
+        checks = self._run_checks()
+        self.assertEqual(checks["Review sub-agents presence"][0], "OK")
+        self.assertEqual(checks["Review sub-agents invariants"][0], "OK")
+
+
 if __name__ == "__main__":
     unittest.main()

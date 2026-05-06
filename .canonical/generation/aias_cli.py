@@ -79,13 +79,15 @@ TOOL_SHORTCUT_DIRS: Dict[str, Tuple[str, ...]] = {
 
 SHORTCUT_BOUNDARY_PATHS: Tuple[str, ...] = (
     "aias-config",
-    "aias/.commands",
     "aias/.skills",
     "RHOAIAS.md",
 )
 
+# aias/.commands/ is retired; symlinks to it are legacy and should be flagged by health.
+LEGACY_COMMAND_DIR = "aias/.commands"
+
 SHORTCUT_REF_RE = re.compile(
-    r"(?:aias-config|aias/\.commands|aias/\.skills)/[A-Za-z0-9._/\-]+|RHOAIAS\.md"
+    r"(?:aias-config|aias/\.skills)/[A-Za-z0-9._/\-]+|RHOAIAS\.md"
 )
 
 
@@ -397,59 +399,17 @@ def new_rule(name: str) -> None:
 # ---------------------------------------------------------------------------
 
 def new_command(name: str) -> None:
-    if not validate_kebab(name):
-        print(f"Error: '{name}' is not valid kebab-case (expected: ^[a-z][a-z0-9]*(-[a-z0-9]+)*$)")
-        sys.exit(1)
-
-    existing = existing_names(PROJECT_COMMANDS_DIR, suffix=".md") + existing_names(FW_COMMANDS_DIR, suffix=".md")
-    if name in existing:
-        if not confirm(f"  Command '{name}' already exists. Overwrite?"):
-            return
-
-    cmd_type = ask_choice("Command type:", ["Advisory (chat-only)", "Operative (procedural, writes files)"])
-    type_label = "Advisory" if "Advisory" in cmd_type else "Operative"
-
-    identity = ask("Identity (what does this command do?)")
-    invocation = ask("Invocation example (e.g. /<name> --flag value)")
-    inputs = ask("Inputs (what information does it consume?)")
-    output_format = ask("Output format (Rendered Markdown, code block, file...)")
-    content_rules = ask("Content rules (what to include/exclude, language)")
-    output_structure = ask("Output structure (sections of the output)")
-    non_goals = ask("Non-goals (what must this command NOT do?)")
-    skills = ask("Skills (comma-separated, optional)")
-
-    content = textwrap.dedent(f"""\
-        # {name.replace('-', ' ').title()} — v1
-
-        ## 1. Identity
-        **Command Type:** {type_label}
-        {identity}
-
-        ## 2. Invocation / Usage
-        {invocation if invocation else f'`/{name}`'}
-
-        ## 3. Inputs
-        {inputs}
-
-        ## 4. Output Contract (Format)
-        {output_format}
-
-        ## 5. Content Rules (Semantics)
-        {content_rules}
-
-        ## 6. Output Structure (Template)
-        {output_structure}
-
-        ## 7. Non-Goals / Forbidden Actions
-        {non_goals}
-    """)
-
-    if skills:
-        skill_list = [s.strip() for s in skills.split(",") if s.strip()]
-        content += "\n## Skills\n" + "\n".join(f"- **{s}**" for s in skill_list) + "\n"
-
-    path = PROJECT_COMMANDS_DIR / f"{name}.md"
-    safe_write(path, content)
+    """Deprecated: redirect to new_skill with category advisory|operative."""
+    print(
+        "\n[DEPRECATED] `aias new --command` is deprecated as of BL-S36 (readme-skill.md v1.3).\n"
+        "Commands are now advisory or operative skills in `aias-config/skills/<name>/SKILL.md`.\n\n"
+        "Use instead:  aias new --skill <name>  (select category: advisory or operative)\n"
+        "Or migrate existing project commands:  aias new --migrate-commands\n"
+    )
+    if not confirm("Redirect to `aias new --skill` now?"):
+        print("Aborted. Run: aias new --skill <name>")
+        return
+    new_skill(name)
 
 
 # ---------------------------------------------------------------------------
@@ -469,47 +429,193 @@ def new_skill(name: str) -> None:
         if not confirm(f"  Skill '{name}' already exists. Overwrite?"):
             return
 
-    category = ask_choice("Skill category:", ["MCP", "Tool"])
+    category_choice = ask_choice(
+        "Skill category:",
+        ["MCP (interacts with an MCP server)", "Knowledge (reusable domain knowledge)", "Tool (CLI tool or local utility)",
+         "Advisory (chat-only command workflow, no file writes)", "Operative (execution command workflow, writes artifacts)"],
+    )
+    category = (
+        "mcp" if "MCP" in category_choice
+        else "knowledge" if "Knowledge" in category_choice
+        else "tool" if "Tool" in category_choice
+        else "advisory" if "Advisory" in category_choice
+        else "operative"
+    )
+    is_command_skill = category in ("advisory", "operative")
+
     description = ask("Description (WHAT + WHEN with trigger terms, max 1024 chars)")
     if not description or len(description) < 50:
         print(f"Warning: description should be >= 50 chars with trigger terms (current: {len(description)}).")
 
-    purpose = ask("Purpose (1-2 sentences: what it enables)")
+    version = ask("Version (SemVer, e.g. 1.0.0)", "1.0.0") if category != "mcp" else None
 
-    print("\nOperations (enter at least one; empty name to stop):")
-    operations = []
-    while True:
-        op_name = ask("  Operation name (empty to finish)")
-        if not op_name:
-            break
-        op_when = ask("  When to use")
-        op_prereq = ask("  Prerequisites")
-        op_sequence = ask("  Call sequence")
-        op_output = ask("  Output")
-        operations.append((op_name, op_when, op_prereq, op_sequence, op_output))
+    if is_command_skill:
+        # Advisory/operative: scaffold from the commands contract template
+        cmd_type = "Advisory" if category == "advisory" else "Operative"
+        purpose = ask("Identity / Purpose (what does this command do?)")
+        invocation = ask("Invocation example (e.g. /<name> --flag value)")
+        inputs_text = ask("Inputs (what information does it consume?)")
+        output_format = ask("Output format (Rendered Markdown, code block, file...)")
+        content_rules = ask("Content rules (what to include/exclude, language)")
+        output_structure = ask("Output structure (sections of the output)")
+        non_goals = ask("Non-goals (what must this command NOT do?)")
+        skills_ref = ask("Skills referenced (comma-separated, optional)")
 
-    if not operations:
-        print("Warning: at least one operation is recommended.")
+        body = textwrap.dedent(f"""\
+            # {name.replace('-', ' ').title()} — v1
 
-    safety = ask("Safety rules (read/write boundary, abort-on-failure, data integrity)")
-    if not safety:
-        safety = "- Read-only by default. Write operations require explicit user request.\n- Abort on failure. Do not invent data.\n- Data integrity: do not fabricate or assume data not returned by the service."
+            ## 1. Identity
+            **Command Type:** {cmd_type}
+            {purpose}
+        """)
+        if skills_ref:
+            sl = [s.strip() for s in skills_ref.split(",") if s.strip()]
+            body += f"\n**Skills referenced:** {', '.join(f'`{s}`' for s in sl)}.\n"
+        body += textwrap.dedent(f"""
+            ---
 
-    # Build SKILL.md
-    content = f"---\nname: {name}\ndescription: \"{description}\"\n---\n"
-    content += f"\n## PURPOSE\n{purpose}\n"
-    content += "\n## OPERATIONS\n"
-    for op_name, op_when, op_prereq, op_sequence, op_output in operations:
-        content += f"\n### {op_name}\n"
-        content += f"- **When**: {op_when}\n"
-        content += f"- **Prerequisites**: {op_prereq}\n"
-        content += f"- **Call sequence**: {op_sequence}\n"
-        content += f"- **Output**: {op_output}\n"
+            ## 2. Invocation / Usage
+            {invocation if invocation else f'`/{name}`'}
 
-    content += f"\n## SAFETY RULES\n{safety}\n"
+            ## 3. Inputs
+            {inputs_text}
+
+            ## 4. Output Contract (Format)
+            {output_format}
+
+            ## 5. Content Rules (Semantics)
+            {content_rules}
+
+            ## 6. Output Structure (Template)
+            {output_structure}
+
+            ## 7. Non-Goals / Forbidden Actions
+            {non_goals}
+
+            ## 8. Self-Verification Checklist
+            - [ ] Terminal state line emitted with correct state token
+        """)
+    else:
+        # MCP / Knowledge / Tool: scaffold with PURPOSE + OPERATIONS + SAFETY RULES
+        body = ""
+        purpose = ask("Purpose (1-2 sentences: what it enables)")
+        body += f"\n## PURPOSE\n{purpose}\n"
+
+        print("\nOperations (enter at least one; empty name to stop):")
+        operations = []
+        while True:
+            op_name = ask("  Operation name (empty to finish)")
+            if not op_name:
+                break
+            op_when = ask("  When to use")
+            op_prereq = ask("  Prerequisites")
+            op_sequence = ask("  Call sequence")
+            op_output = ask("  Output")
+            operations.append((op_name, op_when, op_prereq, op_sequence, op_output))
+
+        if not operations:
+            print("Warning: at least one operation is recommended.")
+
+        body += "\n## OPERATIONS\n"
+        for op_name, op_when, op_prereq, op_sequence, op_output in operations:
+            body += f"\n### {op_name}\n"
+            body += f"- **When**: {op_when}\n"
+            body += f"- **Prerequisites**: {op_prereq}\n"
+            body += f"- **Call sequence**: {op_sequence}\n"
+            body += f"- **Output**: {op_output}\n"
+
+        safety = ask("Safety rules (read/write boundary, abort-on-failure, data integrity)")
+        if not safety:
+            safety = (
+                "- Read-only by default. Write operations require explicit user request.\n"
+                "- Abort on failure. Do not invent data.\n"
+                "- Data integrity: do not fabricate or assume data not returned by the service."
+            )
+        body += f"\n## SAFETY RULES\n{safety}\n"
+
+    # Build SKILL.md frontmatter
+    dm_inv = "true" if is_command_skill else "false"
+    version_line = f"version: {version}\n" if version else ""
+    frontmatter = (
+        f"---\nname: {name}\ndescription: \"{description}\"\n"
+        f"category: {category}\ndisable-model-invocation: {dm_inv}\n"
+        f"{version_line}---\n"
+    )
 
     path = PROJECT_SKILLS_DIR / name / "SKILL.md"
-    safe_write(path, content)
+    safe_write(path, frontmatter + body)
+
+
+# ---------------------------------------------------------------------------
+# new --migrate-commands
+# ---------------------------------------------------------------------------
+
+def migrate_commands() -> None:
+    """Migrate project custom commands from aias-config/commands/ to aias-config/skills/.
+
+    For each .md file found in PROJECT_COMMANDS_DIR, creates a corresponding
+    aias-config/skills/<name>/SKILL.md with an advisory or operative frontmatter
+    and the original content. Does not touch framework commands (aias/.commands/).
+    """
+    if not PROJECT_COMMANDS_DIR.is_dir():
+        print("No aias-config/commands/ directory found. Nothing to migrate.")
+        return
+
+    cmd_files = sorted(PROJECT_COMMANDS_DIR.glob("*.md"))
+    if not cmd_files:
+        print("No command files found in aias-config/commands/. Nothing to migrate.")
+        return
+
+    print(f"Found {len(cmd_files)} command file(s) in aias-config/commands/ to migrate:\n")
+    for f in cmd_files:
+        print(f"  {f.name}")
+    print()
+
+    if not confirm("Migrate all the above commands to aias-config/skills/?"):
+        print("Aborted.")
+        return
+
+    migrated = 0
+    for cmd_file in cmd_files:
+        name = cmd_file.stem
+        content = cmd_file.read_text(encoding="utf-8")
+
+        # Detect category from existing Command Type declaration
+        if "Command Type: Advisory" in content or "Command Type:** Advisory" in content:
+            category = "advisory"
+        else:
+            category = "operative"
+
+        dest_dir = PROJECT_SKILLS_DIR / name
+        dest = dest_dir / "SKILL.md"
+        if dest.exists():
+            if not confirm(f"  aias-config/skills/{name}/SKILL.md already exists. Overwrite?"):
+                print(f"  Skipped: {name}")
+                continue
+
+        description = f"Migrated project command: {name.replace('-', ' ')}. Invoke with /{name}."
+        frontmatter = (
+            f"---\n"
+            f"name: {name}\n"
+            f"description: \"{description}\"\n"
+            f"category: {category}\n"
+            f"disable-model-invocation: true\n"
+            f"version: 1.0.0\n"
+            f"---\n\n"
+        )
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest.write_text(frontmatter + content, encoding="utf-8")
+        print(f"  Migrated: aias-config/commands/{cmd_file.name} → aias-config/skills/{name}/SKILL.md")
+        migrated += 1
+
+    print(f"\nMigrated {migrated} of {len(cmd_files)} command(s).")
+    if migrated:
+        print(
+            "\nNext steps:\n"
+            "  1. Review each migrated SKILL.md and update description + version in frontmatter.\n"
+            "  2. Run: aias generate --shortcuts  (to regenerate .<tool>/commands/ from skills)\n"
+            "  3. Delete aias-config/commands/ once you have verified the migration.\n"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -692,8 +798,7 @@ def new_context() -> None:
 
         - **Rules**: `aias-config/rules/` — Generated behavioral rules (always-apply and output contracts)
         - **Modes**: `aias-config/modes/` — Generated task-specific modes (planning, dev, QA, debug, review, product, integration)
-        - **Commands**: `aias/.commands/` (framework) + `aias-config/commands/` (project) — Command definitions
-        - **Skills**: `aias/.skills/` (framework) + `aias-config/skills/` (project) — Reusable operational skills
+        - **Skills**: `aias/.skills/` (framework) + `aias-config/skills/` (project) — All skills including advisory/operative (commands)
         - **Providers**: `aias-config/providers/` — Provider configuration files
 
         > This file is the single source of truth for project context. Tool-specific context files (e.g., `AGENTS.md`) are symlinks to this file, scoped by the tools selected in `stack-profile.md`.
@@ -844,6 +949,112 @@ def new_stack_fragment() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Sub-agent symlinks (BL-S53, Cursor only)
+# ---------------------------------------------------------------------------
+
+# Canonical sub-agent sources live in aias/.cursor/agents/ (framework, read-only).
+# Projected shortcuts live in .cursor/agents/ (created by aias init, validated by aias health).
+FW_AGENTS_DIR = ROOT / "aias" / ".cursor" / "agents"
+REVIEW_SUBAGENTS = (
+    "aias-correctness-reviewer.md",
+    "aias-quality-reviewer.md",
+    "aias-architecture-reviewer.md",
+    "aias-test-auditor.md",
+    "aias-security-auditor.md",
+    "aias-reflector.md",
+)
+# Frontmatter invariants enforced by aias health
+SUBAGENT_REQUIRED_FRONTMATTER = {
+    "readonly": "true",
+    "is_background": "false",
+}
+
+
+def _parse_subagent_frontmatter(agent_file: pathlib.Path) -> Dict[str, str]:
+    """Parse YAML frontmatter from a Cursor sub-agent .md file."""
+    if not agent_file.is_file():
+        return {}
+    text = agent_file.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return {}
+    result: Dict[str, str] = {}
+    for line in text[4:end].split("\n"):
+        if ":" in line:
+            key, _, val = line.partition(":")
+            result[key.strip()] = val.strip().strip('"')
+    return result
+
+
+def _create_symlink_for_path(link_path: pathlib.Path, target_path: pathlib.Path) -> None:
+    """Create a relative symlink. Idempotent: removes existing file or symlink first."""
+    rel_target = os.path.relpath(target_path, link_path.parent)
+    if link_path.is_symlink() or link_path.exists():
+        link_path.unlink()
+    link_path.parent.mkdir(parents=True, exist_ok=True)
+    link_path.symlink_to(rel_target)
+
+
+def _ensure_review_subagent_symlinks() -> None:
+    """Create/refresh .cursor/agents/ symlinks for the 6 BL-S53 review sub-agents."""
+    agents_dir = ROOT / ".cursor" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+    created = 0
+    skipped = 0
+    for agent_name in REVIEW_SUBAGENTS:
+        source = FW_AGENTS_DIR / agent_name
+        link = agents_dir / agent_name
+        if not source.is_file():
+            print(f"  [WARN] Framework sub-agent not found: {source.relative_to(ROOT)}")
+            skipped += 1
+            continue
+        _create_symlink_for_path(link, source)
+        created += 1
+    print(f"\n  Review sub-agents: {created} symlink(s) created/refreshed in .cursor/agents/"
+          + (f" ({skipped} skipped — source not found)" if skipped else ""))
+
+
+def _check_review_subagent_integrity(results: List[HealthStatus]) -> None:
+    """Validate presence and frontmatter invariants for all 6 BL-S53 review sub-agents."""
+    agents_dir = ROOT / ".cursor" / "agents"
+    missing: List[str] = []
+    violations: List[str] = []
+
+    for agent_name in REVIEW_SUBAGENTS:
+        link = agents_dir / agent_name
+        if not link.exists():
+            missing.append(agent_name)
+            continue
+        # Resolve symlink to read actual content
+        actual = link.resolve() if link.is_symlink() else link
+        fm = _parse_subagent_frontmatter(actual)
+        for field, expected in SUBAGENT_REQUIRED_FRONTMATTER.items():
+            actual_val = fm.get(field, "").lower()
+            if actual_val != expected:
+                violations.append(f"{agent_name}: {field}={actual_val!r} (expected {expected!r})")
+
+    if not missing:
+        results.append(("Review sub-agents presence", "OK",
+                        f"All {len(REVIEW_SUBAGENTS)} sub-agents present in .cursor/agents/"))
+    else:
+        preview = "; ".join(missing[:3])
+        suffix = f" (+{len(missing) - 3} more)" if len(missing) > 3 else ""
+        results.append(("Review sub-agents presence", "WARN",
+                        f"Missing sub-agent(s): {preview}{suffix}. Run: aias init"))
+
+    if not violations:
+        results.append(("Review sub-agents invariants", "OK",
+                        "readonly: true and is_background: false confirmed for all sub-agents"))
+    else:
+        preview = "; ".join(violations[:3])
+        suffix = f" (+{len(violations) - 3} more)" if len(violations) > 3 else ""
+        results.append(("Review sub-agents invariants", "FAIL",
+                        f"Invariant violation(s): {preview}{suffix}"))
+
+
+# ---------------------------------------------------------------------------
 # init — provider config helper
 # ---------------------------------------------------------------------------
 
@@ -949,6 +1160,10 @@ def cmd_init(args: List[str]) -> None:
         d.mkdir(parents=True, exist_ok=True)
     print(f"\n  aias-config/ structure ensured.")
 
+    # Step 5c: Sub-agent symlinks (Cursor only — BL-S53)
+    if "cursor" in selected_tools:
+        _ensure_review_subagent_symlinks()
+
     # Step 6: Generate
     rc = run_generator(shortcuts=True)
     if rc == 0:
@@ -969,14 +1184,15 @@ NEW_HELP = """\
 Usage: aias new <flag> [name]
 
 Flags:
-  -m, --mode <name>        Create a mode (file-specific or intelligent)
-  -r, --rule <name>        Create an always-apply rule
-  -c, --command <name>     Create a command
-  -s, --skill <name>       Create a skill
+  -m, --mode <name>         Create a mode (file-specific or intelligent)
+  -r, --rule <name>         Create an always-apply rule
+  -c, --command <name>      [DEPRECATED] Redirect to --skill (advisory or operative)
+  -s, --skill <name>        Create a skill (mcp|knowledge|tool|advisory|operative)
+  --migrate-commands        Migrate aias-config/commands/ to aias-config/skills/
   -P, --provider <category> Create a provider config (knowledge|tracker|design|vcs)
-  -C, --context            Create RHOAIAS.md
-  -p, --stack-profile      Create stack-profile.md
-  -f, --stack-fragment     Create stack-fragment.md
+  -C, --context             Create RHOAIAS.md
+  -p, --stack-profile       Create stack-profile.md
+  -f, --stack-fragment      Create stack-fragment.md
 """
 
 
@@ -1010,6 +1226,9 @@ def cmd_new(args: List[str]) -> None:
             print("Error: skill name is required. Usage: aias new --skill <name>")
             sys.exit(1)
         new_skill(name)
+    elif flag == "--migrate-commands":
+        migrate_commands()
+        post_generate = False
     elif flag in ("-P", "--provider"):
         if not name:
             print("Error: provider category is required. Usage: aias new --provider <category>")
@@ -1165,6 +1384,29 @@ def _check_shortcut_runtime_integrity(
         preview = "; ".join(missing_refs[:3])
         suffix = f" (+{len(missing_refs) - 3} more)" if len(missing_refs) > 3 else ""
         results.append(("Shortcut content refs", "WARN", f"Missing reference(s): {preview}{suffix}"))
+
+    # Legacy command shortcut check: detect symlinks pointing into aias/.commands/ (retired)
+    legacy_dir = ROOT / LEGACY_COMMAND_DIR
+    legacy_shortcuts: List[str] = []
+    for tool, shortcut_dir in shortcut_dirs:
+        if not shortcut_dir.is_dir():
+            continue
+        for item in shortcut_dir.rglob("*"):
+            if item.is_symlink() and item.exists():
+                target = (item.parent / os.readlink(item)).resolve()
+                if legacy_dir.exists() and str(target).startswith(str(legacy_dir.resolve())):
+                    legacy_shortcuts.append(str(item.relative_to(ROOT)))
+
+    if not legacy_shortcuts:
+        results.append(("Legacy command shortcuts", "OK", "No shortcuts pointing to retired aias/.commands/"))
+    else:
+        preview = "; ".join(legacy_shortcuts[:3])
+        suffix = f" (+{len(legacy_shortcuts) - 3} more)" if len(legacy_shortcuts) > 3 else ""
+        results.append((
+            "Legacy command shortcuts", "WARN",
+            f"Shortcut(s) still pointing to retired aias/.commands/: {preview}{suffix}. "
+            "Run: aias new --migrate-commands  (project) or update generator (framework).",
+        ))
 
 
 def cmd_health() -> None:
@@ -1370,6 +1612,10 @@ def cmd_health() -> None:
             results.append(("Context symlinks", "WARN", f"Broken symlinks: {', '.join(ctx_broken)}"))
         else:
             results.append(("Context symlinks", "WARN", f"Not symlinks: {', '.join(ctx_not_symlink)}"))
+
+    # 8b. Review sub-agent integrity (Cursor only — BL-S53)
+    if selected_tools and "cursor" in selected_tools:
+        _check_review_subagent_integrity(results)
 
     # 9. Provider configs
     if PROVIDERS_DIR.is_dir():

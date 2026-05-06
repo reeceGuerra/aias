@@ -58,10 +58,12 @@ class Paths:
     stack_fragment = _DEFAULT_ROOT / "stack-fragment.md"
     rules_output = _DEFAULT_ROOT / "aias-config" / "rules"
     modes_output = _DEFAULT_ROOT / "aias-config" / "modes"
-    fw_commands = _DEFAULT_ROOT / "aias" / ".commands"
     fw_skills = _DEFAULT_ROOT / "aias" / ".skills"
-    project_commands = _DEFAULT_ROOT / "aias-config" / "commands"
     project_skills = _DEFAULT_ROOT / "aias-config" / "skills"
+    # fw_commands is retired (aias/.commands/ removed in BL-S36). Kept as attribute for
+    # backward-compat with test fixtures that reference it; resolves to a non-existent path.
+    fw_commands = _DEFAULT_ROOT / "aias" / ".commands"
+    project_commands = _DEFAULT_ROOT / "aias-config" / "commands"
 
 
 def init_paths(root: pathlib.Path) -> None:
@@ -71,10 +73,10 @@ def init_paths(root: pathlib.Path) -> None:
     Paths.stack_fragment = root / "stack-fragment.md"
     Paths.rules_output = root / "aias-config" / "rules"
     Paths.modes_output = root / "aias-config" / "modes"
-    Paths.fw_commands = root / "aias" / ".commands"
     Paths.fw_skills = root / "aias" / ".skills"
-    Paths.project_commands = root / "aias-config" / "commands"
     Paths.project_skills = root / "aias-config" / "skills"
+    Paths.fw_commands = root / "aias" / ".commands"  # retired; kept for test fixture compat
+    Paths.project_commands = root / "aias-config" / "commands"
 
 MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration", "delivery", "devops")
 TRANSVERSAL_RULES = ("continuous-improvement",)
@@ -145,11 +147,47 @@ def _extract_description(canonical_path: pathlib.Path) -> str:
         return ""
     for line in text[4:end].split("\n"):
         if line.startswith("description:"):
-            desc = line[len("description:"):].strip()
+            desc = line[len("description:"):].strip().strip('"')
             if len(desc) > 120:
                 return desc[:117] + "..."
             return desc
     return ""
+
+
+def _read_skill_frontmatter(skill_md_path: pathlib.Path) -> Dict[str, str]:
+    """Parse YAML frontmatter from a SKILL.md file. Returns dict of key→value strings.
+
+    Only handles simple scalar string values (no nested YAML). This is sufficient
+    for the fields relevant to shortcut generation (category, disable-model-invocation).
+    """
+    if not skill_md_path.is_file():
+        return {}
+    text = skill_md_path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return {}
+    result: Dict[str, str] = {}
+    for line in text[4:end].split("\n"):
+        if ":" in line:
+            key, _, val = line.partition(":")
+            result[key.strip()] = val.strip().strip('"')
+    return result
+
+
+def _is_command_skill(skill_dir: pathlib.Path) -> bool:
+    """Return True if a skill directory contains a command-shaped skill.
+
+    A command-shaped skill has:
+      - disable-model-invocation: true
+      - category: advisory | operative
+    """
+    fm = _read_skill_frontmatter(skill_dir / "SKILL.md")
+    return (
+        fm.get("disable-model-invocation", "").lower() == "true"
+        and fm.get("category", "") in ("advisory", "operative")
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -518,17 +556,20 @@ def _gate_6_shortcut_consistency(generated_modes: List[str], tools: List[str]) -
             copilot_mode = Paths.root / ".github" / "instructions" / f"{mode_name}.instructions.md"
             _check_shortcut_exists(copilot_mode, f"GitHub Copilot mode: {mode_name}", errors)
 
-    for cmd_dir in (Paths.fw_commands, Paths.project_commands):
-        if not cmd_dir.is_dir():
+    # G6 for command-shaped skills (advisory/operative with disable-model-invocation: true)
+    # These are projected into .<tool>/commands/ directories.
+    for skills_dir in (Paths.fw_skills, Paths.project_skills):
+        if not skills_dir.is_dir():
             continue
-        for cmd_file in sorted(cmd_dir.glob("*.md")):
-            name = cmd_file.name
-            if "cursor" in tools:
-                _check_shortcut_exists(Paths.root / ".cursor" / "commands" / name, f"Cursor command: {name}", errors)
-            if "copilot" in tools:
-                _check_shortcut_exists(Paths.root / ".github" / "agents" / name, f"Copilot command: {name}", errors)
-            if "codex" in tools:
-                _check_shortcut_exists(Paths.root / ".codex" / "commands" / name, f"Codex command: {name}", errors)
+        for skill_dir in sorted(skills_dir.iterdir()):
+            if skill_dir.is_dir() and _is_command_skill(skill_dir):
+                name = f"{skill_dir.name}.md"
+                if "cursor" in tools:
+                    _check_shortcut_exists(Paths.root / ".cursor" / "commands" / name, f"Cursor command: {name}", errors)
+                if "copilot" in tools:
+                    _check_shortcut_exists(Paths.root / ".github" / "agents" / name, f"Copilot command: {name}", errors)
+                if "codex" in tools:
+                    _check_shortcut_exists(Paths.root / ".codex" / "commands" / name, f"Codex command: {name}", errors)
 
     for skills_dir in (Paths.fw_skills, Paths.project_skills):
         if not skills_dir.is_dir():
@@ -1069,12 +1110,15 @@ def _generate_cursor_shortcuts(generated_modes: List[str]) -> int:
 
     cmds_dir = Paths.root / ".cursor" / "commands"
     cmds_dir.mkdir(parents=True, exist_ok=True)
-    for cmd_dir in (Paths.fw_commands, Paths.project_commands):
-        if not cmd_dir.is_dir():
+    # Commands now live in aias/.skills/ (advisory/operative with disable-model-invocation: true)
+    for skills_dir in (Paths.fw_skills, Paths.project_skills):
+        if not skills_dir.is_dir():
             continue
-        for cmd_file in sorted(cmd_dir.glob("*.md")):
-            _create_symlink(cmds_dir / cmd_file.name, cmd_file)
-            count += 1
+        for skill_dir in sorted(skills_dir.iterdir()):
+            if skill_dir.is_dir() and _is_command_skill(skill_dir):
+                skill_file = skill_dir / "SKILL.md"
+                _create_symlink(cmds_dir / f"{skill_dir.name}.md", skill_file)
+                count += 1
 
     return count
 
@@ -1209,12 +1253,15 @@ def _generate_copilot_shortcuts(
 
     agents_dir = github_dir / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
-    for cmd_dir in (Paths.fw_commands, Paths.project_commands):
-        if not cmd_dir.is_dir():
+    # Commands now live in aias/.skills/ (advisory/operative with disable-model-invocation: true)
+    for skills_dir in (Paths.fw_skills, Paths.project_skills):
+        if not skills_dir.is_dir():
             continue
-        for cmd_file in sorted(cmd_dir.glob("*.md")):
-            _create_symlink(agents_dir / cmd_file.name, cmd_file)
-            count += 1
+        for skill_dir in sorted(skills_dir.iterdir()):
+            if skill_dir.is_dir() and _is_command_skill(skill_dir):
+                skill_file = skill_dir / "SKILL.md"
+                _create_symlink(agents_dir / f"{skill_dir.name}.md", skill_file)
+                count += 1
 
     return count
 
@@ -1225,12 +1272,15 @@ def _generate_codex_shortcuts() -> int:
 
     cmds_dir = Paths.root / ".codex" / "commands"
     cmds_dir.mkdir(parents=True, exist_ok=True)
-    for cmd_dir in (Paths.fw_commands, Paths.project_commands):
-        if not cmd_dir.is_dir():
+    # Commands now live in aias/.skills/ (advisory/operative with disable-model-invocation: true)
+    for skills_dir in (Paths.fw_skills, Paths.project_skills):
+        if not skills_dir.is_dir():
             continue
-        for cmd_file in sorted(cmd_dir.glob("*.md")):
-            _create_symlink(cmds_dir / cmd_file.name, cmd_file)
-            count += 1
+        for skill_dir in sorted(skills_dir.iterdir()):
+            if skill_dir.is_dir() and _is_command_skill(skill_dir):
+                skill_file = skill_dir / "SKILL.md"
+                _create_symlink(cmds_dir / f"{skill_dir.name}.md", skill_file)
+                count += 1
 
     for skills_dir in (Paths.fw_skills, Paths.project_skills):
         if not skills_dir.is_dir():

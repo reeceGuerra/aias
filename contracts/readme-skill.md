@@ -1,4 +1,4 @@
-# Skill Contract — Cursor Configuration System (v1.2)
+# Skill Contract — Cursor Configuration System (v1.3)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -21,29 +21,30 @@ It is the reference against which skills are designed, reviewed, and corrected.
 
 ## What is a Skill?
 
-A **skill** is a reusable unit of **operational knowledge** that teaches the agent how to interact with a specific external resource, service, or tool. Skills are consumed by modes and commands when context requires them.
+A **skill** is a reusable unit of **operational knowledge** that teaches the agent how to interact with a specific external resource, service, or tool — or how to execute a specific command workflow. Skills are consumed by modes when context requires them, or invoked directly by the user.
 
 ### Characteristics
 
-- **Operational** — Defines *how to operate* with a resource (API calls, parameter extraction, sequencing, error handling)
-- **Reusable** — Any mode or command can consume it; not tied to a single workflow
+- **Operational** — Defines *how to operate* with a resource (API calls, parameter extraction, sequencing, error handling) or *how to execute* a command workflow
+- **Reusable** — Any mode can consume it; not tied to a single workflow
 - **Transversal** — Platform-agnostic by nature; not iOS-specific or Android-specific
-- **Single-domain** — One skill = one external resource or service (e.g., Atlassian, Figma, GitHub)
 - **Discoverable** — The agent finds and applies it based on the `description` in the frontmatter when context matches
 
 ### What a Skill is NOT
 
-A skill is **not** a mode, a command, a base rule, or an agent definition.
+A skill is **not** a mode, a base rule, or an agent definition.
 
 | Artifact | Defines | Example |
 |----------|---------|---------|
 | **Mode** | How to think; role, principles, mental model for a task type | @planning: "think as a senior tech lead" |
-| **Command** | How to execute; template, procedure, output format | /blueprint: "collect and structure planning data into artifacts" |
-| **Skill** | How to operate with an external resource or service | atlassian-mcp: "this is how you read a Jira ticket via MCP" |
+| **Advisory skill** | How to respond in chat for a specific request type; no file writes | /guide: "read the rho-aias skill and explain the workflow profile" |
+| **Operative skill** | How to execute; template, procedure, artifact writes, external sync | /blueprint: "collect and structure planning data into artifacts" |
+| **MCP skill** | How to operate with an external MCP server | atlassian-mcp: "this is how you read a Jira ticket via MCP" |
+| **Knowledge skill** | Reusable domain or framework knowledge | incremental-decomposition: "canonical increment decomposition rules" |
 | **Base rule** | Always-on behavior; language, constraints, conventions | base.mdc: "respond in Spanish, code in English" |
 | **Agent (AGENTS.md / RHOAIAS.md)** | Project context; structure, technologies, conventions | "This is an iOS app using MVVM + Clean Architecture" |
 
-**Key distinction:** A mode decides *when* to use a resource (e.g., "if the user provides a Jira URL, enrich with ticket data"). A skill provides the *how* (e.g., "call `getAccessibleAtlassianResources` first to get `cloudId`, then `getJiraIssue`"). The skill never decides workflow; the mode or command that consumes it does.
+**Key distinction:** A mode decides *when* to activate a skill or invoke a command (e.g., "if the user provides a Jira URL, enrich with ticket data"). A skill provides the *how* (e.g., "call `getAccessibleAtlassianResources` first to get `cloudId`, then `getJiraIssue`"). The skill never decides workflow; the mode that consumes it does.
 
 ---
 
@@ -103,6 +104,7 @@ Characteristics:
 - Enforce read-only by default; write only on explicit user request
 - Include abort-on-failure behavior
 - For tracker-sync capabilities, declare and validate provider status mapping source
+- SHOULD declare `disable-model-invocation: false` in frontmatter
 
 Examples:
 - `atlassian-mcp` — Read Jira issues, Confluence pages
@@ -117,8 +119,9 @@ Skills that teach reusable domain or framework knowledge that is not bound to a 
 Characteristics:
 - Do not depend on a single MCP provider surface
 - Encode canonical reusable procedures and decision frameworks
-- Can be referenced by multiple commands/modes as shared protocol or writing/decomposition guidance
+- Can be referenced by multiple modes as shared protocol or writing/decomposition guidance
 - Evolve with framework doctrine, not with external API drift
+- SHOULD declare `disable-model-invocation: false` in frontmatter
 
 Examples:
 - `rho-aias` — Artifact protocol and task lifecycle coordination
@@ -134,10 +137,50 @@ Characteristics:
 - Map to a specific tool or script
 - Document invocation, parameters, expected output
 - MAY include validation or error handling steps
+- SHOULD declare `disable-model-invocation: false` in frontmatter
 
 Examples (hypothetical):
 - `xcodebuild-skill` — How to build and test with xcodebuild
 - `gradle-skill` — How to build and test with Gradle
+
+### Advisory Skills
+
+Skills that implement chat-only, read-only command workflows. Previously shipped as flat `.md` command files; now directory-form skills with frontmatter.
+
+Characteristics:
+- Output is presented exclusively in the chat response — no file writes, no state mutation
+- External system calls are allowed only in **read-only** mode (no tracker writes, no VCS mutations)
+- Behaviorally governed by `readme-commands.md` (behavior contract for Advisory and Operative skills)
+- MUST declare `disable-model-invocation: true` — invoked explicitly by the user, never auto-applied
+- SHOULD carry a `version` field tracking command evolution
+
+Examples:
+- `guide` — Read the rho-aias skill and explain a workflow profile in chat
+- `explain` — Explain a concept, artifact, or system in chat
+- `self-review` — Review own implementation work against DoD in chat
+- `peer-review` — Review a PR or third-party work in chat
+- `handoff` — Format an operational handoff summary in chat
+
+### Operative Skills
+
+Skills that implement procedural, execution command workflows with artifact writes, state mutation, and external system calls. Previously shipped as flat `.md` command files; now directory-form skills with frontmatter.
+
+Characteristics:
+- MAY write artifacts to TASK_DIR
+- MAY update `status.md` (state mutation)
+- MAY call external systems (tracker provider, knowledge provider, VCS provider)
+- MAY execute shell commands (git, xcodebuild, etc.)
+- MUST be deterministic and sequential
+- Behaviorally governed by `readme-commands.md` (behavior contract for Advisory and Operative skills)
+- MUST declare `disable-model-invocation: true` — invoked explicitly by the user, never auto-applied
+- SHOULD carry a `version` field tracking command evolution
+
+Examples:
+- `blueprint` — Collect and structure planning data into TASK_DIR artifacts
+- `implement` — Execute planned increments with governance gates
+- `commit` — Stage files and create a git commit
+- `publish` — Reconcile and close a task to the knowledge provider
+- `pr` — Create a pull request via the configured VCS provider
 
 ---
 
@@ -171,12 +214,13 @@ skill-name/
 ---
 name: skill-name
 description: Brief description of what this skill does and when the agent should use it. Include trigger terms.
-category: mcp | knowledge | tool
+category: mcp | knowledge | tool | advisory | operative
+disable-model-invocation: true | false
 # Required when category = mcp
 # tested_against:
 #   mcp_server: server-name@YYYY-MM-DD
 #   tools_count: 0
-# Required when category = knowledge
+# Required when category = knowledge | advisory | operative
 # version: 1.0.0
 ---
 ```
@@ -187,7 +231,8 @@ category: mcp | knowledge | tool
 |-------|-------|---------|
 | `name` | Max 64 chars, lowercase letters/numbers/hyphens only | Unique identifier |
 | `description` | Max 1024 chars, non-empty, third person, includes WHAT and WHEN | Agent uses this to decide when to apply the skill |
-| `category` | MUST be exactly one of `mcp`, `knowledge`, `tool` | Classifies governance, versioning, and maintenance policy |
+| `category` | MUST be exactly one of `mcp`, `knowledge`, `tool`, `advisory`, `operative` | Classifies governance, versioning, and maintenance policy |
+| `disable-model-invocation` | MUST be `true` for `advisory` and `operative`; SHOULD be `false` for `mcp`, `knowledge`, `tool` | Controls whether the skill is auto-applied by the agent or invoked explicitly by the user |
 
 **Category-conditional fields:**
 
@@ -197,6 +242,14 @@ category: mcp | knowledge | tool
 | `mcp` | `tested_against.tools_count` | SHOULD be integer >= 0 (non-binding annotation) | Indicates reviewed MCP tool catalog size at validation time |
 | `knowledge` | `version` | SHOULD follow SemVer (`X.Y.Z`) | Tracks doctrine evolution for non-provider skills |
 | `tool` | `version` | MAY be omitted until first concrete tool-skill use case is ratified | Reserved for future tool-skill rollout |
+| `advisory` | `version` | SHOULD follow SemVer (`X.Y.Z`) | Tracks command behavior evolution |
+| `operative` | `version` | SHOULD follow SemVer (`X.Y.Z`) | Tracks command behavior evolution |
+
+**`disable-model-invocation` policy:**
+
+- `advisory` / `operative` skills MUST declare `disable-model-invocation: true`. They are user-invoked command workflows — the agent MUST NOT apply them automatically based on context matching.
+- `mcp` / `knowledge` / `tool` skills SHOULD declare `disable-model-invocation: false` explicitly. These are auto-applicable based on context (e.g., a Jira URL triggers `atlassian-mcp`).
+- Omitting `disable-model-invocation` is allowed but SHOULD be avoided for auditability.
 
 **Description rules:**
 - Write in **third person** (the description is injected into the system prompt)
@@ -376,8 +429,10 @@ An API (Application Programming Interface) is a way for software to communicate.
 | Question | Answer → Artifact |
 |----------|-------------------|
 | "How should I think about this task?" | → **Mode** |
-| "How do I format or structure this output?" | → **Command** |
-| "How do I interact with this external service?" | → **Skill** |
+| "How do I respond to a user request in chat with no file writes?" | → **Advisory skill** |
+| "How do I execute a workflow with artifact writes or external sync?" | → **Operative skill** |
+| "How do I interact with this external MCP service?" | → **MCP skill** |
+| "How do I apply reusable domain or framework knowledge?" | → **Knowledge skill** |
 | "What is always true in every interaction?" | → **Base rule** |
 | "What is this project and how is it structured?" | → **AGENTS.md / RHOAIAS.md** |
 
@@ -419,6 +474,21 @@ tested_against:
 - Tool skills MAY defer frontmatter version policy until the first concrete tool-skill is ratified in backlog/contract scope.
 - Until then, tool skills remain a reserved category.
 
+### Advisory Skills (`category: advisory`)
+
+- Advisory skills MUST include semantic versioning in `version`.
+- `version` tracks command behavioral evolution and SHOULD bump as:
+  - PATCH (`X.Y.Z+1`) for editorial clarifications with no semantic change
+  - MINOR (`X.Y+1.0`) for additive capability (new invocation modes, new optional output sections)
+  - MAJOR (`X+1.0.0`) for incompatible behavioral/protocol changes
+- Advisory skills MUST declare `disable-model-invocation: true`.
+
+### Operative Skills (`category: operative`)
+
+- Operative skills MUST include semantic versioning in `version`.
+- Same PATCH/MINOR/MAJOR bump rules as Advisory skills.
+- Operative skills MUST declare `disable-model-invocation: true`.
+
 ---
 
 ## Testing a Skill
@@ -437,14 +507,15 @@ After creating or updating a skill, verify:
 ## Summary
 
 A good skill:
-- Provides **operational knowledge** for **one** external resource or service
-- Is **transversal** (platform-agnostic) and **reusable** across modes and commands
-- Is **read-only by default**; writes only on explicit user request
-- **Aborts on failure**; never invents data
+- Belongs to **exactly one** of the five categories: `mcp`, `knowledge`, `tool`, `advisory`, `operative`
+- Is **transversal** (platform-agnostic) and **reusable** across modes
+- MCP/knowledge/tool skills are **read-only by default**; writes only on explicit user request
+- MCP skills **abort on failure**; never invent data
+- Advisory/operative skills have `disable-model-invocation: true` and are **user-invoked**
 - Is **concise, focused, and composable**
-- **Excludes** mode logic, command logic, base behavior, and project context
+- **Excludes** mode logic, base behavior, and project context
 
-When in doubt, ask: "Does this teach the agent how to operate with a specific external resource?" If yes, it belongs in a skill. If it teaches "how to think", it belongs in a mode. If it teaches "how to format output", it belongs in a command.
+When in doubt: "How to think" → mode. "How to respond in chat with no writes" → advisory skill. "How to execute a workflow with artifacts" → operative skill. "How to call an MCP service" → MCP skill. "Reusable domain knowledge" → knowledge skill.
 
 ---
 
@@ -464,12 +535,31 @@ The `rho-aias` skill is the canonical example of this type.
 ---
 
 **Related contracts:**
-- `readme-commands.md` — Contract for command definitions
+- `readme-commands.md` — **Behavior contract** for advisory and operative skills (defines command structure, gate taxonomy, governance schema, self-verification, halt discipline)
 - `readme-mode-rule.md` — Contract for mode rule definitions
 - `readme-base-rule.md` — Contract for `base.mdc` files (always active)
 - `readme-project-context.md` — Contract for `RHOAIAS.md` (project context)
 - `readme-artifact.md` — Contract for task artifacts
 - `readme-tracker-status-mapping.md` — Contract for provider tracker-state mappings
+
+---
+
+## v1.3 Conventions
+
+### Advisory and Operative Skills as Command Surface
+
+All 21 AIAS canonical commands (Advisory + Operative) are now shipped as directory-form skills under `aias/.skills/<command-name>/SKILL.md`. The flat `aias/.commands/` directory is retired.
+
+**Migration invariants:**
+- All 21 command files preserve their behavioral content 1:1; migration adds frontmatter only
+- `disable-model-invocation: true` is MANDATORY for all 21 migrated skills
+- Shortcut generation (`aias generate --shortcuts`) reads command-shaped skills by inspecting `disable-model-invocation: true` in frontmatter and projects them into `.<tool>/commands/` directories per tool (not `.<tool>/skills/` — preserving the invocation UX)
+- Custom project commands (`aias-config/commands/`) MUST be migrated to `aias-config/skills/<name>/SKILL.md` via `aias new --migrate-commands`
+
+**`aias new --command` deprecation:**
+- `aias new --command` is deprecated in favor of `aias new --skill` with `category: advisory|operative`
+- Running `aias new --command` emits a deprecation warning and redirects to `aias new --skill`
+- `aias health` detects legacy command shortcuts pointing to `aias/.commands/` and emits actionable migration guidance
 
 ---
 

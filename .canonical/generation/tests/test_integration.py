@@ -166,6 +166,7 @@ class TestShortcutsPerTool(_IntegrationTestBase):
         self.assertGreater(counts["cursor"], 0)
         self.assertTrue((self.root / ".cursor" / "rules" / "base.mdc").exists())
         self.assertTrue((self.root / ".cursor" / "rules" / "planning.mdc").exists())
+        # Commands are now projected from advisory/operative skills (BL-S36)
         self.assertTrue((self.root / ".cursor" / "commands" / "stub-command.md").exists())
 
     def test_claude_shortcuts(self):
@@ -188,6 +189,7 @@ class TestShortcutsPerTool(_IntegrationTestBase):
     def test_codex_shortcuts(self):
         counts = gen.generate_shortcuts(self.mode_names, self._all_bindings(), ["codex"])
         self.assertGreater(counts["codex"], 0)
+        # Commands are now projected from advisory/operative skills (BL-S36)
         self.assertTrue((self.root / ".codex" / "commands" / "stub-command.md").exists())
 
     def test_multi_tool_shortcuts(self):

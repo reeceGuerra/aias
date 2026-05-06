@@ -1,19 +1,20 @@
-# Cursor Commands – System Contract (v6.2)
+# Cursor Commands – Behavior Contract for Advisory and Operative Skills (v6.2)
 
 > **Keyword convention**: This contract defines and uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY). See section "RFC-2119 Keyword Policy" below for definitions.
 
-This document defines the **canonical contract** for all Cursor commands used in this workspace system.
+This document defines the **canonical behavior contract** for all `advisory` and `operative` skills in the Rho AIAS framework. As of v1.3 of `readme-skill.md`, commands are no longer shipped as flat `.md` files — they are directory-form skills with frontmatter. This contract governs their behavioral requirements regardless of packaging format.
 
 It exists to:
-- Reduce ambiguity and drift between commands
-- Provide a single, stable reference for command structure
-- Improve consistency when Cursor loads commands partially or inconsistently
+- Reduce ambiguity and drift between advisory and operative skills
+- Provide a single, stable behavioral reference for all 21 command-shaped skills
+- Improve consistency when Cursor loads skills partially or inconsistently
+- Serve as the behavior contract referenced by `readme-skill.md` § Advisory Skills and § Operative Skills
 
-This document is written **for me** as the system author and maintainer.
+This document is written **for maintainers** of the Rho AIAS framework.
 
-It is **not** a command.
+It is **not** a skill itself.
 It is **not** executed by Cursor directly.
-It is the reference against which commands are designed, reviewed, and corrected.
+It is the reference against which advisory and operative skills are designed, reviewed, and corrected.
 
 ---
 
@@ -806,6 +807,8 @@ The **Governance** section (above) is the canonical source for all gate behavior
 ### Contract Version
 
 This contract is version **v6.2**. The Governance section is new in v6. v6.2 adds Invocation Mode Detection (section 2), Terminal State Contract (section 4), Self-Verification Checklist (section 8), and Halt Discipline (section 9). All prior conventions (v5, v5.1) remain in effect unless explicitly superseded.
+
+**v6.3 (identity re-scope):** This contract is re-scoped as the *Behavior Contract for Advisory and Operative Skills* (was: "System Contract for all Cursor commands"). No behavioral change — all content, gate taxonomy, governance schema, self-verification, and halt discipline rules are identical. The re-scope reflects the migration of command files from `aias/.commands/<name>.md` to `aias/.skills/<name>/SKILL.md` as of `readme-skill.md` v1.3. This contract is now referenced by `readme-skill.md` § Advisory Skills and § Operative Skills as the governing behavior spec.
 
 ### Backward Compatibility
 

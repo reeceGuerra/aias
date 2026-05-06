@@ -1,4 +1,4 @@
-# Mode Rule Contract — Cursor Rules System (v1.0)
+# Mode Rule Contract — Cursor Rules System (v1.1)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -574,10 +574,34 @@ Modes that load artifacts SHOULD be aware of the current workflow profile (`feat
 
 ---
 
+## v1.1 Conventions
+
+### Subagent Location Convention
+
+Dimension-shaped review sub-agents are distinct from mode rules. They are NOT mode rules and MUST NOT be placed in `aias-config/modes/` or `.cursor/rules/`.
+
+**Canonical locations:**
+- **Framework sub-agents**: `aias/.cursor/agents/<name>.md` — read-only, shipped with the framework
+- **Tool-specific shortcuts**: `.cursor/agents/<name>.md` — symlinks created by `aias init` (Cursor tool only)
+
+**Dimension-shaped subagent pattern:**
+A dimension-shaped sub-agent is a Cursor subagent file that:
+1. Holds deep focus on one review dimension (correctness, quality, architecture, test coverage, or security)
+2. Loads the `review-rubric` skill and selects its dimension selector
+3. Declares `readonly: true` and `is_background: false` in frontmatter
+4. Does NOT declare `tools:` in frontmatter (not a valid Cursor subagent field)
+5. Produces findings in chat output only — MUST NOT write files or call external systems
+
+For the full dispatch protocol, severity gates, and re-verification loop, see `readme-multi-agent-review.md`.
+
+---
+
 **Related contracts:**
 - `readme-base-rule.md` — Contract for `base.mdc` files (always active)
 - `readme-project-context.md` — Contract for `RHOAIAS.md` (project context)
 - `readme-artifact.md` — Contract for task artifacts
+- `readme-multi-agent-review.md` — Multi-agent review governance (dispatch, severity gates, sub-agent manifest)
+- `readme-skill.md` — Skill contract (advisory/operative categories, `disable-model-invocation` policy)
 
 ---
 
