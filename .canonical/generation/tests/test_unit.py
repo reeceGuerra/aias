@@ -633,6 +633,87 @@ class TestValidateSections(unittest.TestCase):
             self.assertEqual(inconsistencies, [], f"Unexpected inconsistency for {fname}")
 
 
+class TestShortcutRuntimeIntegrity(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmpdir.name)
+        self.orig_root = aias_cli.ROOT
+        aias_cli.ROOT = self.root
+
+    def tearDown(self):
+        aias_cli.ROOT = self.orig_root
+        self.tmpdir.cleanup()
+
+    def _run_checks(self, selected_tools):
+        results = []
+        aias_cli._check_shortcut_runtime_integrity(selected_tools, results)
+        return {name: (status, detail) for name, status, detail in results}
+
+    def test_ok_empty_dirs(self):
+        (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Shortcut dirs"][0], "OK")
+        self.assertEqual(checks["Shortcut symlinks"][0], "OK")
+        self.assertEqual(checks["Shortcut boundary"][0], "OK")
+        self.assertEqual(checks["Shortcut content refs"][0], "OK")
+
+    def test_broken_symlink_detected(self):
+        rules_dir = self.root / ".cursor" / "rules"
+        rules_dir.mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        (rules_dir / "broken.mdc").symlink_to("missing-target.mdc")
+
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Shortcut symlinks"][0], "FAIL")
+
+    def test_out_of_bounds_symlink_detected(self):
+        rules_dir = self.root / ".cursor" / "rules"
+        rules_dir.mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        outside = self.root / "outside.mdc"
+        outside.write_text("x", encoding="utf-8")
+        (rules_dir / "bad-boundary.mdc").symlink_to(os.path.relpath(outside, rules_dir))
+
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Shortcut boundary"][0], "FAIL")
+
+    def test_within_boundary_ok(self):
+        rules_dir = self.root / ".cursor" / "rules"
+        rules_dir.mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        canonical_dir = self.root / "aias-config" / "rules"
+        canonical_dir.mkdir(parents=True, exist_ok=True)
+        canonical_file = canonical_dir / "base.mdc"
+        canonical_file.write_text("ok", encoding="utf-8")
+        (rules_dir / "base.mdc").symlink_to(os.path.relpath(canonical_file, rules_dir))
+
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Shortcut boundary"][0], "OK")
+
+    def test_missing_enriched_text_ref(self):
+        rules_dir = self.root / ".claude" / "rules"
+        rules_dir.mkdir(parents=True, exist_ok=True)
+        (self.root / ".claude" / "commands").mkdir(parents=True, exist_ok=True)
+        (rules_dir / "base.md").write_text(
+            "Read and follow aias-config/rules/nonexistent.mdc",
+            encoding="utf-8",
+        )
+
+        checks = self._run_checks(["claude"])
+        self.assertEqual(checks["Shortcut content refs"][0], "WARN")
+
+    def test_missing_dir_warns(self):
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Shortcut dirs"][0], "WARN")
+
+    def test_gemini_skipped(self):
+        results = []
+        aias_cli._check_shortcut_runtime_integrity(["gemini"], results)
+        self.assertEqual(results, [])
+
+
 class TestNestedContextHelpers(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()

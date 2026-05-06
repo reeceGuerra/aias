@@ -69,6 +69,25 @@ TOOL_CONTEXT_MAP: Dict[str, Tuple[str, ...]] = {
     "GEMINI.md": ("gemini",),
 }
 
+TOOL_SHORTCUT_DIRS: Dict[str, Tuple[str, ...]] = {
+    "cursor": (".cursor/rules", ".cursor/commands"),
+    "claude": (".claude/rules", ".claude/commands"),
+    "windsurf": (".windsurf/rules",),
+    "copilot": (".github/instructions", ".github/agents"),
+    "codex": (".codex/commands", ".agents/skills"),
+}
+
+SHORTCUT_BOUNDARY_PATHS: Tuple[str, ...] = (
+    "aias-config",
+    "aias/.commands",
+    "aias/.skills",
+    "RHOAIAS.md",
+)
+
+SHORTCUT_REF_RE = re.compile(
+    r"(?:aias-config|aias/\.commands|aias/\.skills)/[A-Za-z0-9._/\-]+|RHOAIAS\.md"
+)
+
 
 # ---------------------------------------------------------------------------
 # Utilities
@@ -1051,6 +1070,103 @@ def cmd_generate(args: List[str]) -> None:
 HealthStatus = Tuple[str, str, str]  # (check_name, status, detail)
 
 
+def _is_within_shortcut_boundary(
+    target: pathlib.Path,
+    boundaries: List[pathlib.Path],
+) -> bool:
+    """Check if a resolved path stays inside allowed shortcut boundary paths."""
+    for boundary in boundaries:
+        resolved_boundary = boundary.resolve(strict=False)
+        if target == resolved_boundary:
+            return True
+        try:
+            target.relative_to(resolved_boundary)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def _extract_shortcut_refs(content: str) -> List[str]:
+    """Extract canonical path references embedded in enriched-text shortcuts."""
+    return SHORTCUT_REF_RE.findall(content)
+
+
+def _check_shortcut_runtime_integrity(
+    selected_tools: List[str],
+    results: List[HealthStatus],
+) -> None:
+    """Validate runtime shortcut directories, links, boundaries, and content references."""
+    applicable_tools = [tool for tool in selected_tools if tool in TOOL_SHORTCUT_DIRS]
+    if not applicable_tools:
+        return
+
+    shortcut_dirs = [
+        (tool, ROOT / rel_dir)
+        for tool in applicable_tools
+        for rel_dir in TOOL_SHORTCUT_DIRS[tool]
+    ]
+    boundaries = [ROOT / rel_path for rel_path in SHORTCUT_BOUNDARY_PATHS]
+
+    missing_dirs: List[str] = []
+    broken_symlinks: List[str] = []
+    out_of_bounds: List[str] = []
+    missing_refs: List[str] = []
+    symlink_count = 0
+
+    for tool, shortcut_dir in shortcut_dirs:
+        if not shortcut_dir.is_dir():
+            missing_dirs.append(f"{tool}:{shortcut_dir.relative_to(ROOT)}")
+            continue
+
+        for item in shortcut_dir.rglob("*"):
+            if item.is_symlink():
+                symlink_count += 1
+                if not item.exists():
+                    broken_symlinks.append(str(item.relative_to(ROOT)))
+                    continue
+
+                target = (item.parent / os.readlink(item)).resolve()
+                if not _is_within_shortcut_boundary(target, boundaries):
+                    out_of_bounds.append(f"{item.relative_to(ROOT)} -> {target}")
+                continue
+
+            if item.is_file() and item.suffix in (".md", ".mdc"):
+                content = item.read_text(encoding="utf-8", errors="replace")
+                for ref in _extract_shortcut_refs(content):
+                    referenced_path = (ROOT / ref).resolve(strict=False)
+                    if not referenced_path.exists():
+                        missing_refs.append(f"{item.relative_to(ROOT)} references {ref}")
+
+    if not missing_dirs:
+        results.append(("Shortcut dirs", "OK", "All expected runtime shortcut directories exist"))
+    else:
+        preview = "; ".join(missing_dirs[:3])
+        suffix = f" (+{len(missing_dirs) - 3} more)" if len(missing_dirs) > 3 else ""
+        results.append(("Shortcut dirs", "WARN", f"Missing directory(ies): {preview}{suffix}"))
+
+    if not broken_symlinks:
+        results.append(("Shortcut symlinks", "OK", f"{symlink_count} symlink(s) resolve correctly"))
+    else:
+        preview = "; ".join(broken_symlinks[:3])
+        suffix = f" (+{len(broken_symlinks) - 3} more)" if len(broken_symlinks) > 3 else ""
+        results.append(("Shortcut symlinks", "FAIL", f"Broken symlink(s): {preview}{suffix}"))
+
+    if not out_of_bounds:
+        results.append(("Shortcut boundary", "OK", "All shortcut targets are within allowed boundaries"))
+    else:
+        preview = "; ".join(out_of_bounds[:3])
+        suffix = f" (+{len(out_of_bounds) - 3} more)" if len(out_of_bounds) > 3 else ""
+        results.append(("Shortcut boundary", "FAIL", f"Out-of-bound shortcut(s): {preview}{suffix}"))
+
+    if not missing_refs:
+        results.append(("Shortcut content refs", "OK", "All canonical references in shortcut content exist"))
+    else:
+        preview = "; ".join(missing_refs[:3])
+        suffix = f" (+{len(missing_refs) - 3} more)" if len(missing_refs) > 3 else ""
+        results.append(("Shortcut content refs", "WARN", f"Missing reference(s): {preview}{suffix}"))
+
+
 def cmd_health() -> None:
     print("=" * 60)
     print("  Rho AIAS — Health Check")
@@ -1219,6 +1335,10 @@ def cmd_health() -> None:
             results.append(("Shortcut integrity", "WARN", "Could not import generator module for G6/G7 checks"))
     elif not selected_tools:
         results.append(("Shortcut integrity", "WARN", "Cannot run G6/G7 (no binding.generation.tools)"))
+
+    # 7c. Shortcut runtime integrity checks (always active)
+    if selected_tools:
+        _check_shortcut_runtime_integrity(selected_tools, results)
 
     # 8. Context symlinks (scoped by tool selection)
     rhoaias_path = ROOT / "RHOAIAS.md"
