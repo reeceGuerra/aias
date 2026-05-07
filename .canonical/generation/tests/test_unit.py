@@ -651,7 +651,7 @@ class TestShortcutRuntimeIntegrity(unittest.TestCase):
 
     def test_ok_empty_dirs(self):
         (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
-        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
 
         checks = self._run_checks(["cursor"])
         self.assertEqual(checks["Shortcut dirs"][0], "OK")
@@ -662,7 +662,7 @@ class TestShortcutRuntimeIntegrity(unittest.TestCase):
     def test_broken_symlink_detected(self):
         rules_dir = self.root / ".cursor" / "rules"
         rules_dir.mkdir(parents=True, exist_ok=True)
-        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
         (rules_dir / "broken.mdc").symlink_to("missing-target.mdc")
 
         checks = self._run_checks(["cursor"])
@@ -671,7 +671,7 @@ class TestShortcutRuntimeIntegrity(unittest.TestCase):
     def test_out_of_bounds_symlink_detected(self):
         rules_dir = self.root / ".cursor" / "rules"
         rules_dir.mkdir(parents=True, exist_ok=True)
-        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
         outside = self.root / "outside.mdc"
         outside.write_text("x", encoding="utf-8")
         (rules_dir / "bad-boundary.mdc").symlink_to(os.path.relpath(outside, rules_dir))
@@ -682,7 +682,7 @@ class TestShortcutRuntimeIntegrity(unittest.TestCase):
     def test_within_boundary_ok(self):
         rules_dir = self.root / ".cursor" / "rules"
         rules_dir.mkdir(parents=True, exist_ok=True)
-        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
         canonical_dir = self.root / "aias-config" / "rules"
         canonical_dir.mkdir(parents=True, exist_ok=True)
         canonical_file = canonical_dir / "base.mdc"
@@ -855,25 +855,46 @@ class TestLegacyCommandShortcutDetection(unittest.TestCase):
 
     def test_no_legacy_shortcuts_ok(self):
         (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
-        (self.root / ".cursor" / "commands").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
         checks = self._run_checks(["cursor"])
         self.assertEqual(checks["Legacy command shortcuts"][0], "OK")
 
     def test_legacy_shortcut_detected(self):
+        """Legacy shortcut in .cursor/skills/ pointing to retired aias/.commands/ is detected."""
         legacy_dir = self.root / "aias" / ".commands"
         legacy_dir.mkdir(parents=True, exist_ok=True)
         legacy_file = legacy_dir / "blueprint.md"
         legacy_file.write_text("legacy", encoding="utf-8")
 
-        cmds_dir = self.root / ".cursor" / "commands"
-        cmds_dir.mkdir(parents=True, exist_ok=True)
+        # Shortcuts now live in .cursor/skills/ — place the legacy symlink there.
+        skills_dir = self.root / ".cursor" / "skills"
+        skills_dir.mkdir(parents=True, exist_ok=True)
         (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
-        rel = os.path.relpath(legacy_file, cmds_dir)
-        (cmds_dir / "blueprint.md").symlink_to(rel)
+        rel = os.path.relpath(legacy_file, skills_dir)
+        (skills_dir / "blueprint.md").symlink_to(rel)
 
         checks = self._run_checks(["cursor"])
         self.assertEqual(checks["Legacy command shortcuts"][0], "WARN")
         self.assertIn("aias/.commands", checks["Legacy command shortcuts"][1])
+
+    def test_stale_cursor_commands_dir_warns(self):
+        """Stale .cursor/commands/ directory with content emits a WARN."""
+        (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
+        stale_dir = self.root / ".cursor" / "commands"
+        stale_dir.mkdir(parents=True, exist_ok=True)
+        (stale_dir / "old-command.md").write_text("stale", encoding="utf-8")
+
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Stale .cursor/commands/"][0], "WARN")
+        self.assertIn("old-command.md", checks["Stale .cursor/commands/"][1])
+
+    def test_absent_cursor_commands_dir_ok(self):
+        """Absent .cursor/commands/ directory reports OK for the stale check."""
+        (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
+        checks = self._run_checks(["cursor"])
+        self.assertEqual(checks["Stale .cursor/commands/"][0], "OK")
 
 
 class TestReviewSubagentIntegrity(unittest.TestCase):

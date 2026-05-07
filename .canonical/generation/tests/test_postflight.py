@@ -122,14 +122,12 @@ class TestGate6ShortcutConsistency(_PostflightTestBase):
         errors = gen._gate_6_shortcut_consistency(self.mode_names, ["codex"])
         self.assertTrue(any("[G6]" in e and "Codex command" in e for e in errors))
 
-    def test_cursor_missing_command_shortcut(self):
+    def test_cursor_does_not_create_commands_dir(self):
+        """Cursor no longer uses .cursor/commands/ — command-shaped skills go to .cursor/skills/."""
         self._generate_shortcuts(["cursor"])
         cursor_cmds = self.root / ".cursor" / "commands"
-        if cursor_cmds.is_dir():
-            for f in cursor_cmds.iterdir():
-                f.unlink()
-        errors = gen._gate_6_shortcut_consistency(self.mode_names, ["cursor"])
-        self.assertTrue(any("[G6]" in e and "command" in e.lower() for e in errors))
+        self.assertFalse(cursor_cmds.is_dir(),
+                         ".cursor/commands/ must not be created for Cursor (skills only)")
 
     def test_cursor_missing_skill_shortcut(self):
         self._generate_shortcuts(["cursor"])

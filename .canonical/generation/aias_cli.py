@@ -70,7 +70,7 @@ TOOL_CONTEXT_MAP: Dict[str, Tuple[str, ...]] = {
 }
 
 TOOL_SHORTCUT_DIRS: Dict[str, Tuple[str, ...]] = {
-    "cursor": (".cursor/rules", ".cursor/commands"),
+    "cursor": (".cursor/rules", ".cursor/skills"),
     "claude": (".claude/rules", ".claude/commands"),
     "windsurf": (".windsurf/rules",),
     "copilot": (".github/instructions", ".github/agents"),
@@ -1409,6 +1409,27 @@ def _check_shortcut_runtime_integrity(
             f"Shortcut(s) still pointing to retired aias/.commands/: {preview}{suffix}. "
             "Run: aias new --migrate-commands  (project) or update generator (framework).",
         ))
+
+    # Stale .cursor/commands/ directory check: Cursor no longer uses this directory.
+    # Command-shaped skills are now projected into .cursor/skills/. If .cursor/commands/
+    # still exists with content, it is a stale artifact from a previous generator run.
+    if "cursor" in selected_tools:
+        cursor_cmds_dir = ROOT / ".cursor" / "commands"
+        stale_entries = (
+            [p.name for p in cursor_cmds_dir.iterdir()]
+            if cursor_cmds_dir.is_dir() else []
+        )
+        if stale_entries:
+            preview = "; ".join(stale_entries[:3])
+            suffix = f" (+{len(stale_entries) - 3} more)" if len(stale_entries) > 3 else ""
+            results.append((
+                "Stale .cursor/commands/", "WARN",
+                f"Directory exists with content: {preview}{suffix}. "
+                "Remove it — commands are now skills in .cursor/skills/. "
+                "Run: rm -rf .cursor/commands/",
+            ))
+        else:
+            results.append(("Stale .cursor/commands/", "OK", "Directory absent or empty (correct)"))
 
 
 def cmd_health() -> None:

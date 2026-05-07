@@ -166,8 +166,9 @@ class TestShortcutsPerTool(_IntegrationTestBase):
         self.assertGreater(counts["cursor"], 0)
         self.assertTrue((self.root / ".cursor" / "rules" / "base.mdc").exists())
         self.assertTrue((self.root / ".cursor" / "rules" / "planning.mdc").exists())
-        # Commands are now projected from advisory/operative skills (BL-S36)
-        self.assertTrue((self.root / ".cursor" / "commands" / "stub-command.md").exists())
+        # Command-shaped skills are projected into .cursor/skills/ (not .cursor/commands/)
+        self.assertTrue((self.root / ".cursor" / "skills" / "stub-command" / "SKILL.md").exists())
+        self.assertFalse((self.root / ".cursor" / "commands").is_dir())
 
     def test_claude_shortcuts(self):
         counts = gen.generate_shortcuts(self.mode_names, self._all_bindings(), ["claude"])

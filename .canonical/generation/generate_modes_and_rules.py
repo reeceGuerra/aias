@@ -557,15 +557,14 @@ def _gate_6_shortcut_consistency(generated_modes: List[str], tools: List[str]) -
             _check_shortcut_exists(copilot_mode, f"GitHub Copilot mode: {mode_name}", errors)
 
     # G6 for command-shaped skills (advisory/operative with disable-model-invocation: true)
-    # These are projected into .<tool>/commands/ directories.
+    # Cursor: command-shaped skills go into .cursor/skills/ (same as other skills) — no .cursor/commands/ check.
+    # Copilot and Codex: still use their respective commands directories.
     for skills_dir in (Paths.fw_skills, Paths.project_skills):
         if not skills_dir.is_dir():
             continue
         for skill_dir in sorted(skills_dir.iterdir()):
             if skill_dir.is_dir() and _is_command_skill(skill_dir):
                 name = f"{skill_dir.name}.md"
-                if "cursor" in tools:
-                    _check_shortcut_exists(Paths.root / ".cursor" / "commands" / name, f"Cursor command: {name}", errors)
                 if "copilot" in tools:
                     _check_shortcut_exists(Paths.root / ".github" / "agents" / name, f"Copilot command: {name}", errors)
                 if "codex" in tools:
@@ -594,7 +593,6 @@ def _gate_7_no_duplication(tools: List[str]) -> List[str]:
     _TOOL_DIRS: Dict[str, List[pathlib.Path]] = {
         "cursor": [
             Paths.root / ".cursor" / "rules",
-            Paths.root / ".cursor" / "commands",
             Paths.root / ".cursor" / "skills",
         ],
         "claude": [
@@ -1108,17 +1106,10 @@ def _generate_cursor_shortcuts(generated_modes: List[str]) -> int:
         _create_symlink(rules_dir / f"{mode}.mdc", Paths.modes_output / f"{mode}.mdc")
         count += 1
 
-    cmds_dir = Paths.root / ".cursor" / "commands"
-    cmds_dir.mkdir(parents=True, exist_ok=True)
-    # Commands now live in aias/.skills/ (advisory/operative with disable-model-invocation: true)
-    for skills_dir in (Paths.fw_skills, Paths.project_skills):
-        if not skills_dir.is_dir():
-            continue
-        for skill_dir in sorted(skills_dir.iterdir()):
-            if skill_dir.is_dir() and _is_command_skill(skill_dir):
-                skill_file = skill_dir / "SKILL.md"
-                _create_symlink(cmds_dir / f"{skill_dir.name}.md", skill_file)
-                count += 1
+    # NOTE: .cursor/commands/ is intentionally NOT created here.
+    # Command-shaped skills (advisory/operative) are projected into .cursor/skills/
+    # via _generate_skill_shortcuts, which handles all skill categories uniformly.
+    # Cursor consumes skills from .cursor/skills/; .cursor/commands/ is retired for Cursor.
 
     return count
 
