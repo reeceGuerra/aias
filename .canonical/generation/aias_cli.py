@@ -1279,6 +1279,8 @@ def cmd_generate(args: List[str]) -> None:
         created = _ensure_context_symlinks_for_rhoaias(rhoaias_files, selected_tools)
         if created:
             print(f"Created {created} nested context symlink(s).")
+        if "cursor" in selected_tools:
+            _ensure_review_subagent_symlinks()
     sys.exit(result.returncode)
 
 

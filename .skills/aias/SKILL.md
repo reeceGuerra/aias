@@ -27,8 +27,9 @@ Invocation mirrors the CLI interface:
 - `/aias init` — Full project onboarding (interactive, 6 steps)
 - `/aias new --mode <name>` — Create a mode (file-specific or intelligent)
 - `/aias new --rule <name>` — Create an always-apply rule
-- `/aias new --command <name>` — Create a command
-- `/aias new --skill <name>` — Create a skill
+- `/aias new --skill <name>` — Create a skill (use `category: advisory` or `category: operative` for command-shaped skills)
+- `/aias new --migrate-commands` — Migrate project custom commands from `aias-config/commands/` to `aias-config/skills/`
+- ~~`/aias new --command <name>`~~ — **Deprecated.** Redirects to `--skill`; prompts for `advisory` or `operative` category.
 - `/aias new --provider <category>` — Create a provider config (knowledge|tracker|design|vcs)
 - `/aias new --context` — Create RHOAIAS.md
 - `/aias new --stack-profile` — Create stack-profile.md
@@ -45,7 +46,7 @@ Short aliases: `gen` for `generate`, `gen -s` for `generate --shortcuts`.
 Usage notes:
 - `/aias` without arguments shows available subcommands.
 - `/aias new` without flags shows available artifact types.
-- The CLI-style `-c` / `--command` flag used by `/aias new` is unrelated to command-specific flag conventions such as `/handoff -c <command>`.
+- `--command` / `-c` is deprecated. Use `--skill` and select `advisory` or `operative` when prompted for category. The deprecated flag still works but prints a warning and redirects to `--skill`.
 
 ---
 
@@ -56,8 +57,9 @@ Usage notes:
 | `init` | Chat answers to onboarding questions | `readme-project-context.md`, `readme-stack-profile.md`, `readme-provider-config.md`, `readme-output-contract.md` |
 | `new --mode` | Name + chat answers (description, activation, role, scope, skills, workflow) | `readme-mode-rule.md` |
 | `new --rule` | Name + chat answers (description, purpose, content) | `readme-base-rule.md` |
-| `new --command` | Name + chat answers (type, identity, invocation, inputs, format, rules, structure, non-goals) | `readme-commands.md` |
-| `new --skill` | Name + chat answers (category, description, purpose, operations, safety) | `readme-skill.md` |
+| `new --skill` | Name + chat answers (category — mcp/knowledge/tool/advisory/operative, description, purpose, operations, safety). For `advisory`/`operative`: follows structure in `readme-commands.md`. | `readme-skill.md`, `readme-commands.md` (advisory/operative) |
+| `new --migrate-commands` | No name required — scans `aias-config/commands/` for project custom commands and converts each to `aias-config/skills/<name>/SKILL.md` | `readme-skill.md` |
+| ~~`new --command`~~ | **Deprecated** — redirects to `new --skill` | `readme-skill.md` |
 | `new --provider` | Category + chat answers (provider, skill binding, capability, MCP server) | `readme-provider-config.md` |
 | `new --context` | Chat answers (project name, platform, description, architecture, technologies) | `readme-project-context.md` |
 | `new --stack-profile` | Chat answers (language, build system, UI framework, test framework, target tools, tasks directory) | `readme-stack-profile.md` |
@@ -218,8 +220,8 @@ Each `new` subcommand produces a specific artifact structure. See the plan (§ C
 
 - **Mode**: Frontmatter (description, alwaysApply: false, optional globs) + ROLE + SCOPE + WORKFLOW + optional CONTEXT ENRICHMENT
 - **Rule**: Frontmatter (description, alwaysApply: true) + rule content
-- **Command**: 7 mandatory sections (Identity, Invocation, Inputs, Output Contract, Content Rules, Output Structure, Non-Goals)
-- **Skill**: Frontmatter (name, description) + PURPOSE + OPERATIONS + SAFETY RULES
+- **Skill (mcp/knowledge/tool)**: Frontmatter (name, description, category, disable-model-invocation: false, version) + PURPOSE + OPERATIONS + SAFETY RULES
+- **Skill (advisory/operative)**: Frontmatter (name, description, category, disable-model-invocation: true, version) + 7 mandatory sections per `readme-commands.md` (Identity, Invocation, Inputs, Output Contract, Content Rules, Output Structure, Non-Goals) + Self-Verification Checklist
 - **Provider**: 6 mandatory sections (Purpose, Active provider, Skill binding, Provider parameters, Failure behavior, Example)
 - **Context**: RHOAIAS.md per `readme-project-context.md` § Mandatory Structure
 - **Stack profile**: Bindings per `readme-stack-profile.md` § Mandatory Sections. MUST include `binding.generation.tools` (see § 5 Tool selection) and `binding.generation.tasks_dir` (see § 5 Tasks directory).
@@ -235,7 +237,7 @@ Each `new` subcommand produces a specific artifact structure. See the plan (§ C
 - Do NOT generate artifacts from memory — always read the governing contract first.
 - Do NOT skip this command's smart suggestion protocol when user input is below quality threshold.
 - Do NOT create a templates directory — contracts are the single source of truth.
-- Do NOT overwrite or modify files in `aias/.canonical/` — these are framework source templates maintained exclusively by the framework maintainer. The `init` and `new` subcommands create project-level artifacts only (stack-profile.md, stack-fragment.md, RHOAIAS.md, aias-config/providers/, modes, rules, commands, skills).
+- Do NOT overwrite or modify files in `aias/.canonical/` — these are framework source templates maintained exclusively by the framework maintainer. The `init` and `new` subcommands create project-level artifacts only (stack-profile.md, stack-fragment.md, RHOAIAS.md, aias-config/providers/, modes, rules, skills).
 - Do NOT use Glob to verify file existence before writing. Use Shell (`ls`) or Read instead — Glob respects git exclusion rules and may report files as missing when they exist on disk.
 - Do NOT modify `binding.generation.tools` after the user has set it. If the generator fails, report errors to the user — do NOT rewrite the stack profile to fix them.
 
@@ -417,13 +419,13 @@ For `[WARN]` inconsistencies (e.g., TOC cross-reference without `## Table of Con
 
 ## Post-Action
 
-After every `new` subcommand (except `--provider`), invoke the generator:
+After every `new` subcommand (except `--provider`), invoke the CLI:
 
 ```
-python3 aias/.canonical/generation/generate_modes_and_rules.py --shortcuts
+python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 ```
 
-The generator reads `binding.generation.tools` from `stack-profile.md` to determine which tools to produce shortcuts for. Only the listed tools will have shortcuts generated.
+The CLI reads `binding.generation.tools` from `stack-profile.md` to determine which tools to produce shortcuts for. Only the listed tools will have shortcuts generated. When `cursor` is in the selected tools, this also refreshes sub-agent symlinks under `.cursor/agents/`.
 
 After `init`, invoke the generator with `--shortcuts` as the final step.
 
