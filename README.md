@@ -38,6 +38,7 @@ flowchart LR
     M --> Cmd[Commands]
     Cmd --> Skill[Skills]
     Cmd --> Art[Artifacts in TASK_DIR]
+    Cmd -.->|"dispatch"| SubA["Sub-agents<br/>peer-review / self-review"]
     Skill --> Tracker[Tracker Provider<br/>Jira / equivalent]
     Skill --> Design[Design Provider<br/>Figma / equivalent]
     Skill --> Knowledge[Knowledge Provider<br/>Confluence / equivalent]

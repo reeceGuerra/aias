@@ -178,6 +178,7 @@ flowchart LR
     subgraph Execution["Execution Layer"]
         Command[Command]
         Skill[Skill]
+        SubAgents["Sub-agents<br/>.cursor/agents/"]
         Status[status.md]
         Artifacts[Artifacts<br/>*.plan.md, *.issue.md, *.fix.md, ...]
     end
@@ -202,6 +203,8 @@ flowchart LR
     Command --> Skill
     Command --> Artifacts
     Command --> Status
+    Command -.->|"peer-review / self-review"| SubAgents
+    SubAgents -.->|"findings"| Artifacts
 
     Skill --> Tracker
     Skill --> Knowledge
@@ -294,6 +297,7 @@ sequenceDiagram
     participant Mode
     participant Command
     participant Skill
+    participant SubAgent as Sub-agent
     participant TaskDir as TASK_DIR
     participant Status as status.md
     participant Provider as Resolved Provider
@@ -305,6 +309,10 @@ sequenceDiagram
     Skill->>Provider: Read / write provider-specific data
     Provider-->>Skill: Return data or operation result
     Skill-->>Command: Provider-agnostic result
+    opt peer-review or self-review dispatch
+        Command->>SubAgent: Dispatch reviewer
+        SubAgent-->>Command: Review findings
+    end
     Command->>TaskDir: Write or update artifacts
     Command->>Status: Update lifecycle and sync state
     TaskDir-->>Mode: Make artifacts available for next chat
