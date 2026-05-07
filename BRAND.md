@@ -16,8 +16,8 @@ The name draws from two sources:
 | 1 | **RHOAIAS.md** | Explicit project context (tool shortcuts: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `codex.md`) |
 | 2 | **Base Rules** | Universal agent behavior |
 | 3 | **Modes** | Specialized reasoning stances |
-| 4 | **Commands** | Deterministic execution |
-| 5 | **Skills** | Reusable operational knowledge |
+| 4 | **Commands** *(advisory / operative skills)* | Deterministic execution — structured protocols with contracts, self-verification, and defined outputs |
+| 5 | **Skills** *(mcp / knowledge / tool)* | Reusable operational knowledge for external services and domain expertise |
 | 6 | **Contracts** | Architectural standards and governance |
 | 7 | **Artifacts** | Verified, traceable outputs |
 

@@ -15,8 +15,8 @@ For brand identity, origin story, and positioning, see [BRAND.md](../BRAND.md).
 | 1 | **Project Context** | Makes project structure, conventions, and technologies explicit so the agent does not guess |
 | 2 | **Base Rules** | Universal agent behavior that applies to every chat session |
 | 3 | **Modes** | Specialized reasoning stances that define *how to think* about a task type |
-| 4 | **Commands** | Deterministic execution that defines *how to execute* and structure output |
-| 5 | **Skills** | Reusable operational knowledge for external services |
+| 4 | **Commands** *(advisory / operative skills)* | Deterministic execution that defines *how to execute* and structure output — structured protocols with contracts, self-verification, and defined outputs |
+| 5 | **Skills** *(mcp / knowledge / tool)* | Reusable operational knowledge for external services and domain expertise |
 | 6 | **Contracts** | Canonical standards governing every artifact type |
 | 7 | **Artifacts** | Verified, traceable outputs stored in task directories |
 
