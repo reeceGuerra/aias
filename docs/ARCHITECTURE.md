@@ -113,6 +113,8 @@ Five skill categories:
 
 Skills live in `aias/.skills/`. Advisory and operative skills (commands) are invoked by the user via tool-specific shortcuts generated from their `SKILL.md`. MCP, knowledge, and tool skills are loaded by modes and other skills as needed.
 
+**Sub-agents** are a related but distinct artefact. They are specialized Cursor agents (`.md` files with YAML frontmatter) stored in `aias/.cursor/agents/`. During `aias init`, the generator creates symlinks in the project's `.cursor/agents/` directory so Cursor can discover them. The six canonical sub-agents are: `aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, and `aias-reflector`. They are dispatched by `/peer-review` and `/self-review` and are governed by `aias/contracts/readme-multi-agent-review.md`. Key frontmatter invariants: `readonly: true`, `is_background: false`; `model` is advisory. Sub-agent health is validated by `aias health` when `cursor` is the configured tool.
+
 Immutability rule: MCP service skills only change on validated API, MCP, or security triggers — not on framework version bumps.
 
 Contract: `aias/contracts/readme-skill.md`.
@@ -128,7 +130,7 @@ Contracts are the single source of truth for every artifact type in the framewor
 | `readme-output-contract.md` | Output contract rules (build system fragments) |
 | `readme-mode-rule.md` | Mode rules (reasoning stance definitions) |
 | `readme-skill.md` | Skills (five categories: mcp, knowledge, tool, advisory, operative) |
-| `readme-multi-agent-review.md` | Multi-agent review protocol (dimensions, dispatch, severity gates, sub-agent manifest) |
+| `readme-multi-agent-review.md` | Multi-agent review protocol (dimensions, dispatch, severity gates, sub-agent manifest, frontmatter invariants for `.cursor/agents/`) |
 | `readme-provider-config.md` | Service provider configuration and fail-fast resolution |
 | `readme-tracker-status-mapping.md` | Tracker status mappings and trigger naming |
 | `readme-tracker-field-mapping.md` | Tracker field mapping (traceability, catalogs, format resolution) |

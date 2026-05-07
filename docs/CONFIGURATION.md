@@ -173,6 +173,7 @@ The interactive flow creates the following artifacts:
 3. `stack-fragment.md` -- build system integration content
 4. Context symlinks -- `AGENTS.md`, `CLAUDE.md`, `codex.md`, `GEMINI.md` → `RHOAIAS.md`
 5. Generated outputs -- runs `generate --shortcuts` to produce modes, rules, and tool shortcuts (scoped to selected tools)
+6. **Sub-agent symlinks** (Cursor only) -- if `cursor` is among the selected tools, symlinks for the six canonical sub-agents are created in `.cursor/agents/` pointing to `aias/.cursor/agents/`. These power the multi-agent review dispatch in `/peer-review` and `/self-review`.
 
 If some files already exist, the CLI detects them and asks before overwriting.
 
@@ -218,7 +219,7 @@ For `tracker` and `knowledge` categories, the generated config includes an empty
 python3 aias/.canonical/generation/aias_cli.py health
 ```
 
-This runs 11 checks covering file existence, directory structure, contract presence, generator availability, shortcut freshness, context symlinks, and provider referenced files. Any failures include specific remediation guidance. Legacy configuration locations are reported as warnings (see [CLI.md](CLI.md) § Legacy detection).
+This runs checks covering file existence, directory structure, contract presence, generator availability, shortcut freshness, context symlinks, provider referenced files, and (when `cursor` is the configured tool) sub-agent presence and frontmatter integrity. Any failures include specific remediation guidance. Legacy configuration locations are reported as warnings (see [CLI.md](CLI.md) § Legacy detection).
 
 ### 5. Start working
 

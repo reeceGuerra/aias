@@ -8,7 +8,7 @@ Rho AIAS is a contract-driven framework. Every artifact type — modes, commands
 
 Contracts are the canonical standards that govern every artifact type in Rho AIAS. They define structure, required fields, behavioral constraints, and quality criteria. If there is a conflict between an implementation and its governing contract, **the contract wins**.
 
-All contracts live in `aias/contracts/` (14 contracts):
+All contracts live in `aias/contracts/` (15 contracts):
 
 | Contract | Purpose |
 |---|---|
@@ -17,6 +17,7 @@ All contracts live in `aias/contracts/` (14 contracts):
 | `readme-output-contract.md` | Output contract rules and fragment system |
 | `readme-mode-rule.md` | Mode rule structure and design principles |
 | `readme-skill.md` | Skill structure and separation of concerns |
+| `readme-multi-agent-review.md` | Multi-agent review protocol (dimensions, dispatch, severity gates, sub-agent manifest) |
 | `readme-provider-config.md` | Service provider configuration and fail-fast resolution |
 | `readme-tracker-status-mapping.md` | Tracker status mapping and trigger naming |
 | `readme-tracker-field-mapping.md` | Tracker field mapping (traceability, catalogs, format resolution) |
@@ -134,6 +135,44 @@ python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 
 ---
 
+## Creating or Extending a Sub-agent (Cursor only)
+
+Sub-agents are specialized Cursor agents that operate as autonomous reviewers or auditors. They are distinct from skills — they run as separate agent instances dispatched by commands like `/peer-review` and `/self-review`, and they have their own YAML frontmatter lifecycle.
+
+**Canonical sub-agents** (maintained in `aias/.cursor/agents/`) are framework-level and should not be modified for project-specific needs. To extend or customize, add a sub-agent at the project level in `.cursor/agents/` (not symlinked from the framework).
+
+### Frontmatter invariants
+
+Every sub-agent `.md` file must include:
+
+```yaml
+---
+name: <kebab-case-name>
+description: <one-line purpose>
+model: <model-slug>          # advisory; the user may override
+readonly: true               # sub-agents must not write files
+is_background: false         # must be false (reviewed inline, not backgrounded)
+---
+```
+
+**`readonly: true`** is mandatory — sub-agents perform analysis, not implementation. **`is_background: false`** is mandatory — their output must be readable inline before the review continues. `model` is advisory; Cursor allows the user to override it.
+
+> Do **not** add a `tools:` field — this is not a valid Cursor sub-agent frontmatter field.
+
+### Review contract reference
+
+`aias/contracts/readme-multi-agent-review.md` governs dispatch, severity gates, and the sub-agent manifest (which sub-agents exist and what each reviews). Consult this contract before adding or changing a sub-agent's scope.
+
+### Registering a new sub-agent
+
+1. Create `aias/.cursor/agents/<name>.md` (framework) or `.cursor/agents/<name>.md` (project-level).
+2. Add the mandatory frontmatter (see above).
+3. If it is a framework-level sub-agent, register it in the manifest section of `readme-multi-agent-review.md` and update `_ensure_review_subagent_symlinks()` in `aias_cli.py` to include the new file in `aias init` / `generate --shortcuts`.
+4. Update `_check_review_subagent_integrity()` in `aias_cli.py` to validate the new sub-agent in `aias health`.
+5. Run `aias health` to verify integrity.
+
+---
+
 ## Adding Tool Support
 
 1. Read the contract: `aias/contracts/readme-tool-adapter.md`.
@@ -154,13 +193,15 @@ The CLI scaffolds new artifacts and validates existing ones:
 
 | Command | Purpose |
 |---|---|
-| `aias init` | Full project onboarding |
+| `aias init` | Full project onboarding (includes sub-agent symlinks for Cursor) |
 | `aias new --mode <name>` | Create a new mode from the canonical template |
-| `aias new --command <name>` | Create a new command definition |
 | `aias new --skill <name>` | Create a new skill directory and `SKILL.md` |
+| `aias new --migrate-commands` | Migrate project custom commands to skills |
 | `aias new --provider <category>` | Create a provider configuration |
-| `aias generate --shortcuts` | Regenerate all artifacts and shortcuts |
-| `aias health` | Verify setup integrity (contracts, bindings, shortcuts) |
+| `aias generate --shortcuts` | Regenerate all artifacts, shortcuts, and sub-agent symlinks |
+| `aias health` | Verify setup integrity (contracts, bindings, shortcuts, sub-agents) |
+
+> `aias new --command` is deprecated. Use `aias new --skill` and select `advisory` or `operative` as the category.
 
 See [CLI Reference](docs/CLI.md) for full documentation.
 

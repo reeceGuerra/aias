@@ -24,7 +24,7 @@ Full interactive onboarding in 6 steps:
 3. **Stack profile** — creates `stack-profile.md` (language, build system, UI framework, testing, target tools, tasks directory)
 4. **Stack fragment** — creates `stack-fragment.md` (build system integration: automatic discovery, manual project file, or hybrid)
 5. **Context symlinks** — creates context symlinks → `RHOAIAS.md`, scoped by tool selection (`AGENTS.md` for cursor/windsurf/copilot, `CLAUDE.md` for claude, `codex.md` for codex)
-6. **Generation** — runs `generate --shortcuts`
+6. **Generation** — runs `generate --shortcuts`, which also creates sub-agent symlinks in `.cursor/agents/` when `cursor` is a selected tool
 
 > **Provider configuration** is handled separately. Use `new --provider <category>` for skeleton configs, or `/aias configure-providers` in the AI assistant for MCP-assisted discovery.
 
@@ -147,8 +147,16 @@ python3 aias/.canonical/generation/aias_cli.py health
 | 10 | Referenced files | All `resource_files` paths exist | Legacy paths (`aias-providers/`) | Missing `resource_files` key or missing files |
 | 10b | Sections (`<type>`) | All mandatory sections present | TOC cross-reference inconsistency | Missing mandatory sections |
 | 11 | Tasks directory | `binding.generation.tasks_dir` present and directory exists | Directory does not exist yet | Binding missing |
+| 12 | Sub-agent presence (Cursor) | All 6 canonical sub-agents present in `.cursor/agents/` | — | Missing one or more sub-agents |
+| 12b | Sub-agent integrity (Cursor) | All present sub-agents have required frontmatter (`readonly`, `is_background`, `name`) | — | Missing required frontmatter field(s) |
+| 13 | Stale `.cursor/commands/` | Directory absent or empty | Directory exists with content (includes `rm` guidance) | — |
+| 14 | Legacy command shortcuts | No shortcuts pointing to retired `aias/.commands/` | Shortcuts still pointing to retired location | — |
 
 Each check reports a specific corrective action message (not a generic "Run aias init").
+
+#### Sub-agent checks (checks 12–12b, Cursor only)
+
+These checks run when `cursor` is the configured tool. They verify that the six canonical sub-agents (`aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, `aias-reflector`) are present in `.cursor/agents/` and have the required frontmatter invariants (`readonly: true`, `is_background: false`, `name`). If sub-agents are missing or broken, re-run `generate --shortcuts` to recreate their symlinks.
 
 #### Legacy detection and repair
 
