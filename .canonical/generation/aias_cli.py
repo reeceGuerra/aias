@@ -31,7 +31,6 @@ CONTRACTS_DIR = ROOT / "aias" / "contracts"
 AIAS_CONFIG_DIR = ROOT / "aias-config"
 RULES_DIR = AIAS_CONFIG_DIR / "rules"
 MODES_DIR = AIAS_CONFIG_DIR / "modes"
-FW_COMMANDS_DIR = ROOT / "aias" / ".commands"
 FW_SKILLS_DIR = ROOT / "aias" / ".skills"
 PROJECT_COMMANDS_DIR = AIAS_CONFIG_DIR / "commands"
 PROJECT_SKILLS_DIR = AIAS_CONFIG_DIR / "skills"
@@ -1513,7 +1512,8 @@ def cmd_health() -> None:
     if not aias_root.is_dir():
         results.append(("aias/ structure", "FAIL", "aias/ directory not found"))
     else:
-        fw_dirs = [FW_COMMANDS_DIR, FW_SKILLS_DIR]
+        # aias/.commands/ is retired (BL-S36); only aias/.skills/ is required.
+        fw_dirs = [FW_SKILLS_DIR]
         missing_fw = [d for d in fw_dirs if not d.is_dir()]
         if not missing_fw:
             results.append(("aias/ structure", "OK", "Framework directories present"))
