@@ -1,4 +1,4 @@
-# Multi-Agent Review Contract (v1.0)
+# Multi-Agent Review Contract (v1.1)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -59,13 +59,14 @@ Any proposal to embed the rubric inside this contract requires a new architectur
 
 ### When to Dispatch
 
-Multi-agent review dispatch MUST follow Plan Classification:
+Multi-agent review dispatch MUST always occur when code is under review — regardless of Plan Classification:
 
-| Classification | Multi-Agent Review |
+| Condition | Multi-Agent Review |
 |---|---|
-| **Critical** | MUST dispatch all 5 reviewers + reflector |
-| **Standard** | MAY dispatch; SHOULD dispatch when PR touches cross-module or architectural surfaces |
-| **Minor** | SHOULD NOT dispatch — review friction outweighs benefit for local low-risk changes |
+| **Code in review** (any classification) | MUST dispatch all 5 reviewers + reflector |
+| **Enrichment-only task** (no code changed) | MUST NOT dispatch — no code diff to review |
+
+**Rationale (v1.1 change)**: Empirical evidence showed that minor-classified tasks can contain Critical and Major findings across dimensions that a single-agent pass misses due to scope-calibration bias. Plan Classification reflects planning scope, not code quality risk. Sub-agents run in isolated contexts (no chat history), so token cost is bounded by diff size, not task history. The classification condition is therefore removed.
 
 ### How to Dispatch
 
@@ -117,15 +118,16 @@ After the human resolves one or more findings and requests re-review:
 
 ## Plan Classification Integration
 
-Integration with the Plan Classification governance schema (from `readme-commands.md` § Contextual Governance):
+Plan Classification no longer gates multi-agent dispatch. The dispatch rule is unconditional when code is in review:
 
 | Classification | `/self-review` | `/peer-review` |
 |---|---|---|
-| **Critical** | MUST invoke multi-agent review; MUST NOT skip to single-agent pass | MUST invoke multi-agent review |
-| **Standard** | SHOULD invoke multi-agent review when cross-module surfaces are touched | MAY invoke multi-agent review |
-| **Minor** | SHOULD NOT invoke multi-agent review | SHOULD NOT invoke multi-agent review |
+| **Critical** | MUST invoke multi-agent review | MUST invoke multi-agent review |
+| **Standard** | MUST invoke multi-agent review | MUST invoke multi-agent review |
+| **Minor** | MUST invoke multi-agent review | MUST invoke multi-agent review |
+| **No classification** | MUST invoke multi-agent review | MUST invoke multi-agent review |
 
-When Plan Classification is unavailable (legacy plan without `status.md`), `/peer-review` MAY invoke multi-agent review at user discretion.
+When Plan Classification is unavailable (legacy plan without `status.md`), multi-agent dispatch MUST still run as long as a code diff exists.
 
 ---
 

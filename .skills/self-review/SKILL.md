@@ -1,9 +1,9 @@
 ---
 name: self-review
-description: "Reviews the user's own implementation work against DoD criteria before PR creation. Use in @review mode with local code and TASK_DIR artifacts. Dispatches multi-agent review for Critical plans. Trigger terms: /self-review, self review, review own work, pre-PR review."
+description: "Reviews the user's own implementation work against DoD criteria before PR creation. Use in @review mode with local code and TASK_DIR artifacts. Always dispatches multi-agent review sub-agents. Trigger terms: /self-review, self review, review own work, pre-PR review."
 category: advisory
 disable-model-invocation: true
-version: 2.0.0
+version: 2.1.0
 ---
 
 # Self Review (Own-Work Review) — v2
@@ -74,15 +74,14 @@ Rules:
 
 ## 6. Output Structure (Template)
 
-### Multi-agent dispatch (Critical plan classification)
+### Multi-agent dispatch (always)
 
-When Plan Classification is `critical`:
+Multi-agent review is unconditional — dispatch regardless of Plan Classification:
+
 1. Load `review-rubric` skill.
 2. Dispatch `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-architecture-reviewer`, `aias-test-auditor`, `aias-security-auditor` in parallel.
 3. After all 5 complete, dispatch `aias-reflector`.
 4. Emit reflector output as the final review.
-
-### Single-agent output (Standard / Minor / no classification)
 
 ```markdown
 # Self Review
@@ -90,7 +89,7 @@ When Plan Classification is `critical`:
 ## Source Mix
 - Modified local code: used
 - Local TASK_DIR artifacts: <used | not used>
-- Multi-agent review: <dispatched (Critical) | not dispatched>
+- Multi-agent review: dispatched
 
 ## Findings
 ### Blocking issues

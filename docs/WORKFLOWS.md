@@ -67,7 +67,8 @@ flowchart TD
     Gaps -->|Yes| Consolidate["/consolidate-plan"] --> Validate
     Gaps -->|No| Dev["@dev<br/>/implement"]
     Dev --> Commit["/commit"]
-    Commit --> PR["/pr<br/>in_progress → in_review"]
+    Commit --> SelfReview["@review<br/>/self-review<br/>(sub-agents always run)"]
+    SelfReview --> PR["/pr<br/>in_progress → in_review"]
     PR --> Publish["/publish<br/>reconcile + close"]
     Publish --> Done["Task archived"]
 
@@ -367,7 +368,7 @@ If `/validate-plan` finds gaps, use `/consolidate-plan` to resolve them one by o
 TASK: /implement
 ```
 
-After implementation: `/commit` → `/pr` → optional `@review` + `/peer-review` → `/report`
+After implementation: `/commit` → `@review` + `/self-review` → `/pr` → `/report` (and `/peer-review` when the PR is ready for external review). Both `/self-review` and `/peer-review` always dispatch the full sub-agent panel.
 
 **Expected Output:**
 - Production-ready fix implementation
@@ -536,7 +537,8 @@ TASK: Review the current branch changes. When done, /self-review.
 ```
 
 **Expected Output:**
-- Severity-ordered findings in chat
+- Full multi-agent panel dispatched (5 dimension reviewers in parallel, then reflector — always)
+- Severity-ordered findings consolidated by reflector
 - Explicit readiness verdict for peer review / PR
 - No VCS-ready snippets, because there is no remote diff anchor
 
@@ -549,7 +551,8 @@ TASK: Review PR 482. When done, /peer-review 482.
 ```
 
 **Expected Output:**
-- Severity-ordered findings in chat
+- Full multi-agent panel dispatched (5 dimension reviewers in parallel, then reflector — always)
+- Severity-ordered findings consolidated by reflector
 - VCS-ready snippets with `File`, `Applies to diff`, and copy-paste review comments
 - One PR-level general review comment
 
@@ -816,7 +819,7 @@ For the complete artifact catalog (suffixes, producers, and descriptions), see `
 → `@product`
 
 **Reviewing code?**
-→ `@review` + `/self-review` for local work, or `@review` + `/peer-review` for PR / third-party review
+→ `@review` + `/self-review` for local work (recommended before `/pr`), or `@review` + `/peer-review` for PR / third-party review. Both commands always dispatch the full sub-agent panel (`aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-architecture-reviewer`, `aias-test-auditor`, `aias-security-auditor`, `aias-reflector`) regardless of Plan Classification.
 
 **Need to transfer context into the next chat?**
 → use `/handoff` after the current step when TASK_DIR artifacts alone would benefit from an operational startup snippet

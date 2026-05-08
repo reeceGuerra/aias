@@ -1,9 +1,9 @@
 ---
 name: peer-review
-description: "Reviews a pull request or third-party work using the configured VCS provider. Use when reviewing a PR URL or PR number. Dispatches multi-agent review for Critical/Standard plans. Trigger terms: /peer-review, peer review, review PR, code review."
+description: "Reviews a pull request or third-party work using the configured VCS provider. Use when reviewing a PR URL or PR number. Always dispatches multi-agent review sub-agents. Trigger terms: /peer-review, peer review, review PR, code review."
 category: advisory
 disable-model-invocation: true
-version: 2.0.0
+version: 2.1.0
 ---
 
 # Peer Review (PR / Third-Party Review) — v2
@@ -87,16 +87,15 @@ Rules:
 
 ## 6. Output Structure (Template)
 
-### Multi-agent dispatch (Critical / Standard plan classification)
+### Multi-agent dispatch (always)
 
-When Plan Classification is `critical` or (at discretion) `standard` with cross-module changes:
+Multi-agent review is unconditional — dispatch regardless of Plan Classification:
+
 1. Load `review-rubric` skill.
 2. Dispatch `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-architecture-reviewer`, `aias-test-auditor`, `aias-security-auditor` in parallel.
 3. After all 5 complete, dispatch `aias-reflector`.
 4. Emit reflector consolidated output, then append VCS-ready comments and general review comment below.
 5. If reflector emits `BLOCKED` → `/peer-review` MUST emit `[STATE: inconclusive]`.
-
-### Single-agent output (Minor / no classification / user opts out of multi-agent)
 
 ```markdown
 # Peer Review
@@ -105,7 +104,7 @@ When Plan Classification is `critical` or (at discretion) `standard` with cross-
 - VCS provider diff / PR metadata: <used | not used>
 - Local TASK_DIR artifacts: <used | not used>
 - Knowledge-provider enrichment: <used | not used>
-- Multi-agent review: <dispatched (Critical/Standard) | not dispatched>
+- Multi-agent review: dispatched
 
 ## Findings
 ### Blocking issues

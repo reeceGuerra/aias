@@ -113,7 +113,7 @@ Five skill categories:
 
 Skills live in `aias/.skills/`. Advisory and operative skills (commands) are invoked by the user via tool-specific shortcuts generated from their `SKILL.md`. MCP, knowledge, and tool skills are loaded by modes and other skills as needed.
 
-**Sub-agents** are a related but distinct artefact. They are specialized Cursor agents (`.md` files with YAML frontmatter) stored in `aias/.cursor/agents/`. During `aias init`, the generator creates symlinks in the project's `.cursor/agents/` directory so Cursor can discover them. The six canonical sub-agents are: `aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, and `aias-reflector`. They are dispatched by `/peer-review` and `/self-review` and are governed by `aias/contracts/readme-multi-agent-review.md`. Key frontmatter invariants: `readonly: true`, `is_background: false`; `model` is advisory. Sub-agent health is validated by `aias health` when `cursor` is the configured tool.
+**Sub-agents** are a related but distinct artefact. They are specialized Cursor agents (`.md` files with YAML frontmatter) stored in `aias/.cursor/agents/`. During `aias init`, the generator creates symlinks in the project's `.cursor/agents/` directory so Cursor can discover them. The six canonical sub-agents are: `aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, and `aias-reflector`. They are **always dispatched** by `/peer-review` and `/self-review` — unconditionally, regardless of Plan Classification — and are governed by `aias/contracts/readme-multi-agent-review.md`. Key frontmatter invariants: `readonly: true`, `is_background: false`; `model` is advisory. Sub-agent health is validated by `aias health` when `cursor` is the configured tool.
 
 Immutability rule: MCP service skills only change on validated API, MCP, or security triggers — not on framework version bumps.
 
@@ -203,7 +203,7 @@ flowchart LR
     Command --> Skill
     Command --> Artifacts
     Command --> Status
-    Command -.->|"peer-review / self-review"| SubAgents
+    Command -.->|"always: peer-review / self-review"| SubAgents
     SubAgents -.->|"findings"| Artifacts
 
     Skill --> Tracker
@@ -309,10 +309,9 @@ sequenceDiagram
     Skill->>Provider: Read / write provider-specific data
     Provider-->>Skill: Return data or operation result
     Skill-->>Command: Provider-agnostic result
-    opt peer-review or self-review dispatch
-        Command->>SubAgent: Dispatch reviewer
-        SubAgent-->>Command: Review findings
-    end
+    Note over Command,SubAgent: peer-review / self-review always dispatch sub-agents
+    Command->>SubAgent: Dispatch reviewer (always)
+    SubAgent-->>Command: Review findings
     Command->>TaskDir: Write or update artifacts
     Command->>Status: Update lifecycle and sync state
     TaskDir-->>Mode: Make artifacts available for next chat

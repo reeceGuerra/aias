@@ -173,7 +173,7 @@ The interactive flow creates the following artifacts:
 3. `stack-fragment.md` -- build system integration content
 4. Context symlinks -- `AGENTS.md`, `CLAUDE.md`, `codex.md`, `GEMINI.md` → `RHOAIAS.md`
 5. Generated outputs -- runs `generate --shortcuts` to produce modes, rules, and tool shortcuts (scoped to selected tools)
-6. **Sub-agent symlinks** (Cursor only) -- if `cursor` is among the selected tools, symlinks for the six canonical sub-agents are created in `.cursor/agents/` pointing to `aias/.cursor/agents/`. These power the multi-agent review dispatch in `/peer-review` and `/self-review`.
+6. **Sub-agent symlinks** (Cursor only) -- if `cursor` is among the selected tools, symlinks for the six canonical sub-agents are created in `.cursor/agents/` pointing to `aias/.cursor/agents/`. These power the multi-agent review dispatch in `/peer-review` and `/self-review`, which always runs the full sub-agent panel regardless of Plan Classification.
 
 If some files already exist, the CLI detects them and asks before overwriting.
 

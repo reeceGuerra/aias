@@ -137,7 +137,7 @@ python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 
 ## Creating or Extending a Sub-agent (Cursor only)
 
-Sub-agents are specialized Cursor agents that operate as autonomous reviewers or auditors. They are distinct from skills — they run as separate agent instances dispatched by commands like `/peer-review` and `/self-review`, and they have their own YAML frontmatter lifecycle.
+Sub-agents are specialized Cursor agents that operate as autonomous reviewers or auditors. They are distinct from skills — they run as separate agent instances **always dispatched** by `/peer-review` and `/self-review` (unconditionally, regardless of Plan Classification), and they have their own YAML frontmatter lifecycle.
 
 **Canonical sub-agents** (maintained in `aias/.cursor/agents/`) are framework-level and should not be modified for project-specific needs. To extend or customize, add a sub-agent at the project level in `.cursor/agents/` (not symlinked from the framework).
 
