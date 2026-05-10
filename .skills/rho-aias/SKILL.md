@@ -2,7 +2,8 @@
 name: rho-aias
 description: Canonical skill protocol for artifact-driven development workflows. Use when the user works on a task that produces or consumes artifacts under <resolved_tasks_dir>/<TASK_ID>/ (default ~/.cursor/plans/) — including planning, implementation, enrichment, publishing, or any command that reads/writes task artifacts.
 category: knowledge
-version: 5.0.0
+disable-model-invocation: false
+version: 9.1.0
 ---
 
 # Agentic-Driven Development
@@ -205,13 +206,19 @@ Phase 5 — STATUS UPDATE + ARTIFACT TRACKING + KNOWLEDGE SYNC
   5a. Update completed_steps / current_step in status.md
   5b. Set artifact sync status (created/modified) for written artifacts
   5c. CONDITIONAL KNOWLEDGE SYNC (tracker-gated)
-      Preconditions — ALL THREE must be satisfied; if any fails, skip Phase 5c silently
-      and leave artifacts in created/modified state (they will be reconciled by /publish):
+      Preconditions — ALL THREE are evaluated in order:
         P1. task_id in status.md is present and non-empty.
         P2. Tracker provider resolves successfully from aias-config/providers/tracker-config.md
             (service_category, active_provider, provider enabled, skill binding valid).
         P3. The tracker ticket identified by task_id is reachable and exists in the
             resolved tracker provider (verified via tracker MCP read call).
+      Precondition handling:
+        - P1 failure: skip Phase 5c silently and leave artifacts in created/modified state
+          (reconciled later by /publish).
+        - P2 failure: abort the dependent sync operation and request provider configuration
+          correction (fail-fast).
+        - P3 failure: skip Phase 5c silently and leave artifacts in created/modified state
+          (reconciled later by /publish).
       If preconditions are met, publish all non-synced artifacts:
       Publish the full publishable content of all non-synced artifacts to resolved knowledge provider.
       Read each artifact file and publish its complete publishable Markdown body — never summarize.

@@ -1,6 +1,6 @@
 ---
 name: report
-description: "Produces a structured report (RCA, status update, incident summary) in chat or as an artifact. Use when a structured report output is needed from task evidence. Trigger terms: /report, generate report, status report, RCA, incident report."
+description: "Produces a structured report (RCA, status update, incident summary) in chat, with optional tracker publication through gated flow. Use when a structured report output is needed from task evidence. Trigger terms: /report, generate report, status report, RCA, incident report."
 category: operative
 disable-model-invocation: true
 version: 1.0.0
@@ -245,7 +245,7 @@ This command must **NOT**:
 
 ## 8. Self-Verification Checklist
 
-- [ ] Report artifact/output was produced as requested.
+- [ ] Report output was produced as requested.
 - [ ] Optional tracker/publication side effects executed only through declared gate paths.
 - [ ] `status.md` / `command_log` updates were applied when state changed.
 - [ ] Terminal state line was emitted with canonical state token.

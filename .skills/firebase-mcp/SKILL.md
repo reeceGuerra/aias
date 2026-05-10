@@ -2,17 +2,6 @@
 name: firebase-mcp
 description: Operate Firebase project and environment workflows through Firebase MCP. Use when the user asks to inspect Firebase setup, bootstrap environment access, read Firebase resources/security rules, or prepare changes for Auth, Firestore, Functions, Storage, and Hosting.
 category: mcp
-tools:
-  - firebase_login
-  - firebase_init
-  - firebase_get_environment
-  - firebase_update_environment
-  - firebase_list_projects
-  - firebase_get_project
-  - firebase_list_apps
-  - firebase_get_sdk_config
-  - firebase_read_resources
-  - firebase_get_security_rules
 tested_against:
   mcp_server: user-firebase@2026-05-05
   tools_count: 17

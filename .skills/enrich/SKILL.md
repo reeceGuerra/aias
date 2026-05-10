@@ -320,7 +320,7 @@ After writing local artifacts:
 - For remote tracker writes, treat the tracker field payload as a derived representation of the local analysis, not as the canonical source.
 - The local artifact and local preview MUST stay provider-agnostic and MUST NOT contain `Enhanced by` headers.
 - Classification signals from tracker metadata MAY be used to shape `Description`, but `/enrich` MUST surface ambiguity or conflict through the Classification Comprehension gate instead of deciding silently.
-- DoR Test criteria define **what** must be tested (scenarios, happy path, edge/corner cases, failure scenarios). They do NOT define **how** to implement the tests — that is the responsibility of `/blueprint` (Category 9: Testing).
+- DoR Test criteria define **what** must be tested (scenarios, happy path, edge/corner cases, failure scenarios). They do NOT define **how** to implement the tests — that is the responsibility of `/blueprint` (Category 5: Testing).
 
 ---
 
