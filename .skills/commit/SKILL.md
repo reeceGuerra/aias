@@ -3,7 +3,7 @@ name: commit
 description: "Stages and commits changes to git with a structured commit message. Use after completing an increment or a set of related changes. Trigger terms: /commit, git commit, stage and commit, create commit."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Commit (Stage and Commit by File) — v3
@@ -244,6 +244,16 @@ For each planned file, **one at a time, sequentially** (never batch):
 - Each file is committed independently in execution mode.
 - Untracked or unchanged files are skipped with a reason.
 - Behavior is identical regardless of project type (ios-app, android-app, swift-package, etc.); only the resolved `PROJECT_ROOT` matters for git.
+
+---
+
+## Cost Advisory
+
+This command is fully deterministic (no deep reasoning required). Switching to a lighter model before invoking `/commit` reduces cost with no quality loss.
+
+Recommended model: `composer-2-fast`
+
+Note: Model selection is outside this skill's control — switch manually in the chat session before invoking.
 
 ---
 
