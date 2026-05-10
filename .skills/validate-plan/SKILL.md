@@ -183,9 +183,10 @@ The output must be raw text that identifies gaps across completeness dimensions:
 - Verify that `classification` in `status.md` is set (`minor`, `standard`, or `critical`). If `null` or missing, report as a gap.
 
 **7. Governance Gaps** (primary: `increments.plan.md`, `status.md`)**:**
-- Classification Critical without a `## Governance` section in `increments.plan.md` → flag as gap ("Critical requires at least one Approval gate").
-- `## Governance` section present with gate types outside the taxonomy (Confirmation, Decision, Feedback, Approval, Precondition) → flag as gap ("Unknown gate type").
-- Custom gates that contradict classification baseline (e.g., per-increment Approval gates in a Minor plan) → flag as gap ("Custom gates exceed classification baseline expectations").
+- Classification Critical without a `## Governance` section in `increments.plan.md` → flag as gap ("Critical requires a Governance section with ≥1 Approval gate").
+- `## Governance` section present with gate types outside the taxonomy (Confirmation, Decision, Feedback, Approval) → flag as gap ("Unknown gate type").
+- Classification Critical with `## Governance` but zero Approval gates → flag as gap ("Critical Governance requires ≥1 Approval gate").
+- Classification Minor with any `## Governance` section present → flag as gap ("Minor MUST NOT have a Governance section. Escalate classification or remove.").
 
 For each dimension:
 - If complete: State "No gaps identified" or "Complete".
