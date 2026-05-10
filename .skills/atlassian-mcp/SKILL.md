@@ -363,23 +363,27 @@ Most Confluence and Jira tools accept a `contentFormat` or `responseContentForma
 - **Confluence** (`contentFormat`): `"markdown"` or `"adf"`. Default: ADF. Applies to: `createConfluencePage`, `updateConfluencePage`, `getConfluencePage`, `getPagesInConfluenceSpace`, `createConfluenceInlineComment`, `createConfluenceFooterComment`, `getConfluencePageInlineComments`, `getConfluencePageFooterComments`, `getConfluenceCommentChildren`.
 - **Jira** (`responseContentFormat`): `"markdown"` or `"adf"`. Default: ADF. Applies to: `getJiraIssue`, `createJiraIssue`, `editJiraIssue`, `searchJiraIssuesUsingJql`, `addCommentToJiraIssue`.
 
-For rho-aias publishing workflows, always use `contentFormat: "markdown"` when writing to Confluence (artifacts are Markdown files). The only exception is **TOC macro injection**: if `confluence-config.md` contains a `## Table of Contents` section, the agent reads each published page in ADF (`contentFormat: "adf"`) after a successful publish, inserts the TOC extension node if missing, and writes back in ADF. This post-publish step is the only case where `contentFormat: "adf"` is used in the publishing flow. See `confluence-config.md` § Table of Contents for the full algorithm. If that section is absent, TOC injection is skipped entirely.
+For Markdown-first publishing workflows, use `contentFormat: "markdown"` when writing to Confluence. The exception is **TOC macro injection**: if a publishing config includes a `## Table of Contents` section, read each published page in ADF (`contentFormat: "adf"`), insert the TOC extension node if missing, and write back in ADF. If that section is absent, TOC injection is skipped.
+
+### Optional Framework Integration Notes (Rho AIAS adopters)
+
+The guidance below is framework-specific and optional. It MUST NOT be interpreted as a prerequisite for generic Atlassian MCP usage.
 
 ### Jira Rich Text Policy for Rho AIAS
 
-For tracker enrichment workflows such as `/enrich`:
+For tracker enrichment workflows:
 
 - Treat Jira field writes as a **remote representation**, not as the canonical local artifact.
 - `analysis.product.md` remains local and provider-agnostic; provider-specific headers such as `Enhanced by` MUST NOT be written back into local artifacts.
 - For `description`, `Acceptance Criteria`, and `Test Steps`, SHOULD use `contentFormat: "markdown"` when the MCP/instance accepts it reliably.
 - If a textarea field rejects Markdown or renders the managed block incorrectly, fall back to explicit ADF for that field.
 - When updating enriched text fields, preserve human-authored content outside the Rho AIAS-managed block and replace only the managed block content.
-- `/enrich` MUST NOT write RCA fields or RCA narrative for bug workflows when dedicated RCA fields exist.
+- Enrichment flows MUST NOT write RCA fields or RCA narrative when dedicated RCA fields exist.
 - Never publish local filesystem paths or machine-specific references to Jira comments or fields.
 
-### Jira RCA Policy for `/report`
+### Jira RCA Policy for RCA publication flows
 
-For validated bug RCA publication workflows such as `/report`:
+For validated bug RCA publication workflows:
 
 - `/report` is **field-first, comment-last**.
 - If the tracker exposes structured RCA fields, write there first.
@@ -407,7 +411,7 @@ For Confluence publishing configuration (space, root page, hierarchy, TECH resol
 
 ## PRE-WRITE RESOLUTION PROTOCOL
 
-Before any write command (`/enrich`, `/report`) pushes content to Jira fields, the agent MUST resolve the target format for each field using this protocol:
+Before any write workflow pushes content to Jira fields, the agent MUST resolve the target format for each field using this protocol:
 
 1. **Load field mapping**: Read `field_mapping_source` from the resolved tracker config. If missing, abort with `MISSING_FIELD_MAPPING`.
 2. **For each target field**, resolve `content_format` using strict precedence:
@@ -415,7 +419,7 @@ Before any write command (`/enrich`, `/report`) pushes content to Jira fields, t
    2. **Mapping document** (`Format` column in the loaded `jira-field-mapping.md`) — second priority.
    3. **Default** (ADF for custom textarea fields, Markdown for `description`) — lowest priority.
 3. **Record `decision_source`** for each field: `runtime`, `mapping`, or `default`.
-4. **Build write plan**: Assemble the resolved format per field. Include in the command's confirmation gate (Tracker Write Preview for `/enrich --fields`, Tracker Publish for `/report`).
+4. **Build write plan**: Assemble the resolved format per field and present it in the workflow's confirmation gate before writing.
 5. **Execute writes** using resolved formats only. Never assume a format without resolution.
 
 If runtime metadata contradicts the mapping, use runtime metadata for the write and report mapping drift to the user.
@@ -427,7 +431,7 @@ If runtime metadata contradicts the mapping, use runtime metadata for the write 
 **Read-only by default:**
 - Reading issues, pages, comments, and searching: always allowed.
 - Creating, editing, transitioning issues; creating or updating Confluence pages; adding comments: **only when the user explicitly asks**. Never perform write operations autonomously.
-- **Exception:** Commands that reference [tracker-status-mapping.md](../../aias-config/providers/atlassian/tracker-status-mapping.md) may perform automatic Jira transitions and Confluence publishes as part of the rho-aias skill loading protocol (Phase 5 and Phase 6). These are governed by the mapping rules, not by this general safety rule.
+- **Exception:** Framework orchestrators MAY perform configured automatic transitions/publishes when explicitly declared by their own contracts. Those behaviors are governed by mapping/config contracts, not by this general safety rule.
 
 **Abort on failure:**
 - If `getAccessibleAtlassianResources` fails or returns no `cloudId`: abort and ask the user to check Atlassian MCP configuration.
