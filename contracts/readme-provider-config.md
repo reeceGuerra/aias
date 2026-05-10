@@ -64,7 +64,7 @@ Future categories MUST follow:
 
 Provider configs reference external documents (field mappings, status mappings, publishing configs) that contain project-specific configuration. These documents live in a provider-specific subdirectory:
 
-- `aias-config/providers/<provider_org>/` — where `provider_org` identifies the organization or MCP integration that owns one or more provider services (e.g., `atlassian` owns both `confluence` and `jira` services). The `active_provider` field identifies the service (`confluence`, `jira`, `figma`, `github`), while the directory groups configs for that organization.
+- `aias-config/providers/<provider_id>/` — where `provider_id` identifies the provider organization or MCP integration that owns one or more provider services (e.g., `atlassian` owns both `confluence` and `jira` services). The `active_provider` field identifies the service (`confluence`, `jira`, `figma`, `github`), while the directory groups configs for that provider namespace.
 
 Documents are referenced via path keys in the provider parameters (`field_mapping_source`, `status_mapping_source`, `config_source`) and declared as dependencies in `skill_binding.resource_files`.
 
@@ -264,8 +264,8 @@ A service config is valid only if all rules below pass:
 
 - `aias/.skills/<skill>/` (framework — canonical)
 - `aias-config/skills/<skill>/` (project — canonical)
-- `.cursor/skills/<skill>/` (Cursor-native project path)
-- Personal or other editor-global skill directories are not AIAS-resolvable; use only `aias/.skills/<skill>/` or `aias-config/skills/<skill>/`.
+- `.cursor/skills/<skill>/` (Cursor shortcut/projection path; accepted for runtime compatibility, but not canonical source of truth)
+- Personal or other editor-global skill directories are not AIAS-resolvable.
 
 If unresolved, consumers MUST abort the dependent operation and request provider configuration correction.
 

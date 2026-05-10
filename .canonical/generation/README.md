@@ -94,14 +94,14 @@ All 9 modes (`planning`, `dev`, `qa`, `debug`, `review`, `product`, `integration
 ### Shortcut generation (with `--shortcuts`)
 
 1. Collects mode globs from all processed profiles.
-2. For each supported tool, generates shortcut files referencing canonical sources:
-   - **Cursor**: `.mdc` with frontmatter → path reference (rules, modes, command-shaped skills under `.cursor/skills/`)
+2. For each supported tool, generates shortcuts referencing canonical sources:
+   - **Cursor**: symlink shortcuts (rules, modes, command-shaped skills under `.cursor/skills/`)
    - **Claude Code**: `.md` with optional `paths:` frontmatter → path reference (rules, modes, skills)
    - **Windsurf**: plain `.md` → path reference (always-apply rules only)
    - **GitHub Copilot**: aggregated `copilot-instructions.md`, `.instructions.md` with `applyTo:`, agents
    - **Codex**: `.md` → path reference (commands in `.codex/commands/`, skills in `.agents/skills/`)
 
-Shortcut content is always a path reference to the canonical source — never duplicated content.
+Shortcut content is always canonical-reference only (symlink or short path-reference text) — never duplicated content.
 
 ## Prerequisites
 
