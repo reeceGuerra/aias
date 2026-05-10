@@ -65,6 +65,7 @@ Rules:
 - Do NOT include prose before or after the block.
 - The block MUST be directly reusable as the opening payload for another chat / agent.
 - The block MUST always include the required base sections defined in Section 6.
+- To satisfy the Terminal State Contract while preserving single-block output, the block MUST end with a terminal state line: `[STATE: delivered | inconclusive]` + one-line summary.
 
 ---
 
@@ -137,6 +138,8 @@ Findings:
 - <carry-forward findings>
 Assumptions / unknowns:
 - <unknowns>
+
+[STATE: delivered | inconclusive] <one-line summary>
 ```
 ````
 
