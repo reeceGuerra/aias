@@ -198,6 +198,7 @@ Present warning in chat:
    - Check if `RHOAIAS.md` is modified in `git status` (staged or unstaged). If yes → auto-set `rhoaias_update: done` in `status.md`, no gate.
    - If `RHOAIAS.md` is not modified → fire **Gate: RHOAIAS Context Update**.
    - If `rhoaias_update` is `deferred`, `done`, `skipped`, `null`, or absent → no action.
+8. **Commit plan confirmation**: before execution mode stages any file, fire **Gate: Commit Plan Confirmation** with the planned file/message list.
 
 If any step fails, STOP before execution.
 
@@ -221,6 +222,35 @@ If any step fails, STOP before execution.
 **On response:**
 - `stop` → STOP command. User updates RHOAIAS.md and re-invokes `/commit`.
 - `continue` → Set `rhoaias_update: deferred` in `status.md`. Proceed with Phase 1 step 3+. Subsequent `/commit` invocations see `deferred` and skip the gate silently.
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
+#### Gate: Commit Plan Confirmation
+
+**Type:** Confirmation
+**Fires:** End of Phase 1, after the commit plan is computed and before Phase 2 executes any `git add`/`git commit`.
+**Skippable:** No.
+
+**Context output:**
+Present the execution plan:
+- Target branch
+- Ordered file list
+- Generated commit message per file
+- Execution mode (`execute` vs `--plan`/`--dry-run`)
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Commit plan ready. Execute the planned per-file commits now?"
+- **Options:**
+  - `execute`: "Execute staged commits as planned"
+  - `adjust`: "Adjust file scope/messages before execution"
+  - `stop`: "Stop — do not commit now"
+- **allow_multiple:** false
+
+**On response:**
+- `execute` → Proceed to Phase 2 (or finish as planned output if in `--plan`/`--dry-run`).
+- `adjust` → Recompute plan and re-fire this gate.
+- `stop` → STOP command without git write side effects.
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
