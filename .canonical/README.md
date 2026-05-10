@@ -7,7 +7,7 @@ This directory contains canonical templates, transversal (generic) modes, and th
 Generic modes that apply to any platform:
 
 - [delivery.mdc](delivery.mdc): ticket readiness validation, prioritization, and release visibility. Activated with `@delivery`.
-- [devops.mdc](devops.mdc): CI/CD pipeline management and infrastructure. Activated with `@devops`.
+- [devops.mdc](devops.mdc): CI/CD pipeline management and infrastructure. Activated with `@devops` (also auto-activates on `*.yml` and `*.yaml`; these are activation-only globs and do not introduce artifact types).
 
 **Generated modes** (technology-specific roles and references) are produced by the generator and committed to `aias-config/modes/`.
 

@@ -70,7 +70,7 @@ TOOL_CONTEXT_MAP: Dict[str, Tuple[str, ...]] = {
 
 TOOL_SHORTCUT_DIRS: Dict[str, Tuple[str, ...]] = {
     "cursor": (".cursor/rules", ".cursor/skills"),
-    "claude": (".claude/rules", ".claude/commands"),
+    "claude": (".claude/rules", ".claude/skills"),
     "windsurf": (".windsurf/rules",),
     "copilot": (".github/instructions", ".github/agents"),
     "codex": (".codex/commands", ".agents/skills"),
@@ -612,7 +612,7 @@ def migrate_commands() -> None:
         print(
             "\nNext steps:\n"
             "  1. Review each migrated SKILL.md and update description + version in frontmatter.\n"
-            "  2. Run: aias generate --shortcuts  (to regenerate .<tool>/commands/ from skills)\n"
+            "  2. Run: aias generate --shortcuts  (to regenerate tool-specific shortcuts from skills, e.g. .cursor/skills/, .claude/skills/, .codex/commands/)\n"
             "  3. Delete aias-config/commands/ once you have verified the migration.\n"
         )
 

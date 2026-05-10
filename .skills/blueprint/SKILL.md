@@ -74,7 +74,7 @@ Rules:
 Follow the **rho-aias** skill loading protocol Phase 0:
 - If TASK_DIR exists → use it.
 - If TASK_DIR does not exist → create <resolved_tasks_dir>/<TASK_ID>/ where TASK_ID is the canonical task identifier (often equal to the tracker ticket key, when one exists) or an agent-chosen kebab-case name. (Default: `~/.cursor/plans/`)
-- Create `status.md` if it does not exist, with profile inferred from context (default: `feature`).
+- Create `status.md` if it does not exist using the canonical format from `aias/.skills/rho-aias/reference.md` § `status.md` Format. Initialize `profile` from context (default: `feature`), `task_id: <TASK_ID>`, `started: <YYYY-MM-DD>`, `status: pending_dor`, and `current_step: blueprint`; keep all remaining fields at canonical defaults (`classification: null`, `refinement_validated: null`, `rhoaias_update: null`, `published: null`, `completed: null`, `tracker_status: null`, `completed_steps: []`, `artifacts: {}`, `command_log: []`).
 
 ### Gate: Preview
 

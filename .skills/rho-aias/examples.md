@@ -27,6 +27,7 @@ tracker_status: TO DO
 completed_steps: [refinement]
 current_step: blueprint
 refinement_validated: true
+rhoaias_update: null
 published: null
 completed: null
 artifacts:
@@ -40,6 +41,8 @@ command_log:
 ```
 
 ### After `/blueprint`
+
+> Note: the snapshots below show only fields that change from the canonical baseline. Fields such as `rhoaias_update` and `tracker_status` are omitted for brevity unless they change.
 
 ```
 <resolved_tasks_dir>/MAX-12345/
@@ -431,6 +434,7 @@ artifacts:
   analysis.product.md: synced
   dor.plan.md: synced
   dod.plan.md: synced
+  delta.publish.md: synced
 command_log:
   - command: /enrich
     started_at: 2026-02-15T10:00:00Z
@@ -773,11 +777,9 @@ Expected behavior:
 ```markdown
 ## Governance
 
-### Custom Gate: API Contract Verification
-- **Type:** Confirmation
-- **Trigger:** after Increment 2
-- **Prompt:** "Increment 2 modified the networking layer. Verify API contract with backend team before continuing."
-- **Options:** confirm / adjust
+| Increment | Gate Point | Gate Type | Gate Prompt | Options |
+|-----------|-----------|-----------|-------------|---------|
+| Increment 2: Integrate networking layer | after-completion | Confirmation | "Increment 2 modified the networking layer. Verify API contract with backend team before continuing." | confirm \| adjust |
 
 ## Increments
 
@@ -798,17 +800,10 @@ Expected behavior:
 ```markdown
 ## Governance
 
-### Custom Gate: Architecture Approval
-- **Type:** Approval
-- **Trigger:** before Increment 1
-- **Prompt:** "This plan modifies the core DI container. Approve execution of 4 increments?"
-- **Options:** approve / reject
-
-### Custom Gate: Migration Checkpoint
-- **Type:** Confirmation
-- **Trigger:** after Increment 2
-- **Prompt:** "Data migration complete. Verify data integrity before UI migration."
-- **Options:** confirm / adjust
+| Increment | Gate Point | Gate Type | Gate Prompt | Options |
+|-----------|-----------|-----------|-------------|---------|
+| Increment 1: Restructure DI container | before-start | Approval | "This plan modifies the core DI container. Approve execution of 4 increments?" | approve \| reject |
+| Increment 2: Migrate data layer | after-completion | Confirmation | "Data migration complete. Verify data integrity before UI migration." | confirm \| adjust |
 
 ## Increments
 

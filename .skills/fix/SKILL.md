@@ -80,7 +80,7 @@ FILE OUTPUT CONTRACT (must follow)
 - Follow the **rho-aias** skill loading protocol Phase 0 to resolve TASK_DIR.
 - If TASK_DIR is set: write `analysis.fix.md` to TASK_DIR.
 - If TASK_DIR is not set: create a new directory `<resolved_tasks_dir>/<Name>/` (default: ~/.cursor/plans/) using a kebab-case name derived from the fix title, and write `analysis.fix.md` there.
-- Create `status.md` if it does not exist (profile: `bugfix`).
+- Create `status.md` if it does not exist using the canonical format from `aias/.skills/rho-aias/reference.md` § `status.md` Format. Initialize `profile: bugfix`, `task_id: <TASK_ID>`, `started: <YYYY-MM-DD>`, `status: pending_dor`, and `current_step: analyze`; keep all remaining fields at canonical defaults (`classification: null`, `refinement_validated: null`, `rhoaias_update: null`, `published: null`, `completed: null`, `tracker_status: null`, `completed_steps: []`, `artifacts: {}`, `command_log: []`).
 - The content may include guidance and, if @debug provided it in chat, code or suggested patches for @dev to apply.
 
 STATUS UPDATE (Phase 5)

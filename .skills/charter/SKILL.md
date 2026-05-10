@@ -78,7 +78,7 @@ Present artifact summary in chat:
 FILE OUTPUT CONTRACT (must follow)
 - Follow the **rho-aias** skill loading protocol Phase 0 to resolve TASK_DIR.
 - Write `delivery.charter.md` to TASK_DIR.
-- If TASK_DIR does not exist, create it. Create `status.md` if it does not exist.
+- If TASK_DIR does not exist, create it. Create `status.md` if it does not exist using the canonical format from `aias/.skills/rho-aias/reference.md` § `status.md` Format. Initialize `profile` from context (default: `delivery`), `task_id: <TASK_ID>`, `started: <YYYY-MM-DD>`, `status: pending_dor`, and `current_step: charter`; keep all remaining fields at canonical defaults (`classification: null`, `refinement_validated: null`, `rhoaias_update: null`, `published: null`, `completed: null`, `tracker_status: null`, `completed_steps: []`, `artifacts: {}`, `command_log: []`).
 - The charter content must be the ONLY content in the file.
 
 STATUS UPDATE (Phase 5)

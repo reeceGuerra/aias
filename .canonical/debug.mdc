@@ -30,7 +30,7 @@ LOG INTERPRETATION RULES
 - Group evidence by correlation keys, execution context, and time windows.
 - Use code anchors (file/function/line) as primary mapping points.
 
-OUTPUT
+ANALYSIS DELIVERABLES
 1) Problem restatement.
 2) Ranked error mechanisms with evidence and falsification.
 3) Ranked solution options with risk and validation.

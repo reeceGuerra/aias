@@ -1,6 +1,6 @@
 # Workflows — End-to-End Guide
 
-This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **v9.0** architecture with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, and separated refinement/planning phases.
+This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **current** architecture with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, and separated refinement/planning phases.
 
 ---
 
@@ -380,7 +380,7 @@ After implementation: `/commit` → `@review` + `/self-review` → `/pr` → `/r
 
 ### Step 9: Closure
 
-`/publish` to reconcile any remaining artifacts, generate delta, and formally close the task. Since Phase 5c is unconditional, most artifacts will already be published progressively.
+`/publish` to reconcile any remaining artifacts, generate delta, and formally close the task. When Phase 5c ran successfully via prior commands (tracker ticket present, P1-P3 met), most artifacts will already be published progressively; `/publish` reconciles the rest.
 
 ---
 
@@ -483,7 +483,7 @@ TASK: Analyze with product frameworks (JTBD, 5 Whys, User Journey, MoSCoW).
 - Product analysis (JTBD, 5 Whys, User Journey, MoSCoW) → Gap Summary → Enhanced content
 - `analysis.product.md`, `dor.plan.md`, `dod.plan.md` written to `<resolved_tasks_dir>/<TASK_ID>/`
 - DoR Readiness Check gate with blocking/non-blocking classification
-- All artifacts published to knowledge provider (Phase 5c unconditional)
+- All artifacts published to knowledge provider (Phase 5c — fires when tracker ticket exists for TASK_ID)
 - With `--brief`: enrichment brief posted as Jira comment for team refinement context
 - With `--fields`: structured fields written to tracker (`Description`, AC, Test Steps) — `Enhanced by` headers applied only to remote payload
 - No tracker status transition (`pending_dor → ready` is manual)
@@ -689,7 +689,7 @@ For the complete resilience model (local-first guarantees, failure scenarios, re
 
 ## Tracker Sync Milestones
 
-Three commands trigger canonical tracker transitions. `/enrich` publishes artifacts and optionally posts comments/fields but does not transition status. Transitions only fire when `task_id` in `status.md` is valid for the resolved tracker provider.
+Three commands own canonical tracker transitions (`/blueprint`, `/pr`, `/commit`). `/enrich` appears below as tracker-adjacent context: it publishes artifacts and optionally posts comments/fields but does not transition status. Transitions only fire when `task_id` in `status.md` is valid for the resolved tracker provider.
 
 | Command | Condition | Canonical transition |
 |---------|-----------|----------------------|

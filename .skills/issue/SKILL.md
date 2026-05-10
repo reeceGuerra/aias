@@ -77,7 +77,7 @@ FILE OUTPUT CONTRACT (must follow)
 - Follow the **rho-aias** skill loading protocol Phase 0 to resolve TASK_DIR.
 - If TASK_DIR is set (via Structured Prompt, task id, or context): write `report.issue.md` to TASK_DIR.
 - If TASK_DIR is not set: create a new directory `<resolved_tasks_dir>/<Name>/` (default: ~/.cursor/plans/) using a kebab-case name derived from the bug title, and write `report.issue.md` there.
-- Create `status.md` if it does not exist (profile: `bugfix`).
+- Create `status.md` if it does not exist using the canonical format from `aias/.skills/rho-aias/reference.md` § `status.md` Format. Initialize `profile: bugfix`, `task_id: <TASK_ID>`, `started: <YYYY-MM-DD>`, `status: pending_dor`, and `current_step: investigate`; keep all remaining fields at canonical defaults (`classification: null`, `refinement_validated: null`, `rhoaias_update: null`, `published: null`, `completed: null`, `tracker_status: null`, `completed_steps: []`, `artifacts: {}`, `command_log: []`).
 - The bug report content must be the ONLY content in the file. The template has **no "Possible Fix"** section.
 
 STATUS UPDATE (Phase 5)

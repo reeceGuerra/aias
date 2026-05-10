@@ -95,7 +95,7 @@ All 9 modes (`planning`, `dev`, `qa`, `debug`, `review`, `product`, `integration
 
 1. Collects mode globs from all processed profiles.
 2. For each supported tool, generates shortcut files referencing canonical sources:
-   - **Cursor**: `.mdc` with frontmatter → path reference (rules, modes, commands, skills)
+   - **Cursor**: `.mdc` with frontmatter → path reference (rules, modes, command-shaped skills under `.cursor/skills/`)
    - **Claude Code**: `.md` with optional `paths:` frontmatter → path reference (rules, modes, skills)
    - **Windsurf**: plain `.md` → path reference (always-apply rules only)
    - **GitHub Copilot**: aggregated `copilot-instructions.md`, `.instructions.md` with `applyTo:`, agents

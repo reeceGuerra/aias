@@ -188,8 +188,9 @@ flowchart LR
         Knowledge[Knowledge Provider]
         Design[Design Provider]
         VCS[VCS Provider]
-        Xcode[Xcode / Tooling Provider]
     end
+
+    Tooling[Tooling MCP Skills]
 
     Context --> Mode
     Rules --> Mode
@@ -210,7 +211,7 @@ flowchart LR
     Skill --> Knowledge
     Skill --> Design
     Skill --> VCS
-    Skill --> Xcode
+    Skill --> Tooling
 
     Artifacts --> TaskDir
     Status --> TaskDir
@@ -435,7 +436,7 @@ Task artifacts go through a lifecycle tracked by `status.md` in the task directo
 | Status | Meaning | Entered when |
 |---|---|---|
 | `pending_dor` | Artifacts being created | Task directory created |
-| `ready` | Refinement complete, DoR/DoD published | `/enrich` publishes successfully |
+| `ready` | Refinement complete, DoR/DoD published | Manual team transition during refinement (after `/enrich --brief` posts the brief comment) |
 | `in_progress` | Planning or implementation underway | `/blueprint` starts (Phase 0) |
 | `in_review` | PR created | `/pr` creates pull request |
 | `completed` | All artifacts published | `/publish` completes |
@@ -453,9 +454,9 @@ Each artifact tracks its own sync state relative to the configured knowledge pro
 | `synced` | Published to knowledge provider, content matches |
 | `modified` | Local content changed after last sync |
 
-### Progressive Knowledge Sync (Unconditional)
+### Progressive Knowledge Sync (Tracker-Gated, Classification-Independent)
 
-Artifacts are published progressively and unconditionally — after every command that writes to the task directory, regardless of plan classification. This means the knowledge provider stays current throughout the task lifecycle. `/publish` serves as the reconciliation and closure step, ensuring any remaining unpublished artifacts (e.g., locally-amended DoR/DoD) reach `synced` state, generating a Plan Delta, and marking the task as `completed`.
+Artifacts are published progressively and tracker-gated — after every command that writes to the task directory, when the task has a valid tracker ticket (P1-P3 preconditions). Plan Classification does NOT affect publishing (Minor, Standard, and Critical plans publish identically). `/publish` serves as the explicit reconciliation and closure step that publishes all remaining artifacts regardless of Phase 5c outcome (including tracker-less workflows and locally-amended DoR/DoD), generates a Plan Delta, and marks the task as `completed`.
 
 ### Plan Classification
 

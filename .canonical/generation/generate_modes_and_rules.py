@@ -59,10 +59,6 @@ class Paths:
     modes_output = _DEFAULT_ROOT / "aias-config" / "modes"
     fw_skills = _DEFAULT_ROOT / "aias" / ".skills"
     project_skills = _DEFAULT_ROOT / "aias-config" / "skills"
-    # fw_commands is retired (aias/.commands/ removed in BL-S36). Kept as attribute for
-    # backward-compat with test fixtures that reference it; resolves to a non-existent path.
-    fw_commands = _DEFAULT_ROOT / "aias" / ".commands"
-    project_commands = _DEFAULT_ROOT / "aias-config" / "commands"
 
 
 def init_paths(root: pathlib.Path) -> None:
@@ -74,8 +70,6 @@ def init_paths(root: pathlib.Path) -> None:
     Paths.modes_output = root / "aias-config" / "modes"
     Paths.fw_skills = root / "aias" / ".skills"
     Paths.project_skills = root / "aias-config" / "skills"
-    Paths.fw_commands = root / "aias" / ".commands"  # retired; kept for test fixture compat
-    Paths.project_commands = root / "aias-config" / "commands"
 
 MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration", "delivery", "devops")
 TRANSVERSAL_RULES = ("continuous-improvement",)

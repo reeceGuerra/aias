@@ -84,7 +84,7 @@ This command executes four sequential steps:
 
 ### Step 1: Reconciliation Sync
 
-This step performs a full knowledge sync for all artifacts. Since Phase 5c is now unconditional, most artifacts will already be `synced`. This step reconciles any remaining `created` or `modified` artifacts — including DoR/DoD that were locally amended via the Amendment gate and excluded from Phase 5c during the workflow.
+This step performs a full knowledge sync for all artifacts. `/publish` always publishes regardless of Phase 5c outcome — covering both the common case (Phase 5c ran successfully via prior commands and most artifacts are already `synced`) and the residual cases (Phase 5c was skipped because P1-P3 were not met, or DoR/DoD were locally amended via the Amendment gate after the last sync). Any artifact in `created` or `modified` state is reconciled here.
 
 Resolve the knowledge provider from `aias-config/providers/knowledge-config.md`:
 - If config exists and is valid, use `active_provider` + `skill_binding` + provider parameters.

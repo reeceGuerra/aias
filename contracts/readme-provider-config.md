@@ -64,7 +64,7 @@ Future categories MUST follow:
 
 Provider configs reference external documents (field mappings, status mappings, publishing configs) that contain project-specific configuration. These documents live in a provider-specific subdirectory:
 
-- `aias-config/providers/<provider_id>/` — where `provider_id` matches the `active_provider` value (e.g., `atlassian`, `figma`, `github`)
+- `aias-config/providers/<provider_org>/` — where `provider_org` identifies the organization or MCP integration that owns one or more provider services (e.g., `atlassian` owns both `confluence` and `jira` services). The `active_provider` field identifies the service (`confluence`, `jira`, `figma`, `github`), while the directory groups configs for that organization.
 
 Documents are referenced via path keys in the provider parameters (`field_mapping_source`, `status_mapping_source`, `config_source`) and declared as dependencies in `skill_binding.resource_files`.
 

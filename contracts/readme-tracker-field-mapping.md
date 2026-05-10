@@ -127,7 +127,7 @@ Commands that only publish comments (e.g., `/enrich --brief` posts a brief comme
 
 ### status.md Fields Relevant to Tracker Sync
 
-The following `status.md` fields are consumed by tracker sync operations (Phase 6). Implementors SHOULD map these fields to provider-specific equivalents where supported. Fields marked **N/A — local-only** are not tracker write targets; they are identity, cache, timestamps, or workflow flags maintained locally (see `aias/.skills/rho-aias/reference.md` § `status.md` Format).
+The following `status.md` fields are consumed by tracker field-write operations (for example, `/enrich --fields` and `/report`). Implementors SHOULD map these fields to provider-specific equivalents where supported. These field writes are distinct from Phase 6 transitions, which remain reserved for canonical status transitions by `/blueprint`, `/pr`, and `/commit`. Fields marked **N/A — local-only** are not tracker write targets; they are identity, cache, timestamps, or workflow flags maintained locally (see `aias/.skills/rho-aias/reference.md` § `status.md` Format).
 
 | Field | Sync relevance | Typical mapping |
 |---|---|---|

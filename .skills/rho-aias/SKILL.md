@@ -22,7 +22,7 @@ Use this skill when:
 - **Consuming artifacts** — `/implement`, `/validate-plan`, `/pr`, `/commit`, `/consolidate-plan`, `/report`, `/assessment`
 - **Reviewing with artifact context** — `/self-review`, `/peer-review`, `/handoff`
 - **Publishing artifacts** — `/publish`, or any command that triggers progressive knowledge sync (Phase 5)
-- **Syncing with tracker** — `/enrich`, `/blueprint`, `/pr`, `/commit` (Phase 6)
+- **Syncing with tracker** — `/blueprint`, `/pr`, `/commit` (Phase 6)
 - **Reasoning about task state** — any mode that loads from `<resolved_tasks_dir>/<TASK_ID>/` (default: `~/.cursor/plans/`)
 
 Commands that reference this skill: `/aias`, `/assessment`, `/blueprint`, `/charter`, `/commit`, `/consolidate-plan`, `/copyedit`, `/enrich`, `/explain`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.

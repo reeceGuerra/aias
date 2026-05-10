@@ -80,7 +80,7 @@ Present artifact summary in chat:
 FILE OUTPUT CONTRACT (must follow)
 - Follow the **rho-aias** skill loading protocol Phase 0 to resolve TASK_DIR.
 - Write `feasibility.assessment.md` to TASK_DIR.
-- Create `status.md` if it does not exist (profile: `bugfix`).
+- Create `status.md` if it does not exist using the canonical format from `aias/.skills/rho-aias/reference.md` § `status.md` Format. Initialize `profile: bugfix`, `task_id: <TASK_ID>`, `started: <YYYY-MM-DD>`, `status: pending_dor`, and `current_step: assess`; keep all remaining fields at canonical defaults (`classification: null`, `refinement_validated: null`, `rhoaias_update: null`, `published: null`, `completed: null`, `tracker_status: null`, `completed_steps: []`, `artifacts: {}`, `command_log: []`).
 
 STATUS UPDATE (Phase 5)
 - Add `feasibility.assessment.md` to the `artifacts` map in `status.md` with status `created` or `modified`.

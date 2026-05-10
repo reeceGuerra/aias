@@ -43,7 +43,7 @@ flowchart LR
     Skill --> Design[Design Provider<br/>Figma / equivalent]
     Skill --> Knowledge[Knowledge Provider<br/>Confluence / equivalent]
     Skill --> VCS[VCS Provider<br/>GitHub / equivalent]
-    Skill --> Tooling[Tooling Provider<br/>Xcode / external tooling]
+    Skill --> Tooling[Tooling MCP Skills<br/>Xcode / external tooling]
     Art --> Handoff[Cross-chat handoff<br/>between modes]
     Handoff --> M
     Contract[Contracts + Rules] -.govern behavior.-> M
