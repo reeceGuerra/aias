@@ -25,13 +25,13 @@ Invocation:
 - `/blueprint TASK-ID` — enrich with tracker data when the task id maps to a tracker ticket (also sets TASK_DIR)
 - `/blueprint DESIGN-URL` — enrich with design context
 - `/blueprint TASK-ID DESIGN-URL` — enrich with both
-- `/blueprint --fast` — skip Comprehension gate (combinable with other arguments)
+- `/blueprint --fast` — skip Comprehension and Checkpoint gates (combinable with other arguments)
 
 Usage notes:
 - Best used with `@planning` mode active for reasoning quality.
 - Can be invoked standalone when required service configs are available and resolvable.
 - Output is written directly to the task directory as separate artifact files.
-- `--fast` suppresses the Comprehension gate (Phase 0). The Preview gate always fires. All 7 categories are still collected. Use for trivial or well-understood tasks where validation gates add friction without value.
+- `--fast` suppresses the Comprehension and Checkpoint gates (Phase 0). The Preview gate always fires. All 7 categories are still collected. Use for trivial or well-understood tasks where validation gates add friction without value.
 - If TASK_DIR is set (via Structured Prompt or task id), writes to that directory. If not, creates a new directory from the task id or an agent-chosen name.
 - In the Structured Prompt, SHOULD prefer `TASK ID` / `TASK DIR` (or `DIR`) over legacy `TICKET`.
 - **Strict mode:** DoR/DoD artifacts (`dor.plan.md`, `dod.plan.md`) must exist in TASK_DIR before planning can proceed, except when the bug exception applies (see Phase 0).
@@ -267,6 +267,32 @@ Present comprehension summary in chat:
 
 **On response:**
 - `confirm` → Proceed to Phase 1 (COLLECT)
+- `adjust` → Apply corrections, return to context output and re-present gate
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
+#### Gate: Checkpoint
+
+**Type:** Confirmation
+**Fires:** Phase 0, immediately after Comprehension (or as the first gate when Comprehension is skipped via `--fast`).
+**Skippable:** MUST fire UNLESS `--fast` is specified.
+
+**Context output:**
+Present a planning checkpoint summary:
+- Ready-to-collect signal (DoR/DoD verified or bug exception path)
+- Source coverage (tracker/design/chat inputs)
+- Any blockers that would invalidate collection
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Checkpoint before collection — continue with plan data collection?"
+- **Options:**
+  - `continue`: "Continue with plan data collection"
+  - `adjust`: "Adjust assumptions before collecting"
+- **allow_multiple:** false
+
+**On response:**
+- `continue` → Proceed to Phase 1 (COLLECT)
 - `adjust` → Apply corrections, return to context output and re-present gate
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
