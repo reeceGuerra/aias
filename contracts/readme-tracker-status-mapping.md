@@ -95,7 +95,7 @@ The following command transitions are mandatory:
 - `/pr`: `in_progress -> in_review`
 - `/commit`: verify `in_review` (no state change if already there)
 
-> **Note:** `pending_dor → ready` is a **manual transition** (team responsibility during refinement). The framework does not automate this transition. `/enrich` publishes artifacts to the knowledge provider and optionally posts a brief comment (`--brief`) for team context, but does not change the tracker status.
+> **Note:** `pending_dor → ready` is a **manual transition** (team responsibility during refinement). The framework does not automate this transition. `/enrich` publishes artifacts to the knowledge provider and MAY post a brief comment (`--brief`) for team context, but does not change the tracker status.
 
 Canonical trigger-key format is mandatory:
 

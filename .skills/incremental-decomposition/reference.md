@@ -85,7 +85,7 @@ Increment 4: Add analytics tracking (independent, parallelizable with 2–3)
 | Increment touches 3+ unrelated modules | Too big — likely multiple increments bundled |
 | Increment goal needs "and" to describe | Too big — split at the "and" |
 | Increment has 1 step | Possibly too small — check if it's self-contained and valuable |
-| Increment takes >1 sentence to explain the goal | Too complex — consider splitting |
+| Increment takes >1 sentence to explain the goal | Too complex — SHOULD split |
 
 ### When in Doubt
 

@@ -148,6 +148,21 @@ Each task follows one of five profiles. The profile determines which steps are e
 | charter | Chat Delivery | `@delivery` | `/charter` (with or without plans) | `delivery.charter.md` | — |
 | closure | (any) | (any) | `/publish` | `delta.publish.md` | — |
 
+### `spike` — Time-boxed investigation
+
+Lightweight profile for exploration tasks with no predetermined implementation plan.
+
+| Step | Chat | Mode | Command | Artifacts produced | Tracker transition |
+|------|------|------|---------|--------------------|-------------------|
+| refinement | Chat Product | `@product` | `/enrich` | `analysis.product.md`, `dor.plan.md` | — (brief comment if `--brief`) |
+| investigate | Chat Dev | `@dev` | (free instruction) | — (code, notes, prototypes) | — |
+| assess* | Chat Dev | `@dev` | `/assessment` | `feasibility.assessment.md` | — |
+| closure | (any) | (any) | `/publish` | `delta.publish.md` | — |
+
+\* `assess` is conditional — only when a formal feasibility record is needed. `/blueprint` is also optional, recommended only if the investigation yields a concrete implementation plan (feature or bugfix).
+
+DoR uses the spike template from `/enrich` (lightweight: hypothesis, time-box, success criteria, out-of-scope).
+
 ---
 
 ## Step Definitions
@@ -283,7 +298,7 @@ Tracker transitions are defined in canonical form and resolved through provider 
 
 Ownership rules:
 
-- `pending_dor → ready` is a **manual transition** (team responsibility during refinement). `/enrich` publishes artifacts to the knowledge provider and optionally posts a brief comment (`--brief`) but does not change tracker status.
+- `pending_dor → ready` is a **manual transition** (team responsibility during refinement). `/enrich` publishes artifacts to the knowledge provider and MAY post a brief comment (`--brief`) but does not change tracker status.
 - `/blueprint` owns canonical transition `ready` -> `in_progress`.
 - `/blueprint` (bug exception) owns canonical transition `pending_dor` -> `in_progress`.
 - `/pr` owns canonical transition `in_progress` -> `in_review`.

@@ -808,7 +808,7 @@ The **Governance** section (above) is the canonical source for all gate behavior
 
 This contract is version **v6.3**. The Governance section is new in v6. v6.2 adds Invocation Mode Detection (section 2), Terminal State Contract (section 4), Self-Verification Checklist (section 8), and Halt Discipline (section 9). All prior conventions (v5, v5.1) remain in effect unless explicitly superseded.
 
-**v6.3 (identity re-scope):** This contract is re-scoped as the *Behavior Contract for Advisory and Operative Skills* (was: "System Contract for all Cursor commands"). No behavioral change — all content, gate taxonomy, governance schema, self-verification, and halt discipline rules are identical. The re-scope reflects the migration of command files from `aias/.commands/<name>.md` to `aias/.skills/<name>/SKILL.md` as of `readme-skill.md` v1.3. This contract is now referenced by `readme-skill.md` § Advisory Skills and § Operative Skills as the governing behavior spec.
+**v6.3 (identity re-scope):** This contract is re-scoped as the *Behavior Contract for Advisory and Operative Skills* (was: "System Contract for all Cursor commands"). No behavioral change — all content, gate taxonomy, governance schema, self-verification, and halt discipline rules are identical. The re-scope reflects the migration of command files from `aias/.commands/<name>.md` (retired as of v9.0) to `aias/.skills/<name>/SKILL.md` as of `readme-skill.md` v1.3. This contract is now referenced by `readme-skill.md` § Advisory Skills and § Operative Skills as the governing behavior spec.
 
 ### Backward Compatibility
 

@@ -4,6 +4,48 @@
 
 > Paths in examples use `<resolved_tasks_dir>` which defaults to `~/.cursor/plans/`. See `reference.md` § Tasks Base Directory for configuration.
 
+---
+
+## rhoaias_update Lifecycle Reference
+
+The `rhoaias_update` field in `status.md` is a scalar tracking whether `RHOAIAS.md` needs updating for this task. See `reference.md` for the governing spec.
+
+### State transitions
+
+| Value | Set when | Meaning |
+|---|---|---|
+| `null` | Initial state (set by `/enrich`) | No impact on `RHOAIAS.md` assessed yet |
+| `required` | `/blueprint` detects RHOAIAS.md impact | RHOAIAS.md MUST be updated before PR |
+| `deferred` | User acknowledges impact, continues | Update deferred — will be handled separately |
+| `done` | RHOAIAS.md modified and present in diff at `/pr` | Update completed |
+| `skipped` | User consciously skips at `/pr` gate | User accepted the omission |
+
+### Snapshot examples per value
+
+```yaml
+# null — no RHOAIAS.md impact detected (initial / delivery / spike)
+rhoaias_update: null
+```
+
+```yaml
+# required — blueprint detected RHOAIAS.md impact; update pending
+rhoaias_update: required
+```
+
+```yaml
+# done — RHOAIAS.md was updated before the PR (most common for feature/bugfix)
+rhoaias_update: done
+```
+
+```yaml
+# skipped — user consciously chose not to update RHOAIAS.md at /pr gate
+rhoaias_update: skipped
+```
+
+> **Note:** Snapshots in this file omit `rhoaias_update` when it has not changed from the canonical baseline (`null`). The field is shown when it transitions (e.g., at `/blueprint` and at closure).
+
+---
+
 ## Feature Flow: Directory State Evolution
 
 ### After `/enrich MAX-12345 --brief`
@@ -224,6 +266,7 @@ tracker_status: IN REVIEW
 completed_steps: [refinement, blueprint, validate, implement, commit, pr, closure]
 current_step: null
 refinement_validated: true
+rhoaias_update: done
 published: 2026-01-25
 completed: 2026-01-25
 artifacts:
@@ -994,3 +1037,104 @@ Expected behavior:
 ```
 
 `/implement` behavior: Ready gate (structural) → Architecture Approval gate (custom, takes precedence over Critical baseline Approval) → Increment 1. After Increment 2: Migration Checkpoint gate (custom). After Increments 1, 3, 4: Feedback gate (baseline).
+
+---
+
+## Spike Flow: Directory State Evolution
+
+Example task: `MAX-SPIKE-001` — investigating authentication token refresh strategy.
+
+### After `/enrich MAX-SPIKE-001`
+
+```
+<resolved_tasks_dir>/MAX-SPIKE-001/
+├── status.md
+├── analysis.product.md
+└── dor.plan.md
+```
+
+```yaml
+# status.md
+profile: spike
+classification: null
+task_id: MAX-SPIKE-001
+started: 2026-02-10
+status: pending_dor
+tracker_status: TO DO
+completed_steps: [refinement]
+current_step: investigate
+refinement_validated: true
+rhoaias_update: null
+published: null
+completed: null
+artifacts:
+  analysis.product.md: synced
+  dor.plan.md: synced
+command_log:
+  - command: /enrich
+    started_at: 2026-02-10T09:00:00Z
+    ended_at: 2026-02-10T09:04:22Z
+```
+
+> `dod.plan.md` is not produced by spike `/enrich` — the lightweight spike DoR template omits it (no acceptance criteria in the traditional sense).
+
+### After investigation + optional `/assessment`
+
+```
+<resolved_tasks_dir>/MAX-SPIKE-001/
+├── status.md
+├── analysis.product.md
+├── dor.plan.md
+└── feasibility.assessment.md
+```
+
+```yaml
+# status.md (changed fields only from baseline above)
+status: in_progress
+completed_steps: [refinement, assess]
+current_step: closure
+```
+
+### After `/publish` (Closure)
+
+```
+<resolved_tasks_dir>/MAX-SPIKE-001/
+├── status.md
+├── analysis.product.md
+├── dor.plan.md
+├── feasibility.assessment.md
+└── delta.publish.md
+```
+
+```yaml
+# status.md
+profile: spike
+classification: null
+task_id: MAX-SPIKE-001
+started: 2026-02-10
+status: completed
+tracker_status: TO DO
+completed_steps: [refinement, assess, closure]
+current_step: null
+refinement_validated: true
+rhoaias_update: null
+published: 2026-02-10
+completed: 2026-02-10
+artifacts:
+  analysis.product.md: synced
+  dor.plan.md: synced
+  feasibility.assessment.md: synced
+  delta.publish.md: synced
+command_log:
+  - command: /enrich
+    started_at: 2026-02-10T09:00:00Z
+    ended_at: 2026-02-10T09:04:22Z
+  - command: /assessment
+    started_at: 2026-02-10T11:30:00Z
+    ended_at: 2026-02-10T11:37:45Z
+  - command: /publish
+    started_at: 2026-02-10T14:00:00Z
+    ended_at: 2026-02-10T14:04:18Z
+```
+
+> `rhoaias_update` stays `null` for spike closure — spike investigations typically do not modify `RHOAIAS.md`. If the spike results in a follow-up feature/bugfix task, `RHOAIAS.md` is updated as part of that task's flow.

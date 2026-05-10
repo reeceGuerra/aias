@@ -36,6 +36,7 @@ COMMANDS AND SKILLS
 - When a mode or command references a skill by name (e.g., "use the **atlassian-mcp** skill"), follow the skill definition. Skills are loaded from `aias/.skills/` or `aias-config/skills/`.
 - Never execute a command or skill from memory. Always follow the loaded definition.
 - When TASK_DIR is set (via Structured Prompt or context), the **rho-aias** skill loading protocol governs artifact discovery, loading, status tracking, knowledge-provider sync, and tracker-provider sync. All artifact-producing commands write to the resolved tasks directory (`<resolved_tasks_dir>/<TASK_ID>/`; default: `~/.cursor/plans/`).
+- The Structured Prompt is the recommended primary interaction pattern for artifact-producing commands. See `aias/docs/QUICKSTART.md` for format and field reference.
 
 Command catalog (21 commands):
 

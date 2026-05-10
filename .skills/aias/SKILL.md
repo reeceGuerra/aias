@@ -243,7 +243,7 @@ Each `new` subcommand produces a specific artifact structure. See the plan (§ C
 
 ---
 
-## 8. `configure-providers` — AI-Assisted Provider Configuration
+## Extension: configure-providers — AI-Assisted Provider Configuration
 
 This is an **AI agent command** (not a CLI subcommand). It uses MCP discovery to generate referenced configuration files with real project data.
 
@@ -288,7 +288,7 @@ No templates directory is created. The contracts are the single source of truth 
 
 ---
 
-## 9. `health` — Migration and Repair Assistance
+## Extension: health — Migration and Repair Assistance
 
 When the AI agent executes `/aias health` and the CLI output contains `[WARN]` or `[FAIL]` entries with "Legacy", "Deprecated", or "Sections" in the check name or detail:
 
@@ -300,6 +300,12 @@ When the AI agent executes `/aias health` and the CLI output contains `[WARN]` o
 Triggered when `[WARN] Legacy providers` appears in health output.
 
 1. Fire the Provider Migration gate:
+
+**Type:** Decision
+**Fires:** When `[WARN] Legacy providers` is detected in health output.
+**Skippable:** Yes — selecting `skip` bypasses migration.
+**Context output:** "Provider configuration files were found at `aias-providers/`, which is the legacy location. The canonical location is `aias-config/providers/`. Migration copies all files and updates internal path references."
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
@@ -315,6 +321,12 @@ Triggered when `[WARN] Legacy providers` appears in health output.
    - Update `resource_files` and `*_source` paths in each `*-config.md` within `aias-config/providers/` (replace `aias-providers/` with `aias-config/providers/`).
    - Report migration results.
    - Fire the Cleanup gate:
+
+**Type:** Decision
+**Fires:** After successful provider directory migration completes.
+**Skippable:** Yes — selecting `keep` preserves the legacy directory (continues triggering health warnings).
+**Context output:** "Migration is complete. The legacy `aias-providers/` directory still exists. Keeping it will continue to trigger `[WARN] Legacy providers` on each `aias health` run."
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
@@ -335,6 +347,12 @@ Triggered when `[WARN] Legacy rules` or `[WARN] Legacy modes` appears in health 
 1. Inform the user: "Generated rules/modes detected in legacy location inside the submodule. The fix is to re-run the generator, which now writes to `aias-config/rules/` and `aias-config/modes/`."
 2. Offer to execute: `python3 aias/.canonical/generation/aias_cli.py generate --shortcuts`
 3. After successful regeneration, fire the Cleanup gate:
+
+**Type:** Decision
+**Fires:** After successful `aias generate --shortcuts` regeneration completes.
+**Skippable:** Yes — selecting `keep` preserves legacy directories (continues triggering health warnings).
+**Context output:** "Regeneration is complete. Legacy `aias/.rules/` and `aias/.modes/` directories still exist inside the submodule. Keeping them will continue to trigger `[WARN] Legacy rules` / `[WARN] Legacy modes` on each `aias health` run. These directories are `.gitignore`d — deletion is safe."
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
@@ -359,6 +377,12 @@ Triggered when `[WARN] Legacy shortcuts` appears in health output.
 Triggered when `[WARN] Legacy canonical bindings` or `[WARN] Deprecated binding` appears in health output.
 
 1. Fire the Canonical Binding Migration gate:
+
+**Type:** Decision
+**Fires:** When `[WARN] Legacy canonical bindings` or `[WARN] Deprecated binding` is detected in health output.
+**Skippable:** Yes — selecting `skip` leaves legacy bindings in place (continues triggering health warnings).
+**Context output:** "The stack profile contains legacy or deprecated generation output binding keys. Updating replaces them with canonical `aias-config/` paths and removes deprecated keys (`binding.generation.mode_output_dir`)."
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
@@ -395,6 +419,12 @@ Triggered when `[FAIL] Sections (<type>)` or `[WARN] Sections (<type>)` appears 
 3. Read the existing referenced file to understand current content.
 4. Fire the Section Repair gate:
 
+**Type:** Decision
+**Fires:** When `[FAIL] Sections` or `[WARN] Sections` entries are detected in health output for a referenced provider file.
+**Skippable:** Yes — selecting `skip` defers repair to manual intervention.
+**Context output:** "A referenced provider file is missing mandatory sections required by its governing contract. Missing sections will be added with contractual placeholder content — existing content is preserved and not reordered."
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
 **AskQuestion:**
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
 - **Prompt:** "`<file>` is missing N mandatory section(s): `<list>`. Repair by adding the missing sections per the governing contract?"
@@ -402,8 +432,6 @@ Triggered when `[FAIL] Sections (<type>)` or `[WARN] Sections (<type>)` appears 
   - `repair`: "Add missing sections (preserves existing content)"
   - `skip`: "Skip — I will fix manually"
 - **allow_multiple:** false
-
-**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 5. If `repair`:
    - Read the governing contract for the exact section schema.

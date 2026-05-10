@@ -160,14 +160,16 @@ These checks run when `cursor` is the configured tool. They verify that the six 
 
 #### Legacy detection and repair
 
-Legacy checks (9b, 9c, 9d, 9e, 9f, and legacy paths in check 10) detect pre-v7.6 file locations and deprecated bindings. Section validation (10b) detects missing mandatory sections in referenced provider files. These produce `[WARN]` or `[FAIL]`. When the AI agent runs `/aias health` and detects these issues, it offers interactive migration and repair gates (see `/aias` command § 9):
+> **Note:** The paths listed in the table below (`aias-providers/`, `aias/.rules/`, `aias/.modes/`, `aias/.commands/`) are **retired locations — detection targets only**. They are not for operational use. The health command detects their presence and offers migration.
+
+Legacy checks (9b, 9c, 9d, 9e, 9f, and legacy paths in check 10) detect pre-v7.6 file locations and deprecated bindings. Section validation (10b) detects missing mandatory sections in referenced provider files. These produce `[WARN]` or `[FAIL]`. When the AI agent runs `/aias health` and detects these issues, it offers interactive migration and repair gates (see `/aias` command § Extension: health):
 
 | Scenario | Detection | Action |
 |---|---|---|
-| `aias-providers/` at root | Check 9b | Copy to `aias-config/providers/`, update paths in configs |
-| `.mdc` files in `aias/.rules/` or `aias/.modes/` | Check 9c | Re-run `aias generate --shortcuts` |
-| Shortcuts pointing to `aias/.rules/` or `aias/.modes/` | Check 9d | Re-run `aias generate --shortcuts` |
-| `resource_files` with `aias-providers/` prefix | Check 10 | Copy files to `aias-config/providers/<provider>/`, update configs |
+| `aias-providers/` at root (retired, v7.5) | Check 9b | Copy to `aias-config/providers/`, update paths in configs |
+| `.mdc` files in `aias/.rules/` or `aias/.modes/` (retired, v7.6) | Check 9c | Re-run `aias generate --shortcuts` |
+| Shortcuts pointing to `aias/.rules/` or `aias/.modes/` (retired, v7.6) | Check 9d | Re-run `aias generate --shortcuts` |
+| `resource_files` with `aias-providers/` prefix (retired, v7.5) | Check 10 | Copy files to `aias-config/providers/<provider>/`, update configs |
 | Missing mandatory sections in referenced files | Check 10b | Agent reads governing contract and patches missing sections (Scenario F) |
 
 #### Post-submodule update flow

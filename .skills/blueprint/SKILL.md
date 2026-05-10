@@ -404,7 +404,7 @@ If the active mode defines a **DESIGN SYSTEM MAPPING** section, apply it: map ra
 
 ---
 
-## 8. Non-Goals / Forbidden Actions
+## 7. Non-Goals / Forbidden Actions
 
 This command must **NOT**:
 - Write implementation code or full file contents

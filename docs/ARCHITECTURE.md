@@ -105,8 +105,8 @@ Skills are reusable packages of operational knowledge. They encapsulate how to i
 Five skill categories:
 
 - **MCP skills** — Wrap Model Context Protocol servers for external service interaction. Each skill is single-domain, stateless, and provider-specific. Current MCP skills: `atlassian-mcp`, `figma-mcp`, `firebase-mcp`, `github-mcp`, `xcode-mcp`.
-- **Knowledge skills** — Encode reusable reasoning patterns and domain knowledge without external service dependencies. Examples: `technical-writing` (writing patterns), `incremental-decomposition` (decomposition rules), `review-rubric` (multi-agent review criteria).
-- **Tool skills** — Encapsulate reusable shortcut-level adapter knowledge for specific tools (e.g., `cross-repo-integration`).
+- **Knowledge skills** — Encode reusable reasoning patterns and domain knowledge without external service dependencies. Examples: `technical-writing` (writing patterns), `incremental-decomposition` (decomposition rules), `review-rubric` (multi-agent review criteria), `cross-repo-integration` (cross-repo orchestration patterns).
+- **Tool skills** — Encapsulate reusable shortcut-level adapter knowledge for specific tools.
 - **Advisory skills** — Commands that produce structured analysis in the chat. No side effects. Invoked with `disable-model-invocation: true`. Examples: `/explain`, `/guide`, `/peer-review`.
 - **Operative skills** — Commands that perform side effects: write artifacts, call external services, or trigger multi-step workflows. Invoked with `disable-model-invocation: true`. Examples: `/blueprint`, `/implement`, `/publish`.
 - **System skill** — `rho-aias` is the framework's own skill. It defines the artifact catalog, skill loading protocol (7 phases), status lifecycle, workflow profiles, and sync behavior.

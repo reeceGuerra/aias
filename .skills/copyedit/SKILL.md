@@ -12,6 +12,8 @@ version: 1.0.0
 
 **Command Type:** Operative — Procedural / Execution
 
+**Skills referenced:** rho-aias
+
 You are performing **editorial copyediting** to improve the communicative quality of any document that contains natural language prose — excluding code and structured configuration files.
 
 This command is responsible for analyzing and improving the textual quality of documents by applying editorial standards for adequacy, coherence, cohesion, intelligibility, clarity, and precision.
@@ -181,7 +183,7 @@ This command must **NOT**:
 
 ---
 
-## 8. STATUS UPDATE (Phase 5)
+## Extension: Status Update (Phase 5)
 
 When invoked as part of a tracked workflow (TASK_DIR is set):
 - MUST NOT modify `completed_steps` or `current_step` — `/copyedit` is position-neutral and does not advance workflow steps.
@@ -192,20 +194,20 @@ When invoked standalone (no TASK_DIR), no status update is required.
 
 ---
 
-## 9. Self-Verification Checklist
+## 8. Self-Verification Checklist
 
 - [ ] Target document edits were applied as requested and limited to approved scope.
 - [ ] No out-of-scope files were modified.
 - [ ] `status.md` / `command_log` updates were written when required by workflow.
 - [ ] Terminal state line was emitted with canonical state token.
 
-## 10. Halt Discipline
+## 9. Halt Discipline
 
 - Pause only at declared gates/preconditions/blockers.
 - Do not pause ad-hoc between deterministic edit steps.
 - If blocked, report exact blocker and required resume input.
 
-## 11. Terminal State Emission
+## Terminal State Emission
 
 `[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
 

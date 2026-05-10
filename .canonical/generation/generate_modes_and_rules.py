@@ -74,6 +74,12 @@ def init_paths(root: pathlib.Path) -> None:
 MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration", "delivery", "devops")
 TRANSVERSAL_RULES = ("continuous-improvement",)
 
+# NOTE: This dictionary is a documentation reference only.
+# At generation time, {{globs_yaml}} is resolved from binding.mode.<mode>.globs
+# in the stack profile, which takes runtime precedence over these entries.
+# For the canonical spec, see: aias/.skills/rho-aias/reference.md § Per-Mode Artifact Requirements.
+# Do NOT treat this dictionary as the authoritative glob spec.
+#
 # Canonical artifact-suffix requirements per mode.
 # "required" must always be present; "optional" are validated only for catalog coherence.
 MODE_ARTIFACT_GLOB_RULES: Dict[str, Dict[str, Tuple[str, ...]]] = {
