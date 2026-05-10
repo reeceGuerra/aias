@@ -103,11 +103,13 @@ Rules:
 - **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md`.
 - **Prompt:** "Base branch not specified and could not be inferred. Which branch should this PR target?"
 - **Options:**
-  - `(1) Provide base branch name` — user supplies the target branch as free text; use it and proceed.
-  - `(2) Use repository default branch` — resolve default branch name via VCS provider; use it and proceed.
+  - `provide_branch`: "Provide a base branch name now"
+  - `default_branch`: "Use repository default branch"
+- **allow_multiple:** false
 
 **On response:**
-- Apply the chosen resolution and proceed to the PR Confirmation gate.
+- `provide_branch` → Request the branch name, validate it exists/remains resolvable, then proceed to PR Confirmation.
+- `default_branch` → Resolve and use repository default branch, then proceed to PR Confirmation.
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
