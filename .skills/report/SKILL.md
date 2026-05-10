@@ -115,6 +115,8 @@ Present the RCA evidence summary in chat:
 - `omit` → Continue with only the fields that satisfy sufficiency
 - `cancel` → Abort publish and keep chat output only
 
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
 ### Gate: Tracker Publish
 
 **Type:** Confirmation

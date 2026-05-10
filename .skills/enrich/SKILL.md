@@ -179,6 +179,8 @@ Present classification context in chat:
 - `user` → Continue with the user-declared classification
 - `neutral` → Continue with a neutral description format and no specialized template
 
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
 ### Gate: Brief Comment Preview (only with `--brief`)
 
 **Type:** Confirmation
@@ -265,6 +267,8 @@ DoR READINESS (<work_type>):
 - `proceed` → Continue to write artifacts
 - `override` → Continue with acknowledged risk
 - `stop` → Halt execution; inform user which blockers need resolution
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
 ### End-of-Response Confirmation
 

@@ -148,6 +148,8 @@ Present the approved proposal summary:
 - `pause` → Halt consolidation for this gap. Inform user to consult the team and return when resolved.
 - `reject` → Discard proposed changes. Mark validation todo as `completed` (no action taken). The plan must work with existing DoR/DoD.
 
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
 ### Step 4 — Update artifacts
 
 - Apply the **approved** proposal to the relevant artifact file(s) in TASK_DIR.
