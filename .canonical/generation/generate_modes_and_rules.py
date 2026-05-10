@@ -74,6 +74,20 @@ def init_paths(root: pathlib.Path) -> None:
 MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration", "delivery", "devops")
 TRANSVERSAL_RULES = ("continuous-improvement",)
 
+# Canonical artifact-suffix requirements per mode.
+# "required" must always be present; "optional" are validated only for catalog coherence.
+MODE_ARTIFACT_GLOB_RULES: Dict[str, Dict[str, Tuple[str, ...]]] = {
+    "planning": {"required": (), "optional": ("*.product.md", "*.issue.md", "*.fix.md", "*.assessment.md", "*.plan.md", "*.design.md")},
+    "product": {"required": (), "optional": ("*.product.md", "*.design.md", "*.plan.md", "*.issue.md", "*.fix.md", "*.assessment.md")},
+    "dev": {"required": ("*.plan.md",), "optional": ("*.design.md", "*.product.md", "*.fix.md", "*.assessment.md", "*.trace.md", "*.issue.md")},
+    "qa": {"required": ("*.issue.md",), "optional": ("*.trace.md", "*.plan.md")},
+    "debug": {"required": ("*.issue.md",), "optional": ("*.fix.md", "*.plan.md")},
+    "review": {"required": ("*.plan.md",), "optional": ("*.design.md", "*.product.md")},
+    "delivery": {"required": ("*.charter.md",), "optional": ("*.plan.md", "*.product.md")},
+    "integration": {"required": ("*.plan.md",), "optional": ()},
+    "devops": {"required": ("*.plan.md",), "optional": ()},
+}
+
 TRANSVERSAL_MODE_DEFAULTS: Dict[str, Dict[str, str]] = {
     "delivery": {
         "description": "Delivery mode: evaluate plans or tickets for viability, effort, impact, dependencies, and risks; produce raw delivery data for /charter (no implementation design)",
@@ -706,6 +720,23 @@ def normalize_globs_yaml(raw_globs: str) -> str:
     return "\n".join(f'  - "{item}"' for item in items)
 
 
+def validate_mode_glob_coverage(mode: str, raw_globs: str) -> None:
+    """Fail fast when mode globs use unknown artifact suffixes."""
+    rules = MODE_ARTIFACT_GLOB_RULES.get(mode)
+    if not rules:
+        return
+    current = {item.strip() for item in raw_globs.split(",") if item.strip()}
+    allowed = set(rules.get("required", ())) | set(rules.get("optional", ()))
+    configured_artifact_globs = {
+        item for item in current if re.match(r"^\*\.[a-z0-9-]+\.md$", item)
+    }
+    unknown = sorted(glob for glob in configured_artifact_globs if glob not in allowed)
+    if unknown:
+        raise ValueError(
+            f"Mode '{mode}' has non-canonical artifact globs: {', '.join(unknown)}"
+        )
+
+
 def render_conditionals(content: str, context: Dict[str, str]) -> str:
     pattern = re.compile(r"\{\{#if ([^}]+)\}\}(.*?)\{\{/if\}\}", re.DOTALL)
     while True:
@@ -763,6 +794,7 @@ def generate_modes_for_profile(
         context = {}
         context.update(bindings)
         frontmatter = mode_frontmatter_from_bindings(bindings, mode)
+        validate_mode_glob_coverage(mode, frontmatter["globs"])
         frontmatter["globs_yaml"] = normalize_globs_yaml(frontmatter["globs"])
         context.update(frontmatter)
 
