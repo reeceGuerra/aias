@@ -205,7 +205,7 @@ For complete parameter details, types, and return values for every tool, see [re
 **Read-only by default:**
 - Reading files, listing structure, searching, getting build logs, getting test lists, checking diagnostics, listing issues, listing windows, searching docs: always allowed.
 - Building, running tests, rendering previews, executing snippets: allowed (they don't modify source code, but they do compile/execute).
-- Writing, updating, creating directories, moving, deleting files: **only when the user explicitly asks or when the active mode authorizes code modifications** (e.g., `@dev` with an explicit action verb).
+- Writing, updating, creating directories, moving, deleting files: **only when the user explicitly asks**.
 
 **Abort on failure:**
 - If `XcodeListWindows` fails or returns no windows: abort and ask the user to ensure Xcode is open.

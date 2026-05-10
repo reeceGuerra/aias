@@ -312,7 +312,7 @@ For complete parameter details, types, and return values for every tool, see [re
 
 **Read-only by default:**
 - `get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs`, `get_figjam`, `get_code_connect_map`, `whoami`: always allowed.
-- `add_code_connect_map`, `create_design_system_rules`, `generate_diagram`: **only when the user explicitly asks**.
+- Write-capable tools (`add_code_connect_map`, `create_design_system_rules`, `generate_diagram`, `use_figma`, `generate_figma_design`, `upload_assets`, `create_new_file`): **only when the user explicitly asks**.
 
 **Abort on failure:**
 - If Figma returns a permission error: call `whoami` to verify the authenticated user, report the issue, and ask the user to check access.
