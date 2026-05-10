@@ -3,7 +3,7 @@ name: implement
 description: "Executes planned increments from increments.plan.md with governance gates per Plan Classification. Use after /blueprint to implement a planned task. Trigger terms: /implement, implement plan, execute increments, implement task."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Implement (Plan-Driven Execution) — v4
@@ -323,6 +323,29 @@ Report increment completion (changes, files, verification).
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
+#### Gate: Context Handoff (conditional)
+
+**Type:** Advisory
+**Fires:** After `Gate: Inter-Increment Feedback` resolves as `continue`, when `completed_count == CONTEXT_THRESHOLD` (default: 4) AND remaining increments > 0.
+**Skippable:** Yes.
+
+**Context output:**
+"Context threshold reached: <N> increments completed in this session. Long contexts increase cost. Consider transferring to a fresh chat via `/handoff -m @dev -c /implement`."
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md`.
+- **Prompt:** "<N> increments completed. Continue here or transfer to a new chat?"
+- **Options:**
+  - `continue`: "Continue in this chat"
+  - `handoff`: "Generate handoff and stop — I'll resume in a new chat"
+- **allow_multiple:** false
+
+**On response:**
+- `continue` → Proceed to next increment normally. Gate does NOT re-fire (one-shot per session).
+- `handoff` → Invoke `/handoff -m @dev -c /implement` (using the existing handoff skill). Emit `[STATE: partial]` + "N of M increments completed; handoff initiated."
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. Gate fires at most once per session regardless of subsequent increments.
+
 #### Gate: Verification Failure (conditional)
 
 **Type:** Decision
@@ -440,6 +463,14 @@ This command must **NOT**:
 
 ---
 
+## Cost / Context Advisory
+
+Context accumulates with each increment. Long sessions (4+ increments) significantly increase per-token cost. The `Gate: Context Handoff` (Phase 4) fires at `CONTEXT_THRESHOLD` increments (default: 4) to suggest a `/handoff` transfer.
+
+Threshold is advisory — the user may choose to continue in the same chat.
+
+---
+
 ## 8. Self-Verification Checklist
 
 - [ ] Increment changes were applied only to files in current increment scope.
@@ -458,6 +489,8 @@ This command must **NOT**:
 ## Terminal State Emission
 
 `[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
+
+Note: `partial` covers both manual stop and context handoff (Gate: Context Handoff resolved as `handoff`).
 
 ## Invocation Mode Detection
 
