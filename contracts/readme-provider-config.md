@@ -307,7 +307,7 @@ When `service_category=tracker`:
 - `providers.<active_provider>.status_mapping_source` is mandatory.
 - The referenced file MUST exist.
 - The referenced file MUST follow `aias/contracts/readme-tracker-status-mapping.md`.
-- `command_triggers` in the referenced mapping MUST use only `slash + kebab-case`.
+- `command_triggers` in the referenced mapping MUST use canonical trigger keys: `slash + kebab-case`, optionally with `@variant-kebab-case` suffix for command variants.
 - Legacy trigger keys (for example `snake_case`) are invalid.
 
 If any condition fails, consumers MUST abort dependent tracker operations and request configuration correction.
