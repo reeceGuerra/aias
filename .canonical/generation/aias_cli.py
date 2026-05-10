@@ -964,9 +964,11 @@ REVIEW_SUBAGENTS = (
 )
 # Frontmatter invariants enforced by aias health
 SUBAGENT_REQUIRED_FRONTMATTER = {
+    "name": "__non_empty__",
     "readonly": "true",
     "is_background": "false",
 }
+SUBAGENT_FORBIDDEN_FRONTMATTER = {"tools"}
 
 
 def _parse_subagent_frontmatter(agent_file: pathlib.Path) -> Dict[str, str]:
@@ -1030,9 +1032,17 @@ def _check_review_subagent_integrity(results: List[HealthStatus]) -> None:
         actual = link.resolve() if link.is_symlink() else link
         fm = _parse_subagent_frontmatter(actual)
         for field, expected in SUBAGENT_REQUIRED_FRONTMATTER.items():
-            actual_val = fm.get(field, "").lower()
+            raw_val = fm.get(field, "").strip()
+            if expected == "__non_empty__":
+                if not raw_val:
+                    violations.append(f"{agent_name}: missing required frontmatter field {field!r}")
+                continue
+            actual_val = raw_val.lower()
             if actual_val != expected:
                 violations.append(f"{agent_name}: {field}={actual_val!r} (expected {expected!r})")
+        for forbidden in SUBAGENT_FORBIDDEN_FRONTMATTER:
+            if forbidden in fm:
+                violations.append(f"{agent_name}: forbidden frontmatter field {forbidden!r} is present")
 
     if not missing:
         results.append(("Review sub-agents presence", "OK",
@@ -1045,7 +1055,7 @@ def _check_review_subagent_integrity(results: List[HealthStatus]) -> None:
 
     if not violations:
         results.append(("Review sub-agents invariants", "OK",
-                        "readonly: true and is_background: false confirmed for all sub-agents"))
+                        "name, readonly: true, is_background: false, and no forbidden fields confirmed"))
     else:
         preview = "; ".join(violations[:3])
         suffix = f" (+{len(violations) - 3} more)" if len(violations) > 3 else ""
