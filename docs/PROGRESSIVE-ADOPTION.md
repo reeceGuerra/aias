@@ -72,7 +72,7 @@ This guide provides a structured path for adopting Rho AIAS incrementally. You d
 ### Workflow
 
 ```
-@product + /enrich → @planning + /blueprint → /validate-plan → @dev + /implement → /self-review → /commit → /pr
+@product + /enrich → @planning + /blueprint → /validate-plan → @dev + /implement → /commit → /self-review → /pr
 ```
 
 ### When to move to Level 3
@@ -118,13 +118,13 @@ This guide provides a structured path for adopting Rho AIAS incrementally. You d
 ### Full workflow (feature)
 
 ```
-@product + /enrich → @planning + /blueprint → /validate-plan → @dev + /implement → /self-review → /commit → /pr → /publish
+@product + /enrich → @planning + /blueprint → /validate-plan → @dev + /implement → /commit → /self-review → /pr → /publish
 ```
 
 ### Full workflow (bugfix)
 
 ```
-@qa + /issue → @qa + /trace → @debug + /fix → /assessment → @planning + /blueprint → @dev + /implement → /commit → /pr → /report → /publish
+@qa + /issue → @qa + /trace → @debug + /fix → /assessment → @planning + /blueprint → /validate-plan → /consolidate-plan (if gaps) → @dev + /implement → /commit → /pr → /report → /publish
 ```
 
 ---

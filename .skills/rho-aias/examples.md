@@ -201,6 +201,18 @@ command_log:
 
 ### After `/publish` (Standard closure)
 
+```
+<resolved_tasks_dir>/MAX-12345/
+├── status.md
+├── analysis.product.md
+├── dor.plan.md
+├── dod.plan.md
+├── technical.plan.md
+├── increments.plan.md
+├── specs.design.md
+└── delta.publish.md
+```
+
 ```yaml
 # status.md
 profile: feature
@@ -455,6 +467,9 @@ command_log:
   - command: /blueprint
     started_at: 2026-02-10T10:00:00Z
     ended_at: 2026-02-10T10:14:20Z
+  - command: /validate-plan
+    started_at: 2026-02-10T10:20:00Z
+    ended_at: 2026-02-10T10:24:10Z
   - command: /implement
     started_at: 2026-02-10T10:30:00Z
     ended_at: 2026-02-10T11:22:48Z
@@ -649,6 +664,15 @@ command_log:
 
 ### After `/publish` (Enrichment closure)
 
+```
+<resolved_tasks_dir>/MAX-22222/
+├── status.md
+├── analysis.product.md
+├── dor.plan.md
+├── dod.plan.md
+└── delta.publish.md
+```
+
 ```yaml
 # status.md
 profile: enrichment
@@ -711,6 +735,13 @@ command_log:
 ```
 
 ### After `/publish` (Standard closure)
+
+```
+<resolved_tasks_dir>/MAX-33333/
+├── status.md
+├── delivery.charter.md
+└── delta.publish.md
+```
 
 ```yaml
 # status.md

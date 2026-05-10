@@ -44,7 +44,7 @@ If your project was set up with v8.x, update the `aias/` submodule and then:
 2. Run `python3 aias/.canonical/generation/aias_cli.py health` — detects legacy command shortcuts and `aias-config/commands/` entries.
 3. Run `/aias health` in your AI assistant for interactive migration of any legacy shortcut targets.
 
-Key changes in v9.0: Custom commands migrated to command-shaped skills — new custom work must use `aias-config/skills/<name>/SKILL.md` (not `aias-config/commands/`). Multi-agent review added: run `aias init` or `aias health` to create sub-agent symlinks under `.cursor/agents/`. If upgrading from v8.0–v8.9: Plan Classification A/B/C → Minor/Standard/Critical in all `status.md` `classification` fields.
+Key changes in v9.0: Custom commands migrated to command-shaped skills — new custom work must use `aias-config/skills/<name>/SKILL.md` (not `aias-config/commands/`). Multi-agent review added: run `aias init` or `aias health` to create sub-agent symlinks under `.cursor/agents/`. If upgrading from v8.0–v8.9, migrate historical Plan Classification labels to current values: `minor|standard|critical` in all `status.md` `classification` fields.
 
 ---
 

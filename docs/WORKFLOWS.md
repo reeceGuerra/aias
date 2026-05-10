@@ -90,10 +90,12 @@ flowchart TD
 
     Entry -->|Enrichment| EnrichProduct["@product<br/>analysis"]
     EnrichProduct --> EnrichOnly["/enrich<br/>DoR + DoD + publish"]
-    EnrichOnly --> EnrichDone["Task complete<br/>(no implementation)"]
+    EnrichOnly --> EnrichClosure["/publish<br/>closure + delta.publish.md"]
+    EnrichClosure --> EnrichDone["Task complete<br/>(no implementation)"]
 
     Entry -->|Delivery| DeliveryMode["@delivery<br/>/charter"]
-    DeliveryMode --> DeliveryDone["Charter complete"]
+    DeliveryMode --> DeliveryClosure["/publish<br/>closure + delta.publish.md"]
+    DeliveryClosure --> DeliveryDone["Task complete"]
 ```
 
 This map is intentionally high level. The detailed sections below define exact mode boundaries, command sequencing, optional branches, and expected outputs.
