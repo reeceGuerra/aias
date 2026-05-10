@@ -652,6 +652,7 @@ class TestShortcutRuntimeIntegrity(unittest.TestCase):
     def test_ok_empty_dirs(self):
         (self.root / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
         (self.root / ".cursor" / "skills").mkdir(parents=True, exist_ok=True)
+        (self.root / ".cursor" / "agents").mkdir(parents=True, exist_ok=True)
 
         checks = self._run_checks(["cursor"])
         self.assertEqual(checks["Shortcut dirs"][0], "OK")
@@ -898,28 +899,52 @@ class TestLegacyCommandShortcutDetection(unittest.TestCase):
 
 
 class TestReviewSubagentIntegrity(unittest.TestCase):
-    """BL-S53: aias health validates sub-agent presence and frontmatter invariants."""
+    """BL-S53: aias health validates the three-tier sub-agent chain.
+
+    Three-tier model:
+      aias/.canonical/subagents/ (framework canonical, read-only)
+      → aias-config/subagents/  (project-owned copies)
+      → .cursor/agents/         (tool-specific symlinks)
+    """
 
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.tmpdir.name)
         self.orig_root = aias_cli.ROOT
+        self.orig_subagents_output = aias_cli.SUBAGENTS_OUTPUT_DIR
         aias_cli.ROOT = self.root
-        self.fw_agents = self.root / "aias" / ".cursor" / "agents"
+        # aias/.canonical/subagents/ — framework canonical
+        self.fw_agents = self.root / "aias" / ".canonical" / "subagents"
         self.fw_agents.mkdir(parents=True, exist_ok=True)
+        # aias-config/subagents/ — project-owned copies
+        self.config_agents = self.root / "aias-config" / "subagents"
+        self.config_agents.mkdir(parents=True, exist_ok=True)
+        aias_cli.SUBAGENTS_OUTPUT_DIR = self.config_agents
+        # .cursor/agents/ — tool-specific symlinks
         self.cursor_agents = self.root / ".cursor" / "agents"
         self.cursor_agents.mkdir(parents=True, exist_ok=True)
 
     def tearDown(self):
         aias_cli.ROOT = self.orig_root
+        aias_cli.SUBAGENTS_OUTPUT_DIR = self.orig_subagents_output
         self.tmpdir.cleanup()
 
-    def _write_subagent(self, name: str, readonly: str = "true", is_background: str = "false") -> None:
+    def _write_config_agent(self, name: str, readonly: str = "true", is_background: str = "false") -> None:
+        """Write a sub-agent file to aias-config/subagents/ (tier 2)."""
         content = (
             f"---\nname: {name}\nreadonly: {readonly}\nis_background: {is_background}\n---\n"
             f"# {name}\n"
         )
-        (self.cursor_agents / name).write_text(content, encoding="utf-8")
+        (self.config_agents / name).write_text(content, encoding="utf-8")
+
+    def _add_cursor_symlink(self, name: str) -> None:
+        """Create a .cursor/agents/ symlink pointing to aias-config/subagents/ (tier 3)."""
+        src = self.config_agents / name
+        rel = os.path.relpath(src, self.cursor_agents)
+        link = self.cursor_agents / name
+        if link.exists() or link.is_symlink():
+            link.unlink()
+        link.symlink_to(rel)
 
     def _run_checks(self):
         results = []
@@ -927,46 +952,64 @@ class TestReviewSubagentIntegrity(unittest.TestCase):
         return {name: (status, detail) for name, status, detail in results}
 
     def test_all_present_and_valid(self):
+        """Full three-tier chain present and valid."""
         for agent_name in aias_cli.REVIEW_SUBAGENTS:
-            self._write_subagent(agent_name)
+            self._write_config_agent(agent_name)
+            self._add_cursor_symlink(agent_name)
         checks = self._run_checks()
-        self.assertEqual(checks["Review sub-agents presence"][0], "OK")
+        self.assertEqual(checks["Review sub-agents (config)"][0], "OK")
+        self.assertEqual(checks["Review sub-agents (shortcuts)"][0], "OK")
         self.assertEqual(checks["Review sub-agents invariants"][0], "OK")
+        self.assertNotIn("Review sub-agents (legacy)", checks)
 
-    def test_missing_subagent_warns(self):
-        # Create only 5 of 6 sub-agents
+    def test_missing_config_subagent_warns(self):
+        """Missing aias-config/subagents/ file emits WARN."""
         for agent_name in list(aias_cli.REVIEW_SUBAGENTS)[:-1]:
-            self._write_subagent(agent_name)
+            self._write_config_agent(agent_name)
+            self._add_cursor_symlink(agent_name)
         checks = self._run_checks()
-        self.assertEqual(checks["Review sub-agents presence"][0], "WARN")
+        self.assertEqual(checks["Review sub-agents (config)"][0], "WARN")
+
+    def test_missing_cursor_symlink_warns(self):
+        """Missing .cursor/agents/ symlink emits WARN for shortcuts."""
+        for agent_name in aias_cli.REVIEW_SUBAGENTS:
+            self._write_config_agent(agent_name)
+        # No symlinks created
+        checks = self._run_checks()
+        self.assertEqual(checks["Review sub-agents (shortcuts)"][0], "WARN")
 
     def test_wrong_readonly_fails_invariant(self):
         for agent_name in aias_cli.REVIEW_SUBAGENTS:
-            self._write_subagent(agent_name, readonly="false")
+            self._write_config_agent(agent_name, readonly="false")
+            self._add_cursor_symlink(agent_name)
         checks = self._run_checks()
         self.assertEqual(checks["Review sub-agents invariants"][0], "FAIL")
         self.assertIn("readonly", checks["Review sub-agents invariants"][1])
 
     def test_wrong_is_background_fails_invariant(self):
         for agent_name in aias_cli.REVIEW_SUBAGENTS:
-            self._write_subagent(agent_name, is_background="true")
+            self._write_config_agent(agent_name, is_background="true")
+            self._add_cursor_symlink(agent_name)
         checks = self._run_checks()
         self.assertEqual(checks["Review sub-agents invariants"][0], "FAIL")
         self.assertIn("is_background", checks["Review sub-agents invariants"][1])
 
-    def test_symlink_to_valid_subagent_passes(self):
-        # Create source files in fw_agents and symlinks in cursor_agents
+    def test_legacy_symlink_target_warns(self):
+        """Symlinks pointing to old aias/.cursor/agents/ location emit legacy WARN."""
+        old_fw = self.root / "aias" / ".cursor" / "agents"
+        old_fw.mkdir(parents=True, exist_ok=True)
         for agent_name in aias_cli.REVIEW_SUBAGENTS:
-            src = self.fw_agents / agent_name
-            content = (
-                f"---\nname: {agent_name}\nreadonly: true\nis_background: false\n---\n"
+            # Write file at old location (not in aias-config/subagents/)
+            src = old_fw / agent_name
+            src.write_text(
+                f"---\nname: {agent_name}\nreadonly: true\nis_background: false\n---\n",
+                encoding="utf-8",
             )
-            src.write_text(content, encoding="utf-8")
             rel = os.path.relpath(src, self.cursor_agents)
             (self.cursor_agents / agent_name).symlink_to(rel)
         checks = self._run_checks()
-        self.assertEqual(checks["Review sub-agents presence"][0], "OK")
-        self.assertEqual(checks["Review sub-agents invariants"][0], "OK")
+        self.assertIn("Review sub-agents (legacy)", checks)
+        self.assertEqual(checks["Review sub-agents (legacy)"][0], "WARN")
 
 
 if __name__ == "__main__":

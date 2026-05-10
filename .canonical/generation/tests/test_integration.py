@@ -93,7 +93,7 @@ class TestHappyPathGeneration(_IntegrationTestBase):
     def test_transversal_rules_copied(self):
         gen.Paths.rules_output.mkdir(parents=True, exist_ok=True)
         for tr in gen.TRANSVERSAL_RULES:
-            src = gen.Paths.canonical_dir / f"{tr}.mdc"
+            src = gen.Paths.canonical_rules_dir / f"{tr}.mdc"
             if src.is_file():
                 dst = gen.Paths.rules_output / f"{tr}.mdc"
                 dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
@@ -153,7 +153,7 @@ class TestShortcutsPerTool(_IntegrationTestBase):
         self.stack_id, self.mode_names = gen.generate_modes_for_profile(profile, self.bindings)
         gen.generate_rules_for_profile(profile, self.bindings)
         for tr in gen.TRANSVERSAL_RULES:
-            src = gen.Paths.canonical_dir / f"{tr}.mdc"
+            src = gen.Paths.canonical_rules_dir / f"{tr}.mdc"
             if src.is_file():
                 dst = gen.Paths.rules_output / f"{tr}.mdc"
                 dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")

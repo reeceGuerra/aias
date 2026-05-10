@@ -453,7 +453,7 @@ After every `new` subcommand (except `--provider`), invoke the CLI:
 python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 ```
 
-The CLI reads `binding.generation.tools` from `stack-profile.md` to determine which tools to produce shortcuts for. Only the listed tools will have shortcuts generated. When `cursor` is in the selected tools, this also refreshes sub-agent symlinks under `.cursor/agents/`.
+The CLI reads `binding.generation.tools` from `stack-profile.md` to determine which tools to produce shortcuts for. Only the listed tools will have shortcuts generated. When `cursor` is in the selected tools, this also copies sub-agents from `aias/.canonical/subagents/` to `aias-config/subagents/` and refreshes symlinks under `.cursor/agents/`. The adopter should review `git diff aias-config/subagents/` before committing regenerated sub-agent files.
 
 After `init`, invoke the generator with `--shortcuts` as the final step.
 

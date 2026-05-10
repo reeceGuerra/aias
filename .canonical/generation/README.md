@@ -10,6 +10,7 @@ Generate committed mode and rule files for:
 - `aias-config/modes/*.mdc` — Generated platform modes
 - `aias-config/rules/base.mdc` — Generated base rule (flat)
 - `aias-config/rules/output-contract.mdc` — Generated output contract (flat)
+- `aias-config/subagents/*.md` — Project-owned sub-agent copies (regenerable, customizable)
 
 **Shortcuts** (Phase 5, with `--shortcuts` flag):
 - `.cursor/rules/*.mdc` — Rules + modes for Cursor
@@ -25,9 +26,11 @@ Generate committed mode and rule files for:
 
 from:
 
-- `aias/.canonical/*.mdc` (mode templates)
-- `aias/.canonical/base-rule.md` (canonical base rule)
-- `aias/.canonical/output-contract.md` (canonical output contract)
+- `aias/.canonical/modes/*.mdc` (mode templates)
+- `aias/.canonical/rules/base-rule.md` (canonical base rule)
+- `aias/.canonical/rules/output-contract.md` (canonical output contract)
+- `aias/.canonical/rules/continuous-improvement.mdc` (transversal rule)
+- `aias/.canonical/subagents/*.md` (framework canonical sub-agents)
 - `<repo_root>/stack-fragment.md` (build system integration — one per repo, fixed name)
 - `<repo_root>/stack-profile.md` (one per repo, fixed name)
 
@@ -44,7 +47,7 @@ Before any file is generated, the script runs 6 sequential validation gates that
 
 | Gate | Name | What it checks |
 |---|---|---|
-| **G0** | Infrastructure | Canonical sources (`base-rule.md`, `output-contract.md`) exist and contain a `` ```markdown `` code block. Fragment file exists. All 9 canonical mode templates exist. |
+| **G0** | Infrastructure | Canonical sources (`rules/base-rule.md`, `rules/output-contract.md`) exist and contain a `` ```markdown `` code block. Fragment file exists. All 9 canonical mode templates exist under `modes/`. |
 | **G1** | Profile Discovery | `stack-profile.md` exists at repo root. Profile is readable and parses into non-empty bindings. `generation.stack_id` is present. `canonical_mode_output_dir` and `canonical_rule_output_dir` are present and set to `aias-config/modes` and `aias-config/rules` respectively. Deprecated `mode_output_dir` emits warning if present. |
 | **G2** | Mode Binding Completeness | For every profile × mode, the 4 frontmatter keys (`description`, `model`, `color`, `globs`) are present and non-empty. |
 | **G3** | Rule Binding Completeness | For every discovered workspace: all required base rule keys (10) and output contract keys (4) resolve (workspace → shared → platform fallback). `profile` binding is present. |
@@ -57,7 +60,7 @@ Post-flight gates are **fatal**: if any G6/G7 check fails, the generator exits w
 
 | Gate | Name | What it checks |
 |---|---|---|
-| **G6** | Shortcut Consistency | Every canonical rule and mode has corresponding shortcuts for all supported tools (Cursor, Claude Code, Windsurf, GitHub Copilot, Codex). Command-shaped skills validated for Cursor (`.cursor/skills/`), Copilot, and Codex. Skills validated for Cursor, Claude Code, and Codex. |
+| **G6** | Shortcut Consistency | Every canonical rule and mode has corresponding shortcuts for all supported tools (Cursor, Claude Code, Windsurf, GitHub Copilot, Codex). Command-shaped skills validated for Cursor (`.cursor/skills/`), Copilot, and Codex. Skills validated for Cursor, Claude Code, and Codex. For Cursor: all 6 review sub-agent symlinks validated in `.cursor/agents/`. |
 | **G7** | No Content Duplication | No enriched text shortcut exceeds 500 bytes (symlinks are exempt). Aggregated files (`copilot-instructions.md`) must not exceed 1500 bytes. Checked across all shortcut directories including `.codex/commands`, `.agents/skills`, `.cursor/skills`, `.claude/skills`. |
 
 ## Generator behavior
@@ -70,7 +73,7 @@ All 9 modes (`planning`, `dev`, `qa`, `debug`, `review`, `product`, `integration
 
 1. Reads `binding.*` keys from stack profiles.
 2. Resolves stack identity.
-3. Loads canonical mode templates (all from `aias/.canonical/*.mdc`).
+3. Loads canonical mode templates (all from `aias/.canonical/modes/*.mdc`).
 4. Resolves per-mode frontmatter: explicit bindings take priority, then built-in defaults for transversal modes.
 5. Renders conditional blocks (`{{#if ...}}...{{/if}}`).
 6. Replaces placeholders (`{{key}}`).
@@ -95,11 +98,12 @@ All 9 modes (`planning`, `dev`, `qa`, `debug`, `review`, `product`, `integration
 
 1. Collects mode globs from all processed profiles.
 2. For each supported tool, generates shortcuts referencing canonical sources:
-   - **Cursor**: symlink shortcuts (rules, modes, command-shaped skills under `.cursor/skills/`)
+   - **Cursor**: symlink shortcuts (rules, modes, command-shaped skills under `.cursor/skills/`, review sub-agents under `.cursor/agents/` → `aias-config/subagents/`)
    - **Claude Code**: `.md` with optional `paths:` frontmatter → path reference (rules, modes, skills)
    - **Windsurf**: plain `.md` → path reference (always-apply rules only)
    - **GitHub Copilot**: aggregated `copilot-instructions.md`, `.instructions.md` with `applyTo:`, agents
    - **Codex**: `.md` → path reference (commands in `.codex/commands/`, skills in `.agents/skills/`)
+3. Syncs sub-agents from `aias/.canonical/subagents/` to `aias-config/subagents/` (always, not just with `--shortcuts`). Emits notice to review `git diff aias-config/subagents/` after regeneration.
 
 Shortcut content is always canonical-reference only (symlink or short path-reference text) — never duplicated content.
 

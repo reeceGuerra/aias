@@ -147,16 +147,22 @@ python3 aias/.canonical/generation/aias_cli.py health
 | 10 | Referenced files | All `resource_files` paths exist | Legacy paths (`aias-providers/`) | Missing `resource_files` key or missing files |
 | 10b | Sections (`<type>`) | All mandatory sections present | TOC cross-reference inconsistency | Missing mandatory sections |
 | 11 | Tasks directory | `binding.generation.tasks_dir` present and directory exists | Directory does not exist yet | Binding missing |
-| 12 | Sub-agent presence (Cursor) | All 6 canonical sub-agents present in `.cursor/agents/` | — | Missing one or more sub-agents |
-| 12b | Sub-agent integrity (Cursor) | All present sub-agents have required frontmatter (`readonly`, `is_background`, `name`) | — | Missing required frontmatter field(s) |
+| 12 | Sub-agent config (Cursor) | All 6 sub-agents present in `aias-config/subagents/` | — | Missing one or more project-owned copies |
+| 12b | Sub-agent shortcuts (Cursor) | All 6 symlinks present in `.cursor/agents/` pointing to `aias-config/subagents/` | Legacy symlinks to old framework location | Missing or legacy symlinks |
+| 12c | Sub-agent integrity (Cursor) | All present sub-agents have required frontmatter (`readonly`, `is_background`, `name`) | — | Missing required frontmatter field(s) |
 | 13 | Stale `.cursor/commands/` | Directory absent or empty | Directory exists with content (includes `rm` guidance) | — |
 | 14 | Legacy command shortcuts | No shortcuts pointing to retired `aias/.commands/` | Shortcuts still pointing to retired location | — |
 
 Each check reports a specific corrective action message (not a generic "Run aias init").
 
-#### Sub-agent checks (checks 12–12b, Cursor only)
+#### Sub-agent checks (checks 12–12c, Cursor only)
 
-These checks run when `cursor` is the configured tool. They verify that the six canonical sub-agents (`aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, `aias-reflector`) are present in `.cursor/agents/` and have the required frontmatter invariants (`readonly: true`, `is_background: false`, `name`). If sub-agents are missing or broken, re-run `generate --shortcuts` to recreate their symlinks.
+These checks run when `cursor` is the configured tool. They validate the three-tier sub-agent chain:
+- **Check 12** — `aias-config/subagents/*.md` (project-owned copies) exist. If missing, run `aias init` or `aias generate --shortcuts`.
+- **Check 12b** — `.cursor/agents/*.md` symlinks exist and point to `aias-config/subagents/`. Legacy symlinks pointing to `aias/.cursor/agents/` or `aias/.canonical/subagents/` emit a `[LEGACY]` warning; re-run `aias generate --shortcuts` to update targets.
+- **Check 12c** — All resolved sub-agent files have required frontmatter invariants (`readonly: true`, `is_background: false`, `name`).
+
+The six sub-agents are: `aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, `aias-reflector`.
 
 #### Legacy detection and repair
 

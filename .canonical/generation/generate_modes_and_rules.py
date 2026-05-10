@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-Maintenance-time generator for canonical mode, rule, and shortcut files.
+Maintenance-time generator for canonical mode, rule, subagent, and shortcut files.
 
 Inputs:
-- aias/.canonical/*.mdc (mode templates)
-- aias/.canonical/base-rule.md (canonical base rule)
-- aias/.canonical/output-contract.md (canonical output contract)
+- aias/.canonical/modes/*.mdc (mode templates)
+- aias/.canonical/rules/base-rule.md (canonical base rule)
+- aias/.canonical/rules/output-contract.md (canonical output contract)
+- aias/.canonical/rules/continuous-improvement.mdc (transversal rule)
+- aias/.canonical/subagents/*.md (framework canonical sub-agent definitions)
 - <repo_root>/stack-fragment.md (build system integration — one per repo)
-- aias/.canonical/delivery.mdc, devops.mdc (transversal mode templates — rendered with defaults or stack-profile bindings)
+- aias/.canonical/modes/delivery.mdc, devops.mdc (transversal mode templates — rendered with defaults or stack-profile bindings)
 - <repo_root>/stack-profile.md (one per repo)
 
 Outputs (canonical — always produced):
 - aias-config/modes/*.mdc (generated platform modes)
 - aias-config/rules/base.mdc, output-contract.mdc (flat, from last workspace processed)
+- aias-config/subagents/*.md (project-owned sub-agent copies; regenerable, customizable)
 
 Outputs (shortcuts — only with --shortcuts flag):
 - .cursor/rules/*.mdc (rules + modes)
@@ -54,9 +57,13 @@ class Paths:
     """Resolved filesystem paths. Reconfigurable via init_paths() for testing."""
     root = _DEFAULT_ROOT
     canonical_dir = _DEFAULT_ROOT / "aias" / ".canonical"
+    canonical_rules_dir = _DEFAULT_ROOT / "aias" / ".canonical" / "rules"
+    canonical_modes_dir = _DEFAULT_ROOT / "aias" / ".canonical" / "modes"
+    canonical_subagents_dir = _DEFAULT_ROOT / "aias" / ".canonical" / "subagents"
     stack_fragment = _DEFAULT_ROOT / "stack-fragment.md"
     rules_output = _DEFAULT_ROOT / "aias-config" / "rules"
     modes_output = _DEFAULT_ROOT / "aias-config" / "modes"
+    subagents_output = _DEFAULT_ROOT / "aias-config" / "subagents"
     fw_skills = _DEFAULT_ROOT / "aias" / ".skills"
     project_skills = _DEFAULT_ROOT / "aias-config" / "skills"
 
@@ -65,14 +72,26 @@ def init_paths(root: pathlib.Path) -> None:
     """Reconfigure all paths for a different root. Used by tests."""
     Paths.root = root
     Paths.canonical_dir = root / "aias" / ".canonical"
+    Paths.canonical_rules_dir = root / "aias" / ".canonical" / "rules"
+    Paths.canonical_modes_dir = root / "aias" / ".canonical" / "modes"
+    Paths.canonical_subagents_dir = root / "aias" / ".canonical" / "subagents"
     Paths.stack_fragment = root / "stack-fragment.md"
     Paths.rules_output = root / "aias-config" / "rules"
     Paths.modes_output = root / "aias-config" / "modes"
+    Paths.subagents_output = root / "aias-config" / "subagents"
     Paths.fw_skills = root / "aias" / ".skills"
     Paths.project_skills = root / "aias-config" / "skills"
 
 MODE_NAMES = ("planning", "dev", "qa", "debug", "review", "product", "integration", "delivery", "devops")
 TRANSVERSAL_RULES = ("continuous-improvement",)
+REVIEW_SUBAGENTS = (
+    "aias-correctness-reviewer.md",
+    "aias-quality-reviewer.md",
+    "aias-architecture-reviewer.md",
+    "aias-test-auditor.md",
+    "aias-security-auditor.md",
+    "aias-reflector.md",
+)
 
 # NOTE: This dictionary is a documentation reference only.
 # At generation time, {{globs_yaml}} is resolved from binding.mode.<mode>.globs
@@ -230,14 +249,14 @@ def _gate_0_infrastructure() -> List[str]:
     """G0: Verify templates, stack-fragment.md, and canonical mode templates exist."""
     errors: List[str] = []
 
-    base_tpl = Paths.canonical_dir / "base-rule.md"
+    base_tpl = Paths.canonical_rules_dir / "base-rule.md"
     if not base_tpl.is_file():
         errors.append(
             f"[G0] Missing canonical base rule: {base_tpl.relative_to(Paths.root)}\n"
             f"      → Create it following aias/contracts/readme-base-rule.md"
         )
 
-    oc_tpl = Paths.canonical_dir / "output-contract.md"
+    oc_tpl = Paths.canonical_rules_dir / "output-contract.md"
     if not oc_tpl.is_file():
         errors.append(
             f"[G0] Missing canonical output contract: {oc_tpl.relative_to(Paths.root)}\n"
@@ -251,11 +270,11 @@ def _gate_0_infrastructure() -> List[str]:
         )
 
     for mode_name in MODE_NAMES:
-        mode_path = Paths.canonical_dir / f"{mode_name}.mdc"
+        mode_path = Paths.canonical_modes_dir / f"{mode_name}.mdc"
         if not mode_path.is_file():
             errors.append(
                 f"[G0] Missing canonical mode template: {mode_path.relative_to(Paths.root)}\n"
-                f"      → Create the template for mode '{mode_name}'"
+                f"      → Create the template for mode '{mode_name}' under aias/.canonical/modes/"
             )
 
     if base_tpl.is_file():
@@ -596,6 +615,12 @@ def _gate_6_shortcut_consistency(generated_modes: List[str], tools: List[str]) -
                 if "codex" in tools:
                     _check_shortcut_exists(Paths.root / ".agents" / "skills" / sname / "SKILL.md", f"Codex skill: {sname}", errors)
 
+    # G6 for review sub-agents: .cursor/agents/ symlinks must point to aias-config/subagents/
+    if "cursor" in tools:
+        agents_dir = Paths.root / ".cursor" / "agents"
+        for name in REVIEW_SUBAGENTS:
+            _check_shortcut_exists(agents_dir / name, f"Cursor sub-agent: {name}", errors)
+
     return errors
 
 
@@ -794,7 +819,7 @@ def generate_modes_for_profile(
     generated_mode_names: List[str] = []
 
     for mode in MODE_NAMES:
-        canonical_path = Paths.canonical_dir / f"{mode}.mdc"
+        canonical_path = Paths.canonical_modes_dir / f"{mode}.mdc"
         template = canonical_path.read_text(encoding="utf-8")
 
         context = {}
@@ -942,7 +967,7 @@ def generate_base_rule(
     ws_id: str,
     shared_prefix: Optional[str],
 ) -> pathlib.Path:
-    template = extract_template_content(Paths.canonical_dir / "base-rule.md")
+    template = extract_template_content(Paths.canonical_rules_dir / "base-rule.md")
 
     required_keys = (
         "description",
@@ -986,7 +1011,7 @@ def generate_output_contract(
     ws_id: str,
     shared_prefix: Optional[str],
 ) -> pathlib.Path:
-    template = extract_template_content(Paths.canonical_dir / "output-contract.md")
+    template = extract_template_content(Paths.canonical_rules_dir / "output-contract.md")
 
     context: Dict[str, str] = {}
     context["description"] = "Output contract: complete file contents + reasoning"
@@ -1141,6 +1166,15 @@ def _generate_cursor_shortcuts(generated_modes: List[str]) -> int:
     # Command-shaped skills (advisory/operative) are projected into .cursor/skills/
     # via _generate_skill_shortcuts, which handles all skill categories uniformly.
     # Cursor consumes skills from .cursor/skills/; .cursor/commands/ is retired for Cursor.
+
+    # Sub-agent shortcuts: .cursor/agents/ → aias-config/subagents/
+    agents_dir = Paths.root / ".cursor" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+    for name in REVIEW_SUBAGENTS:
+        src = Paths.subagents_output / name
+        if src.is_file():
+            _create_symlink(agents_dir / name, src)
+            count += 1
 
     return count
 
@@ -1350,6 +1384,30 @@ def _generate_skill_shortcuts(tools: List[str]) -> Tuple[int, int]:
 
 
 # ---------------------------------------------------------------------------
+# Subagent sync
+# ---------------------------------------------------------------------------
+
+
+def _sync_subagents() -> int:
+    """Copy sub-agent files from aias/.canonical/subagents/ to aias-config/subagents/.
+
+    Returns the number of files written. Overwrites existing files — the adopter
+    should review git diff before committing. aias-config/subagents/ is a
+    project-owned generated surface, customizable between framework updates.
+    """
+    Paths.subagents_output.mkdir(parents=True, exist_ok=True)
+    written = 0
+    for name in REVIEW_SUBAGENTS:
+        src = Paths.canonical_subagents_dir / name
+        if not src.is_file():
+            continue
+        dst = Paths.subagents_output / name
+        dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        written += 1
+    return written
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1404,17 +1462,23 @@ def main() -> int:
         all_mode_names = mode_names
         rule_workspaces.extend(generate_rules_for_profile(profile, bindings))
 
-    # --- Transversal rules: copy from .canonical/ to .rules/ ---
+    # --- Transversal rules: copy from .canonical/rules/ to aias-config/rules/ ---
     Paths.rules_output.mkdir(parents=True, exist_ok=True)
     for tr in TRANSVERSAL_RULES:
-        src = Paths.canonical_dir / f"{tr}.mdc"
+        src = Paths.canonical_rules_dir / f"{tr}.mdc"
         if src.is_file():
             dst = Paths.rules_output / f"{tr}.mdc"
             dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
 
+    # --- Subagents: copy from .canonical/subagents/ to aias-config/subagents/ ---
+    synced_subagents = _sync_subagents()
+
     print(f"\nMode generation completed for stacks: {', '.join(mode_stacks)} ({len(MODE_NAMES)} modes).")
     print(f"Rule generation completed for workspaces: {', '.join(rule_workspaces)}.")
-    print(f"Canonical output: aias-config/rules/ (flat), aias-config/modes/ (flat)")
+    print(f"Subagent sync: {synced_subagents} file(s) written to aias-config/subagents/")
+    if synced_subagents:
+        print(f"  → Review 'git diff aias-config/subagents/' before committing.")
+    print(f"Canonical output: aias-config/rules/ (flat), aias-config/modes/ (flat), aias-config/subagents/ (project-owned)")
     if RULE_GENERATION_SKIP:
         print(f"Skipped (manual-maintenance): {', '.join(sorted(RULE_GENERATION_SKIP))}.")
 

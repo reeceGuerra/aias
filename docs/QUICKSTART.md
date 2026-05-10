@@ -46,6 +46,8 @@ If your project was set up with v8.x, update the `aias/` submodule and then:
 
 Key changes in v9.0: Custom commands migrated to command-shaped skills — new custom work must use `aias-config/skills/<name>/SKILL.md` (not `aias-config/commands/`). Multi-agent review added: run `aias init` or `aias health` to create sub-agent symlinks under `.cursor/agents/`. If upgrading from v8.0–v8.9, migrate historical Plan Classification labels to current values: `minor|standard|critical` in all `status.md` `classification` fields.
 
+**Upgrading to v9.2:** Canonical sources reorganized into `aias/.canonical/rules/`, `aias/.canonical/modes/`, and `aias/.canonical/subagents/`. Sub-agents are now a project-owned generated surface at `aias-config/subagents/`. Run `aias generate --shortcuts` to regenerate sub-agent copies and refresh `.cursor/agents/` symlinks. Review `git diff aias-config/subagents/` before committing.
+
 ---
 
 ### Upgrading from v7.5

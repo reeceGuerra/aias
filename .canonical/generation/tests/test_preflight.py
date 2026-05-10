@@ -48,12 +48,12 @@ class TestGate0Infrastructure(_PreflightTestBase):
         self.assertEqual(errors, [])
 
     def test_missing_base_rule(self):
-        (self.root / "aias" / ".canonical" / "base-rule.md").unlink()
+        (self.root / "aias" / ".canonical" / "rules" / "base-rule.md").unlink()
         errors = gen._gate_0_infrastructure()
         self.assertTrue(any("[G0]" in e and "base rule" in e for e in errors))
 
     def test_missing_output_contract(self):
-        (self.root / "aias" / ".canonical" / "output-contract.md").unlink()
+        (self.root / "aias" / ".canonical" / "rules" / "output-contract.md").unlink()
         errors = gen._gate_0_infrastructure()
         self.assertTrue(any("[G0]" in e and "output contract" in e for e in errors))
 
@@ -63,18 +63,18 @@ class TestGate0Infrastructure(_PreflightTestBase):
         self.assertTrue(any("[G0]" in e and "fragment" in e.lower() for e in errors))
 
     def test_missing_one_mode_template(self):
-        (self.root / "aias" / ".canonical" / "planning.mdc").unlink()
+        (self.root / "aias" / ".canonical" / "modes" / "planning.mdc").unlink()
         errors = gen._gate_0_infrastructure()
         self.assertTrue(any("[G0]" in e and "planning" in e for e in errors))
 
     def test_base_rule_no_markdown_block(self):
-        br = self.root / "aias" / ".canonical" / "base-rule.md"
+        br = self.root / "aias" / ".canonical" / "rules" / "base-rule.md"
         br.write_text("# No code block here\nJust text.\n", encoding="utf-8")
         errors = gen._gate_0_infrastructure()
         self.assertTrue(any("[G0]" in e and "markdown" in e.lower() for e in errors))
 
     def test_output_contract_no_markdown_block(self):
-        oc = self.root / "aias" / ".canonical" / "output-contract.md"
+        oc = self.root / "aias" / ".canonical" / "rules" / "output-contract.md"
         oc.write_text("# No code block\nJust text.\n", encoding="utf-8")
         errors = gen._gate_0_infrastructure()
         self.assertTrue(any("[G0]" in e and "markdown" in e.lower() for e in errors))
@@ -397,7 +397,7 @@ class TestPreflightValidation(_PreflightTestBase):
         self.assertEqual(errors, [], f"Unexpected errors: {errors}")
 
     def test_accumulates_multiple_errors(self):
-        (self.root / "aias" / ".canonical" / "base-rule.md").unlink()
+        (self.root / "aias" / ".canonical" / "rules" / "base-rule.md").unlink()
         (self.root / "stack-fragment.md").unlink()
         errors = gen.preflight_validation(self._profiles())
         g0_errors = [e for e in errors if "[G0]" in e]

@@ -34,17 +34,19 @@ class _PostflightTestBase(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def _generate_canonical_outputs(self):
-        """Generate canonical mode/rule files so shortcuts can reference them."""
+        """Generate canonical mode/rule/subagent files so shortcuts can reference them."""
         profile = self.root / "stack-profile.md"
         bindings = gen.load_bindings(profile)
         self.bindings = bindings
         self.stack_id, self.mode_names = gen.generate_modes_for_profile(profile, bindings)
         gen.generate_rules_for_profile(profile, bindings)
         for tr in gen.TRANSVERSAL_RULES:
-            src = gen.Paths.canonical_dir / f"{tr}.mdc"
+            src = gen.Paths.canonical_rules_dir / f"{tr}.mdc"
             if src.is_file():
                 dst = gen.Paths.rules_output / f"{tr}.mdc"
                 dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        # Sync subagents to aias-config/subagents/ so shortcuts can be created
+        gen._sync_subagents()
 
 
 # ---------------------------------------------------------------------------
