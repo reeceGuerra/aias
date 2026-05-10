@@ -269,6 +269,7 @@ tracker_status: PENDING DOR
 completed_steps: [investigate]
 current_step: analyze
 refinement_validated: null
+rhoaias_update: null
 published: null
 completed: null
 artifacts:
@@ -403,6 +404,74 @@ command_log:
     ended_at: 2026-02-10T10:14:20Z
 ```
 
+### After `/publish` (Bugfix closure)
+
+```
+<resolved_tasks_dir>/MAX-67890/
+├── status.md
+├── report.issue.md
+├── analysis.fix.md
+├── feasibility.assessment.md
+├── technical.plan.md
+├── increments.plan.md
+├── dor.plan.md
+├── dod.plan.md
+└── delta.publish.md
+```
+
+```yaml
+# status.md
+profile: bugfix
+classification: minor
+task_id: MAX-67890
+started: 2026-01-22
+status: completed
+tracker_status: IN REVIEW
+completed_steps: [investigate, analyze, assess, blueprint, validate, implement, commit, pr, report, closure]
+current_step: null
+refinement_validated: null
+rhoaias_update: null
+published: 2026-02-12
+completed: 2026-02-12
+artifacts:
+  report.issue.md: synced
+  analysis.fix.md: synced
+  feasibility.assessment.md: synced
+  technical.plan.md: synced
+  increments.plan.md: synced
+  dor.plan.md: synced
+  dod.plan.md: synced
+  delta.publish.md: synced
+command_log:
+  - command: /issue
+    started_at: 2026-02-10T09:00:00Z
+    ended_at: 2026-02-10T09:08:45Z
+  - command: /fix
+    started_at: 2026-02-10T09:15:00Z
+    ended_at: 2026-02-10T09:28:30Z
+  - command: /assessment
+    started_at: 2026-02-10T09:30:00Z
+    ended_at: 2026-02-10T09:38:15Z
+  - command: /blueprint
+    started_at: 2026-02-10T10:00:00Z
+    ended_at: 2026-02-10T10:14:20Z
+  - command: /implement
+    started_at: 2026-02-10T10:30:00Z
+    ended_at: 2026-02-10T11:22:48Z
+  - command: /commit
+    started_at: 2026-02-10T11:23:10Z
+    ended_at: 2026-02-10T11:24:40Z
+  - command: /pr
+    started_at: 2026-02-10T11:25:00Z
+    ended_at: 2026-02-10T11:30:11Z
+  - command: /report
+    started_at: 2026-02-10T11:32:00Z
+    ended_at: 2026-02-10T11:35:54Z
+  - command: /publish
+    started_at: 2026-02-12T09:00:00Z
+    ended_at: 2026-02-12T09:04:36Z
+```
+
 ---
 
 ## Refactor Flow: Directory State Evolution
@@ -428,13 +497,13 @@ tracker_status: TO DO
 completed_steps: [refinement]
 current_step: blueprint
 refinement_validated: true
+rhoaias_update: null
 published: null
 completed: null
 artifacts:
   analysis.product.md: synced
   dor.plan.md: synced
   dod.plan.md: synced
-  delta.publish.md: synced
 command_log:
   - command: /enrich
     started_at: 2026-02-15T10:00:00Z
@@ -482,6 +551,64 @@ command_log:
     ended_at: 2026-02-15T10:41:50Z
 ```
 
+### After `/publish` (Refactor closure)
+
+```
+<resolved_tasks_dir>/MAX-11111/
+├── status.md
+├── analysis.product.md
+├── dor.plan.md
+├── dod.plan.md
+├── technical.plan.md
+├── increments.plan.md
+└── delta.publish.md
+```
+
+```yaml
+# status.md
+profile: refactor
+classification: minor
+task_id: MAX-11111
+started: 2026-01-23
+status: completed
+tracker_status: IN REVIEW
+completed_steps: [refinement, blueprint, validate, implement, commit, pr, closure]
+current_step: null
+refinement_validated: true
+rhoaias_update: null
+published: 2026-02-20
+completed: 2026-02-20
+artifacts:
+  analysis.product.md: synced
+  dor.plan.md: synced
+  dod.plan.md: synced
+  technical.plan.md: synced
+  increments.plan.md: synced
+  delta.publish.md: synced
+command_log:
+  - command: /enrich
+    started_at: 2026-02-15T10:00:00Z
+    ended_at: 2026-02-15T10:06:22Z
+  - command: /blueprint
+    started_at: 2026-02-15T10:30:00Z
+    ended_at: 2026-02-15T10:41:50Z
+  - command: /validate-plan
+    started_at: 2026-02-15T10:45:00Z
+    ended_at: 2026-02-15T10:49:33Z
+  - command: /implement
+    started_at: 2026-02-15T11:10:00Z
+    ended_at: 2026-02-15T12:01:27Z
+  - command: /commit
+    started_at: 2026-02-15T12:03:00Z
+    ended_at: 2026-02-15T12:04:18Z
+  - command: /pr
+    started_at: 2026-02-15T12:05:00Z
+    ended_at: 2026-02-15T12:09:55Z
+  - command: /publish
+    started_at: 2026-02-20T08:40:00Z
+    ended_at: 2026-02-20T08:44:12Z
+```
+
 ---
 
 ## Enrichment Flow: Directory State Evolution
@@ -507,6 +634,7 @@ tracker_status: TO DO
 completed_steps: [refinement]
 current_step: closure
 refinement_validated: true
+rhoaias_update: null
 published: null
 completed: null
 artifacts:
@@ -532,12 +660,13 @@ tracker_status: TO DO
 completed_steps: [refinement, closure]
 current_step: null
 refinement_validated: true
-published: 2026-01-24
-completed: 2026-01-24
+published: 2026-03-01
+completed: 2026-03-01
 artifacts:
   analysis.product.md: synced
   dor.plan.md: synced
   dod.plan.md: synced
+  delta.publish.md: synced
 command_log:
   - command: /enrich
     started_at: 2026-03-01T11:00:00Z
@@ -570,6 +699,7 @@ tracker_status: PENDING DOR
 completed_steps: [charter]
 current_step: closure
 refinement_validated: null
+rhoaias_update: null
 published: null
 completed: null
 artifacts:
@@ -593,8 +723,8 @@ tracker_status: PENDING DOR
 completed_steps: [charter, closure]
 current_step: null
 refinement_validated: null
-published: 2026-01-25
-completed: 2026-01-25
+published: 2026-03-05
+completed: 2026-03-05
 artifacts:
   delivery.charter.md: synced
   delta.publish.md: synced
@@ -620,6 +750,21 @@ artifacts:
   analysis.product.md: synced     # published successfully
   dor.plan.md: synced             # published successfully
   dod.plan.md: synced             # published successfully
+```
+
+### Step 1b: `/blueprint` runs without tracker ticket (P1 fails)
+
+Phase 5c is skipped because no tracker ticket exists for the task.
+
+```yaml
+task_id: null
+artifacts:
+  analysis.product.md: created
+  dor.plan.md: created
+  dod.plan.md: created
+  technical.plan.md: created
+  increments.plan.md: created
+  specs.design.md: created
 ```
 
 ### Step 2: `/blueprint` completes, knowledge provider is unavailable

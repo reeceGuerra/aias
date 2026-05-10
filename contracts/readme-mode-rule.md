@@ -28,6 +28,8 @@ A **mode rule** is a Cursor rule file (`.mdc` format) that defines **task-specif
 - **Behavior-focused** — Defines *how to think* and *what to do*, not output structure (that's handled by workspace `output-contract.mdc`)
 - **One mode per chat** — Each chat session uses exactly one mode. Modes are never mixed in the same chat. Handoffs between modes happen across chats via artifact files
 
+Note: the "one mode per chat" rule is intentionally anchored in `base-rule.md` (`alwaysApply: true`) and is not repeated in individual mode templates.
+
 ### Output Format Responsibility
 
 **Important:** Output format and structure are defined by the workspace's `output-contract.mdc` file (always applied). Mode rules focus on **behavior and thinking**, not output formatting. Only define output format in a mode if it needs to specify raw data collection for commands (e.g., unstructured data that commands will later structure).

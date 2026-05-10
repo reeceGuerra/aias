@@ -124,7 +124,7 @@ This guide provides a structured path for adopting Rho AIAS incrementally. You d
 ### Full workflow (bugfix)
 
 ```
-@qa + /issue → @qa + /trace → @debug + /fix → /assessment → @planning + /blueprint → @dev + /implement → /commit → /pr → /publish
+@qa + /issue → @qa + /trace → @debug + /fix → /assessment → @planning + /blueprint → @dev + /implement → /commit → /pr → /report → /publish
 ```
 
 ---

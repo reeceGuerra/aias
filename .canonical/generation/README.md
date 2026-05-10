@@ -194,10 +194,10 @@ When onboarding a new repo:
 - [x] `xctemplates-dev` rules are untouched by the generator.
 
 ### Shortcuts (with `--shortcuts`)
-- [x] Cursor: rules, modes, commands, skills shortcuts generated.
+- [x] Cursor: rules, modes, command-shaped skills, skills shortcuts generated.
 - [x] Claude Code: rules, modes, skills shortcuts generated (with `paths:` for modes).
 - [x] Windsurf: always-apply rules only (no modes).
-- [x] GitHub Copilot: aggregated rules, modes with `applyTo:`, agents for commands.
+- [x] GitHub Copilot: aggregated rules, modes with `applyTo:`, agents for command-shaped skills.
 - [x] Codex: commands, skills shortcuts generated.
 - [x] No enriched text shortcut exceeds 500 bytes; aggregated files do not exceed 1500 bytes (symlinks are exempt).
 - [x] Gemini: no shortcuts (context only via `GEMINI.md`).

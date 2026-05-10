@@ -436,7 +436,7 @@ Task artifacts go through a lifecycle tracked by `status.md` in the task directo
 | Status | Meaning | Entered when |
 |---|---|---|
 | `pending_dor` | Artifacts being created | Task directory created |
-| `ready` | Refinement complete, DoR/DoD published | Manual team transition during refinement (after `/enrich --brief` posts the brief comment) |
+| `ready` | Refinement complete, DoR/DoD published | Manual team transition during refinement |
 | `in_progress` | Planning or implementation underway | `/blueprint` starts (Phase 0) |
 | `in_review` | PR created | `/pr` creates pull request |
 | `completed` | All artifacts published | `/publish` completes |

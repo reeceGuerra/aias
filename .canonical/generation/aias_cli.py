@@ -797,7 +797,7 @@ def new_context() -> None:
 
         - **Rules**: `aias-config/rules/` — Generated behavioral rules (always-apply and output contracts)
         - **Modes**: `aias-config/modes/` — Generated task-specific modes (planning, dev, QA, debug, review, product, integration)
-        - **Skills**: `aias/.skills/` (framework) + `aias-config/skills/` (project) — All skills including advisory/operative (commands)
+        - **Skills**: `aias/.skills/` (framework) + `aias-config/skills/` (project) — All skills including advisory/operative command-shaped skills
         - **Providers**: `aias-config/providers/` — Provider configuration files
 
         > This file is the single source of truth for project context. Tool-specific context files (e.g., `AGENTS.md`) are symlinks to this file, scoped by the tools selected in `stack-profile.md`.

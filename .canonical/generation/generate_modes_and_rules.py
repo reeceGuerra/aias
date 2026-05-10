@@ -1076,7 +1076,7 @@ def _collect_mode_globs(
 
 
 def _generate_cursor_shortcuts(generated_modes: List[str]) -> int:
-    """Generate .cursor/ symlinks for rules, modes, and commands.
+    """Generate .cursor/ symlinks for rules, modes, and command-shaped skills.
 
     All Cursor shortcuts are filesystem symlinks to canonical sources.
     Behavioral change: mode symlinks inherit `globs` from canonical .mdc,

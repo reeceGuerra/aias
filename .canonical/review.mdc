@@ -50,7 +50,7 @@ REVIEW DELIVERABLES
 5) Positive notes.
 
 <!-- Conditional blocks -->
-MCP ENRICHMENT
+CONTEXT ENRICHMENT
 - If a PR identifier exists, resolve VCS provider via `aias-config/providers/vcs-config.md` for diff context.
 - If VCS service config is missing, invalid, or points to an unresolvable provider, abort review enrichment and request provider configuration before continuing.
 - If TASK_DIR exists, SHOULD load local plan artifacts (`dod.plan.md`, `increments.plan.md`, `technical.plan.md`) as review context.

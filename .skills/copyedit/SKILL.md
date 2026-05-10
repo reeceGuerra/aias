@@ -184,9 +184,9 @@ This command must **NOT**:
 ## 8. STATUS UPDATE (Phase 5)
 
 When invoked as part of a tracked workflow (TASK_DIR is set):
-- Update `current_step` to the next expected step per the active profile.
-- If the edited file is a tracked artifact in TASK_DIR, mark it `modified` in the `artifacts` map.
-- Append to `command_log`: {command: /copyedit, started_at: <UTC>, ended_at: <UTC>}
+- MUST NOT modify `completed_steps` or `current_step` — `/copyedit` is position-neutral and does not advance workflow steps.
+- If the edited file is a tracked artifact in TASK_DIR, MUST mark it `modified` in the `artifacts` map.
+- MUST append to `command_log`: {command: /copyedit, started_at: <UTC>, ended_at: <UTC>}
 
 When invoked standalone (no TASK_DIR), no status update is required.
 

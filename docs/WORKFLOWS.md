@@ -1,6 +1,6 @@
 # Workflows — End-to-End Guide
 
-This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **current** architecture with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, and separated refinement/planning phases.
+This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **current** architecture (v9.0+) with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, and separated refinement/planning phases.
 
 ---
 
@@ -634,7 +634,7 @@ The `command_log` field is an append-only list recording each command execution 
 | Status | Meaning | Entered when |
 |--------|---------|-------------|
 | `pending_dor` | Artifacts being created, not ready for implementation | Task directory created |
-| `ready` | Refinement complete, DoR/DoD published | Manual team action during refinement (after `/enrich` delivers artifacts and optional brief) |
+| `ready` | Refinement complete, DoR/DoD published | Manual team transition during refinement |
 | `in_progress` | Planning or implementation underway | `/blueprint` starts (Phase 0) |
 | `in_review` | PR created, awaiting feedback or approval | `/pr` creates PR |
 | `completed` | All artifacts published, task archived | `/publish` completes |

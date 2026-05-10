@@ -23,7 +23,7 @@ It is the reference against which advisory and operative skills are designed, re
 Commands in this system are:
 - Deterministic
 - Procedural or formatting-oriented
-- Designed to work reliably in a **two-message workflow**
+- Designed to work reliably with the **Structured Prompt** contract and a **two-message workflow**
 
 Commands **do not**:
 - Perform deep reasoning
@@ -31,7 +31,7 @@ Commands **do not**:
 - Invent information
 - Act autonomously without explicit input
 
-When reasoning is required, it happens **before** the command, using a mode (`@planning`, `@qa`, etc.).
+The Structured Prompt is the primary invocation surface for command execution. When reasoning is required, it happens **before** the command, using a mode (`@planning`, `@qa`, etc.).
 
 ### Controlled Resolution Exception
 
