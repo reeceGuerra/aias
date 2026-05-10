@@ -13,7 +13,6 @@ Generate committed mode and rule files for:
 
 **Shortcuts** (Phase 5, with `--shortcuts` flag):
 - `.cursor/rules/*.mdc` — Rules + modes for Cursor
-- `.cursor/commands/*.md` — Commands for Cursor
 - `.cursor/skills/<name>/SKILL.md` — Skills for Cursor
 - `.claude/rules/*.md` — Rules + modes for Claude Code (with `paths:` for modes)
 - `.claude/skills/<name>/SKILL.md` — Skills for Claude Code
@@ -58,7 +57,7 @@ Post-flight gates are **fatal**: if any G6/G7 check fails, the generator exits w
 
 | Gate | Name | What it checks |
 |---|---|---|
-| **G6** | Shortcut Consistency | Every canonical rule and mode has corresponding shortcuts for all supported tools (Cursor, Claude Code, Windsurf, GitHub Copilot, Codex). Commands validated for Cursor, Copilot, and Codex. Skills validated for Cursor, Claude Code, and Codex. |
+| **G6** | Shortcut Consistency | Every canonical rule and mode has corresponding shortcuts for all supported tools (Cursor, Claude Code, Windsurf, GitHub Copilot, Codex). Command-shaped skills validated for Cursor (`.cursor/skills/`), Copilot, and Codex. Skills validated for Cursor, Claude Code, and Codex. |
 | **G7** | No Content Duplication | No enriched text shortcut exceeds 500 bytes (symlinks are exempt). Aggregated files (`copilot-instructions.md`) must not exceed 1500 bytes. Checked across all shortcut directories including `.codex/commands`, `.agents/skills`, `.cursor/skills`, `.claude/skills`. |
 
 ## Generator behavior

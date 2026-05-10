@@ -8,7 +8,7 @@ This document offers non-normative guidance on managing the accumulation of publ
 
 ## Why Think About Knowledge Provider Retention?
 
-Phase 5c publishes artifacts unconditionally after every command execution. Over the lifecycle of a project, published content accumulates: superseded plans, outdated DoR/DoD checklists, stale analysis, intermediate review artifacts. Without periodic review:
+Phase 5c publishes artifacts when a valid tracker ticket exists (P1-P3 preconditions; see rho-aias SKILL.md § Phase 5c) — regardless of Plan Classification. Over the lifecycle of a project, published content accumulates: superseded plans, outdated DoR/DoD checklists, stale analysis, intermediate review artifacts. Without periodic review:
 
 - **Search degrades.** Knowledge provider search results become noisy with outdated content, making it harder for team members to find what is currently relevant.
 - **Onboarding suffers.** New team members navigating the knowledge base encounter historical artifacts without clear signals about which content reflects the current system state.

@@ -554,7 +554,7 @@ def migrate_commands() -> None:
 
     For each .md file found in PROJECT_COMMANDS_DIR, creates a corresponding
     aias-config/skills/<name>/SKILL.md with an advisory or operative frontmatter
-    and the original content. Does not touch framework commands (aias/.commands/).
+    and the original content. Does not touch framework command-shaped skills (aias/.skills/).
     """
     if not PROJECT_COMMANDS_DIR.is_dir():
         print("No aias-config/commands/ directory found. Nothing to migrate.")

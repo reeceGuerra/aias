@@ -181,20 +181,31 @@ This command must **NOT**:
 
 ---
 
-## 8. Self-Verification Checklist
+## 8. STATUS UPDATE (Phase 5)
+
+When invoked as part of a tracked workflow (TASK_DIR is set):
+- Update `current_step` to the next expected step per the active profile.
+- If the edited file is a tracked artifact in TASK_DIR, mark it `modified` in the `artifacts` map.
+- Append to `command_log`: {command: /copyedit, started_at: <UTC>, ended_at: <UTC>}
+
+When invoked standalone (no TASK_DIR), no status update is required.
+
+---
+
+## 9. Self-Verification Checklist
 
 - [ ] Target document edits were applied as requested and limited to approved scope.
 - [ ] No out-of-scope files were modified.
 - [ ] `status.md` / `command_log` updates were written when required by workflow.
 - [ ] Terminal state line was emitted with canonical state token.
 
-## 9. Halt Discipline
+## 10. Halt Discipline
 
 - Pause only at declared gates/preconditions/blockers.
 - Do not pause ad-hoc between deterministic edit steps.
 - If blocked, report exact blocker and required resume input.
 
-## Terminal State Emission
+## 11. Terminal State Emission
 
 `[STATE: completed | partial | blocked | failed]` + one-line summary is mandatory.
 

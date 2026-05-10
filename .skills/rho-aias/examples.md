@@ -22,7 +22,7 @@ profile: feature
 classification: null
 task_id: MAX-12345
 started: 2026-01-20
-status: ready
+status: pending_dor
 tracker_status: TO DO
 completed_steps: [refinement]
 current_step: blueprint
@@ -420,7 +420,7 @@ profile: refactor
 classification: null
 task_id: MAX-11111
 started: 2026-01-23
-status: ready
+status: pending_dor
 tracker_status: TO DO
 completed_steps: [refinement]
 current_step: blueprint
@@ -498,7 +498,7 @@ profile: enrichment
 classification: null
 task_id: MAX-22222
 started: 2026-01-24
-status: ready
+status: pending_dor
 tracker_status: TO DO
 completed_steps: [refinement]
 current_step: closure

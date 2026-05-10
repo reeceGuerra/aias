@@ -1,6 +1,6 @@
 # Workflows — End-to-End Guide
 
-This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **v8.0** architecture with unified task directories, Plan Classification, tracker sync, unconditional knowledge-provider publishing, and separated refinement/planning phases.
+This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **v9.0** architecture with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, and separated refinement/planning phases.
 
 ---
 
@@ -67,7 +67,7 @@ flowchart TD
     Gaps -->|Yes| Consolidate["/consolidate-plan"] --> Validate
     Gaps -->|No| Dev["@dev<br/>/implement"]
     Dev --> Commit["/commit"]
-    Commit --> SelfReview["@review<br/>/self-review<br/>(sub-agents always run)"]
+    Commit --> SelfReview["@review<br/>/self-review<br/>(optional; recommended for Standard/Critical plans)"]
     SelfReview --> PR["/pr<br/>in_progress → in_review"]
     PR --> Publish["/publish<br/>reconcile + close"]
     Publish --> Done["Task archived"]
@@ -120,7 +120,7 @@ TASK: Analyze with product frameworks (JTBD, 5 Whys, User Journey, MoSCoW).
 - Product analysis (JTBD, 5 Whys, User Journey, MoSCoW) → Gap Summary → Enhanced content
 - `analysis.product.md`, `dor.plan.md`, `dod.plan.md` written to `<resolved_tasks_dir>/<TASK_ID>/`
 - DoR Readiness Check gate with blocking/non-blocking classification
-- All artifacts published to knowledge provider (Phase 5c unconditional)
+- All artifacts published to knowledge provider (Phase 5c — tracker-gated, classification-independent)
 - With `--brief`: enrichment brief posted as Jira comment (team context for refinement)
 - With `--fields`: structured fields written to tracker after confirmation (Description, AC, Test Steps)
 - No tracker status transition (`pending_dor → ready` is manual)
@@ -634,7 +634,7 @@ The `command_log` field is an append-only list recording each command execution 
 | Status | Meaning | Entered when |
 |--------|---------|-------------|
 | `pending_dor` | Artifacts being created, not ready for implementation | Task directory created |
-| `ready` | Refinement complete, DoR/DoD published | `/enrich` publishes successfully |
+| `ready` | Refinement complete, DoR/DoD published | Manual team action during refinement (after `/enrich` delivers artifacts and optional brief) |
 | `in_progress` | Planning or implementation underway | `/blueprint` starts (Phase 0) |
 | `in_review` | PR created, awaiting feedback or approval | `/pr` creates PR |
 | `completed` | All artifacts published, task archived | `/publish` completes |
@@ -664,9 +664,9 @@ Gates fire at `/commit` (once, skippable → `deferred`) and `/pr` (once, skippa
 
 ---
 
-## Progressive Knowledge Sync (Unconditional)
+## Progressive Knowledge Sync (Tracker-Gated)
 
-Artifacts are synced to the resolved knowledge provider progressively via Phase 5c of the rho-aias skill loading protocol. **Phase 5c is unconditional** — it always publishes regardless of Plan Classification.
+Artifacts are synced to the resolved knowledge provider progressively via Phase 5c of the rho-aias skill loading protocol. **Phase 5c fires when a valid tracker ticket exists for TASK_ID (P1-P3 preconditions; see rho-aias SKILL.md § Phase 5c)** — it publishes regardless of Plan Classification.
 
 **Publishing hierarchy:** provider-defined hierarchy under `<TASK_ID>`, resolved from `aias-config/providers/knowledge-config.md` and the active provider binding.
 
@@ -801,7 +801,7 @@ For the complete artifact catalog (suffixes, producers, and descriptions), see `
 → `@product` + `/enrich` (DoR/DoD + publish) → `@planning` + `/blueprint` → `/validate-plan` → `@dev` + `/implement` → `/commit` → `/pr` → `/publish`
 
 **Found a bug?**
-→ `@qa` + `/issue` → `@debug` + `/fix` → `/assessment` → `@planning` + `/blueprint` (bug exception: derives DoR/DoD, `pending_dor` → `in_progress`) → `/validate-plan` → `@dev` + `/implement` → `/report` → `/commit` → `/pr` → `/publish`
+→ `@qa` + `/issue` → `@debug` + `/fix` → `/assessment` → `@planning` + `/blueprint` (bug exception: derives DoR/DoD, `pending_dor` → `in_progress`) → `/validate-plan` → `@dev` + `/implement` → `/commit` → `/pr` → `/report` → `/publish`
 
 **Refactoring code?**
 → `@product` + `/enrich` (DoR/DoD refactor template + publish) → `@planning` + `/blueprint` → `/validate-plan` → `@dev` + `/implement` → `/commit` → `/pr` → `/publish`

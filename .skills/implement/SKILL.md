@@ -411,6 +411,12 @@ IMPLEMENTATION SUMMARY:
   - /publish to archive artifacts via knowledge provider (when ready)
 ```
 
+STATUS UPDATE (Phase 5, when TASK_DIR is set — on full plan completion):
+- Add `implement` to `completed_steps`.
+- Set `current_step` to `commit`.
+- Append to `command_log`: {command: /implement, started_at: <UTC>, ended_at: <UTC>}
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see rho-aias skill § Phase 5c). If preconditions are not met, skip silently.
+
 SERVICE RESOLUTION PSEUDOFLOW:
 
 ```

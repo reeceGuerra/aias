@@ -204,7 +204,7 @@ The following signals indicate that `RHOAIAS.md` MAY need updating:
 ### Update governance
 
 - `RHOAIAS.md` MUST NOT be modified without human approval. All automated flows (blueprint detection, health warnings, refresh-context proposals) operate through gates — the framework informs and proposes, the human decides.
-- The `rhoaias_update` field in `status.md` tracks freshness state per task. See `reference.md` § `status.md` Format for the field definition and valid states.
+- The `rhoaias_update` field in `status.md` tracks freshness state per task. See `aias/.skills/rho-aias/reference.md` § `status.md` Format for the field definition and valid states.
 - Tasks that bypass `/blueprint` (ad-hoc `/implement`) do not activate the in-workflow freshness flow. This is a known limitation — ad-hoc work is outside the governed workflow.
 - `/publish` records the `rhoaias_update` outcome in `delta.publish.md` as a `RHOAIAS.md Context Sync` section. This makes deltas the **primary explicit source** for `/aias refresh-context` when a knowledge provider is available — the command searches deltas with `deferred` or `skipped` status to identify tasks that impacted project context but did not update `RHOAIAS.md`. Deltas published before this feature (without the section) are ignored by `refresh-context`.
 

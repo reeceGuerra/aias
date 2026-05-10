@@ -193,6 +193,26 @@ CONTEXT: Ticket only says "Add export button to reports".
 TASK: Analyze with product frameworks. When done, execute /enrich.
 ```
 
+**Refactoring with a plan:**
+```
+MODE: @planning
+TASK ID: MAX-13200
+TASK DIR: MAX-13200
+PROFILE: refactor
+CONTEXT: Extracting the authentication layer into a standalone module.
+TASK: Analyze the refactor scope. When done, execute /blueprint.
+```
+
+**Delivery assessment:**
+```
+MODE: @delivery
+TASK ID: MAX-13300
+TASK DIR: MAX-13300
+PROFILE: delivery
+CONTEXT: Evaluating readiness for the Q2 search feature release.
+TASK: Assess the plan and produce a charter.
+```
+
 **Quick code review:**
 ```
 MODE: @review

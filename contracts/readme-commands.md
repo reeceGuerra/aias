@@ -1,4 +1,4 @@
-# Cursor Commands – Behavior Contract for Advisory and Operative Skills (v6.2)
+# Cursor Commands – Behavior Contract for Advisory and Operative Skills (v6.3)
 
 > **Keyword convention**: This contract defines and uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY). See section "RFC-2119 Keyword Policy" below for definitions.
 

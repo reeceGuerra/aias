@@ -65,7 +65,7 @@ This guide provides a structured path for adopting Rho AIAS incrementally. You d
 - **Refinement workflow:** `/enrich` produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md` — Definition of Ready and Done before planning.
 - **Plan validation:** `/validate-plan` audits your plan against DoR/DoD and flags gaps.
 - **Tracker sync:** Status transitions fire automatically for planning and review phases (`ready` → `in_progress` → `in_review`). The `pending_dor → ready` transition is manual (team responsibility during refinement).
-- **Knowledge publishing:** Phase 5c publishes artifacts to Confluence after every command.
+- **Knowledge publishing:** Phase 5c publishes artifacts when a valid tracker ticket exists (tracker-gated, classification-independent; see rho-aias SKILL.md § Phase 5c).
 - **Code review:** `/self-review` and `/peer-review` provide structured review analysis.
 - **Pull requests:** `/pr` creates PRs with plan delta sections.
 

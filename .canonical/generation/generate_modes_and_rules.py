@@ -16,7 +16,6 @@ Outputs (canonical — always produced):
 
 Outputs (shortcuts — only with --shortcuts flag):
 - .cursor/rules/*.mdc (rules + modes)
-- .cursor/commands/*.md (commands)
 - .cursor/skills/<name>/SKILL.md (skills)
 - .claude/rules/*.md (rules + modes with paths:)
 - .claude/skills/<name>/SKILL.md (skills)

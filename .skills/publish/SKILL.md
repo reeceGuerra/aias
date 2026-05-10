@@ -206,7 +206,7 @@ Follow the **rho-aias** skill loading protocol to resolve TASK_DIR and load all 
 - Append to `command_log`: `{command: /publish, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - No further Phase 5c sync needed (already done in Step 1).
 
-### Phase 6 — Tracker Boundary (No Transition)
+### TRACKER BOUNDARY (No Transition)
 
 `/publish` does NOT trigger a tracker status transition. It only posts an optional closure comment through the resolved tracker provider. Final transition to `DONE` remains Product's responsibility.
 

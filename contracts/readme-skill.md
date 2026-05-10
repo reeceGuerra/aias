@@ -553,7 +553,7 @@ All 21 AIAS canonical commands (Advisory + Operative) are now shipped as directo
 **Migration invariants:**
 - All 21 command files preserve their behavioral content 1:1; migration adds frontmatter only
 - `disable-model-invocation: true` is MANDATORY for all 21 migrated skills
-- Shortcut generation (`aias generate --shortcuts`) reads command-shaped skills by inspecting `disable-model-invocation: true` in frontmatter and projects them into `.<tool>/commands/` directories per tool (not `.<tool>/skills/` — preserving the invocation UX)
+- Shortcut generation (`aias generate --shortcuts`) reads command-shaped skills by inspecting `disable-model-invocation: true` in frontmatter and projects them into tool-specific directories per the tool adapter contract: Cursor → `.cursor/skills/<name>/SKILL.md`, Claude → `.claude/skills/<name>/SKILL.md`, Codex → `.codex/commands/<name>.md`, Copilot → `.github/instructions/<name>.instructions.md`
 - Custom project commands (`aias-config/commands/`) MUST be migrated to `aias-config/skills/<name>/SKILL.md` via `aias new --migrate-commands`
 
 **`aias new --command` deprecation:**

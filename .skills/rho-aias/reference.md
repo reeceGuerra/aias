@@ -42,6 +42,8 @@ Each mode declares which artifacts it **requires** (must be present) and which a
 | `@integration` | `*.plan.md` | — |
 | `@devops` | — | `*.plan.md` |
 
+> **Note on `@devops` activation globs:** `@devops` also activates on `*.yml` and `*.yaml` files (CI/CD file pattern triggers). These are activation-only globs — they do not introduce new artifact types beyond `*.plan.md`.
+
 If a mode is activated and TASK_DIR is set, run Phases 0–3 of the skill loading protocol automatically. If TASK_DIR is not set, proceed normally without artifact context.
 
 ---
@@ -91,8 +93,11 @@ Each task follows one of five profiles. The profile determines which steps are e
 | consolidate | Chat Planning | `@planning` | `/consolidate-plan` (if gaps) | plan artifacts (updated) | — |
 | implement | Chat Dev | `@dev` | `/implement` | — (code changes) | — |
 | commit | Chat Dev | `@dev` | `/commit` | — | — |
+| self-review* | Chat Review | `@review` | `/self-review` | — | — |
 | pr | Chat Dev | `@dev` | `/pr` | — (PR created) | `in_progress` → `in_review` |
 | closure | (any) | (any) | `/publish` or `/report` | `delta.publish.md` | — |
+
+> \* Optional step; recommended for Standard and Critical plans.
 
 ### `bugfix` — Bug investigation and fix
 
@@ -204,6 +209,7 @@ The `rhoaias_update` field tracks whether `RHOAIAS.md` needs updating for the cu
 | `required` | `/blueprint` | Impact detected — RHOAIAS.md should be updated before PR |
 | `deferred` | `/commit` gate | User acknowledged the need but chose to continue; silent in subsequent commits |
 | `done` | Auto-detected by `/commit` or `/pr` | RHOAIAS.md was modified (present in `git status` or `git diff`) |
+| `skipped` | `/pr` gate | User consciously chose not to update |
 
 ### Nested Context Discovery (v1.1)
 
@@ -215,7 +221,6 @@ When repositories provide nested `RHOAIAS.md` files, commands resolve context by
 4. Keep root-only sections (for example `Rho AIAS Integration`) from root baseline.
 
 This preserves local specificity without duplicating full context in every subdirectory.
-| `skipped` | `/pr` gate | User consciously chose not to update |
 
 **Backward compatibility:** If the field is absent in an existing `status.md`, all commands MUST treat it as `null`. This field is not relevant to tracker sync and does not require an entry in `readme-tracker-field-mapping.md`.
 
@@ -466,11 +471,11 @@ TASK: /assessment
 
 Provider-specific hierarchy derivation is owned by the resolved provider adapter (not by this skill protocol contract). Repeating hierarchy nodes and artifact pages MUST use provider-safe, scope-aware titles to avoid namespace collisions at the provider level (for example, task-scoped artifact titles prefixed with `<TASK_ID>`) — the exact format is defined by the resolved provider adapter.
 
-### Progressive sync (Phase 5c) — Unconditional
+### Progressive sync (Phase 5c) — Conditional (tracker-gated)
 
-Phase 5c is **unconditional** — knowledge sync fires after every command execution regardless of Plan Classification.
+Phase 5c fires when a valid tracker ticket exists for TASK_ID (P1-P3 preconditions; see rho-aias SKILL.md § Phase 5c). It fires regardless of Plan Classification — the tracker-ticket check is the only prerequisite.
 
-After every command execution:
+After verifying P1-P3 preconditions are met:
 
 1. Resolve knowledge provider from `aias-config/providers/knowledge-config.md`:
    - Validate active provider, skill binding, provider enablement, and capability compatibility.

@@ -282,7 +282,21 @@ Saved artifacts to: <absolute_path>/
 ### Status Update (Phase 5)
 
 After writing local artifacts:
-1. Create TASK_DIR and `status.md` if they do not exist (profile: infer from context, default `feature`; if only enrichment is planned, use `enrichment`).
+1. Create TASK_DIR and `status.md` if they do not exist. Bootstrap all mandatory fields with initial values:
+   - `profile`: inferred from context (default: `feature`; if enrichment-only: `enrichment`)
+   - `classification: null`
+   - `task_id`: from invocation context
+   - `started`: today's date (UTC)
+   - `status: pending_dor`
+   - `tracker_status: null` (or from tracker if already available)
+   - `completed_steps: []`
+   - `current_step: refinement`
+   - `refinement_validated: null`
+   - `rhoaias_update: null`
+   - `published: null`
+   - `completed: null`
+   - `artifacts: {}`
+   - `command_log: []`
 2. Add `analysis.product.md`, `dor.plan.md`, and `dod.plan.md` to `artifacts` map with status `created` or `modified`.
 3. Add `refinement` to `completed_steps`. Set `current_step` based on the profile: if `enrichment` → `closure`; otherwise → `blueprint`.
 4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config.

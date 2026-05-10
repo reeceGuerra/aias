@@ -122,7 +122,7 @@ If this section is absent, the agent MUST NOT inject any TOC element.
 
 ### Phase 5c Integration
 
-Publishing to the resolved knowledge provider is triggered by Phase 5c of the rho-aias skill loading protocol. Phase 5c is **unconditional** — it always publishes regardless of Plan Classification. Every artifact-producing command that writes to TASK_DIR MUST sync non-synced artifacts to the knowledge provider at Phase 5c. The publishing config defined in this contract governs how and where those artifacts are placed in the provider's hierarchy.
+Publishing to the resolved knowledge provider is triggered by Phase 5c of the rho-aias skill loading protocol. Phase 5c fires when a valid tracker ticket exists for TASK_ID (P1-P3 preconditions; see rho-aias skill § Phase 5c). It publishes regardless of Plan Classification — the tracker-ticket check is the only prerequisite. Every artifact-producing command that writes to TASK_DIR MUST sync non-synced artifacts to the knowledge provider at Phase 5c when preconditions are met. The publishing config defined in this contract governs how and where those artifacts are placed in the provider's hierarchy.
 
 ---
 

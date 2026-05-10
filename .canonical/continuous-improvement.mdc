@@ -5,7 +5,7 @@ alwaysApply: true
 
 CONTINUOUS IMPROVEMENT
 
-When the user provides feedback, corrections, suggestions, or expresses preferences during an interaction, evaluate whether existing rules, modes, or commands should be refined.
+When the user provides feedback, corrections, suggestions, or expresses preferences during an interaction, evaluate whether existing rules, modes, advisory/operative skills (slash commands), contracts, or project context should be refined.
 
 PROCESS
 1. MUST identify the feedback or learning opportunity from the interaction.

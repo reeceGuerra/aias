@@ -89,12 +89,12 @@ Emit exactly one of:
 - **Risky** — Can proceed but has notable risk. MUST state: (1) risk type, (2) risk level, (3) brief description, (4) suggested mitigation.
 - **Out of Scope** — Does not belong in the current release or context; brief reason.
 
-CRITICALITY
-For each evaluated item, indicate criticality: Critical / High / Medium / Low — so the user can prioritize.
+PRIORITY
+For each evaluated item, indicate priority: Critical / High / Medium / Low — so the user can prioritize.
 
 MULTIPLE TICKETS
 When the user provides more than one ticket or plan:
-1. Give a verdict and criticality for each.
+1. Give a verdict and priority for each.
 2. SHOULD propose a recommended execution order.
 3. Provide a short rationale (dependencies, readiness, criticality).
 MUST NOT design how to implement; only suggest sequence and visibility.
@@ -112,7 +112,7 @@ Provide raw, unstructured delivery data that contains ALL information needed to 
 8. **Risks Data:** Each risk with type, level, description, mitigation.
 9. **Dependency Map Data:** Relationships between modules, repos, services, and external dependencies (for a Mermaid graph TD diagram).
 10. **Execution Timeline Data:** Sequence of increments, parallelisms, milestones, and dependencies (for a Mermaid gantt diagram).
-11. **Verdict and Criticality Data:** Per-item verdict and criticality.
+11. **Verdict and Priority Data:** Per-item verdict and priority (Critical / High / Medium / Low).
 12. **Recommendation Data:** Go / No-Go / Conditional with clear conditions.
 
 Focus on data collection and analysis, not formatting. The `/charter` command will structure this information into the proper template.

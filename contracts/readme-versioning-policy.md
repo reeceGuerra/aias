@@ -46,15 +46,16 @@ When a contract has no prior version history, it SHOULD be initialized at **v1.0
 |---|---|
 | `readme-artifact.md` | v2.0 |
 | `readme-base-rule.md` | v1.0 |
-| `readme-commands.md` | v6.0 |
+| `readme-commands.md` | v6.3 |
 | `readme-knowledge-publishing-config.md` | v1.0 |
-| `readme-mode-rule.md` | v1.0 |
+| `readme-mode-rule.md` | v1.1 |
+| `readme-multi-agent-review.md` | v1.1 |
 | `readme-output-contract.md` | v1.0 |
-| `readme-project-context.md` | v1.0 |
+| `readme-project-context.md` | v1.1 |
 | `readme-provider-config.md` | v2.1 |
-| `readme-skill.md` | v1.1 |
+| `readme-skill.md` | v1.3 |
 | `readme-stack-profile.md` | v1.2 |
-| `readme-tool-adapter.md` | v1.0 |
+| `readme-tool-adapter.md` | v1.1 |
 | `readme-tracker-field-mapping.md` | v1.0 |
 | `readme-tracker-status-mapping.md` | v1.0 |
 | `readme-versioning-policy.md` | v1.2 |

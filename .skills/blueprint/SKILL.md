@@ -131,6 +131,16 @@ Artifacts written to: <absolute_path_to_TASK_DIR>/
 RHOAIAS.md impact: <detected (reason) | none | skipped (placeholders/missing)>
 ```
 
+### Status Update (Phase 5)
+
+After writing artifacts:
+1. Update `status.md`: add each artifact to the `artifacts` map with status `created` (new) or `modified` (overwrite).
+2. **Assign Plan Classification**: set `classification` in `status.md` to `minor`, `standard`, or `critical` based on scope, impact, and complexity. See `SKILL.md` Plan Classification for criteria.
+3. **RHOAIAS Impact Analysis**: evaluate whether the planned work will require a `RHOAIAS.md` update. See § RHOAIAS Impact Analysis below.
+4. Add `blueprint` to `completed_steps`, set `current_step` to `validate`.
+5. Append to `command_log`: `{command: /blueprint, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
+6. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. When the bug exception generated `dor.plan.md` and `dod.plan.md`, Phase 5c publishes them automatically alongside `technical.plan.md` and `increments.plan.md` when preconditions are met. After each successful publish, inject TOC per resolved provider config.
+
 ### TRACKER SYNC (Phase 6 — on start)
 
 - When `task_id` in `status.md` is valid for the resolved tracker provider AND DoR/DoD are verified (exist or bug exception applies):
@@ -142,16 +152,6 @@ RHOAIAS.md impact: <detected (reason) | none | skipped (placeholders/missing)>
   4. If config is missing, invalid, or unresolvable: abort sync and request provider configuration.
   5. Report transition result in chat (include which transition path was used).
 - If tracker transition fails, report the error but do not block planning (planning data is still valuable).
-
-### Status Update (Phase 5)
-
-After writing artifacts:
-1. Update `status.md`: add each artifact to the `artifacts` map with status `created` (new) or `modified` (overwrite).
-2. **Assign Plan Classification**: set `classification` in `status.md` to `minor`, `standard`, or `critical` based on scope, impact, and complexity. See `SKILL.md` Plan Classification for criteria.
-3. **RHOAIAS Impact Analysis**: evaluate whether the planned work will require a `RHOAIAS.md` update. See § RHOAIAS Impact Analysis below.
-4. Add `blueprint` to `completed_steps`, set `current_step` to `validate`.
-5. Append to `command_log`: `{command: /blueprint, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
-6. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. When the bug exception generated `dor.plan.md` and `dod.plan.md`, Phase 5c publishes them automatically alongside `technical.plan.md` and `increments.plan.md` when preconditions are met. After each successful publish, inject TOC per resolved provider config.
 
 ### RHOAIAS Impact Analysis
 
@@ -169,9 +169,8 @@ After assigning classification, determine whether the task will affect `RHOAIAS.
 
 Report the result in the End-of-Response Confirmation.
 
-#### Gate: RHOAIAS Onboarding Incomplete
+#### Advisory Notice: RHOAIAS Onboarding Incomplete
 
-**Type:** Advisory
 **Fires:** When `RHOAIAS.md` exists but contains unfilled placeholders.
 **Skippable:** Yes (informational only, does not block planning).
 

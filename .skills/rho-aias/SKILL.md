@@ -25,7 +25,7 @@ Use this skill when:
 - **Syncing with tracker** — `/enrich`, `/blueprint`, `/pr`, `/commit` (Phase 6)
 - **Reasoning about task state** — any mode that loads from `<resolved_tasks_dir>/<TASK_ID>/` (default: `~/.cursor/plans/`)
 
-Commands that reference this skill: `/aias`, `/blueprint`, `/charter`, `/commit`, `/consolidate-plan`, `/enrich`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
+Commands that reference this skill: `/aias`, `/assessment`, `/blueprint`, `/charter`, `/commit`, `/consolidate-plan`, `/copyedit`, `/enrich`, `/explain`, `/fix`, `/guide`, `/handoff`, `/implement`, `/issue`, `/peer-review`, `/pr`, `/publish`, `/report`, `/self-review`, `/trace`, `/validate-plan`.
 
 ---
 
@@ -235,7 +235,7 @@ Phase 5 — STATUS UPDATE + ARTIFACT TRACKING + KNOWLEDGE SYNC
   5d. Completion check
 
 Phase 6 — TRACKER SYNC
-  Triggered only by: /enrich, /blueprint, /pr, /commit
+  Triggered only by: /blueprint, /pr, /commit
   Resolve provider from aias-config/providers/tracker-config.md.
   Validate service_category, active_provider, provider enabled flag,
   skill binding, and capability compatibility.
