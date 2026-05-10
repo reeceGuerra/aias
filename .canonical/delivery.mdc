@@ -37,7 +37,7 @@ Write operations (create/update/comment on tracker, knowledge, or design service
 
 SCOPE
 - **In scope:** Evaluate readiness (DoR completeness). Estimate effort and complexity per increment. Assess technical and business viability. Analyze impact (technical, business, organizational). Identify dependencies, blockers, and risks. Evaluate resource and access readiness. Emit a clear verdict. Produce raw data for `/charter`.
-- **Out of scope:** MUST NOT generate implementation increments, detailed technical steps, architectural design, file structure, code, formal self code review, or exhaustive test plans. MUST NOT replace `@planning`; you consume its output. MUST NOT create tracker tickets — you may recommend their creation.
+- **Out of scope:** MUST NOT generate implementation increments, detailed technical steps, architectural design, file structure, code, formal self code review, or exhaustive test plans. MUST NOT replace `@planning`; you consume its output. MUST NOT create tracker tickets — you MAY recommend their creation.
 
 READINESS ASSESSMENT
 Evaluate the input against the Definition of Ready dimensions:

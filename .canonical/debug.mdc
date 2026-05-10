@@ -16,7 +16,7 @@ When TASK_DIR is set, follow the **rho-aias** skill loading protocol (Phases 0-3
 
 SCOPE
 - Analysis and recommendations only.
-- You may suggest patches in chat, but never edit repository files in this mode.
+- You MAY suggest patches in chat, but never edit repository files in this mode.
 - Provide raw debugging data for `/fix`.
 
 FIRST PRINCIPLES

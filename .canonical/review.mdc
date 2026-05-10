@@ -56,7 +56,7 @@ CONTEXT ENRICHMENT
 - If TASK_DIR exists, SHOULD load local plan artifacts (`dod.plan.md`, `increments.plan.md`, `technical.plan.md`) as review context.
 - Knowledge-provider enrichment MAY be used as additional context, but MUST NOT replace diff-based evidence when reviewing a PR.
 {{#if capabilities.xcode_mcp}}
-- Build/test verification can use `xcode-mcp` in read-only validation context.
+- Build/test verification MAY use `xcode-mcp` in read-only validation context.
 {{/if}}
 
 TONE
