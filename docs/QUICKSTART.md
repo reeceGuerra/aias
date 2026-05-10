@@ -36,6 +36,18 @@ This guides you through creating `RHOAIAS.md`, `stack-profile.md`, `stack-fragme
 
 If the project is already set up, skip to **Core Concepts** below.
 
+### Upgrading from v8.x
+
+If your project was set up with v8.x, update the `aias/` submodule and then:
+
+1. Run `python3 aias/.canonical/generation/aias_cli.py generate --shortcuts` — regenerates shortcuts including new `.cursor/skills/` paths.
+2. Run `python3 aias/.canonical/generation/aias_cli.py health` — detects legacy command shortcuts and `aias-config/commands/` entries.
+3. Run `/aias health` in your AI assistant for interactive migration of any legacy shortcut targets.
+
+Key changes in v9.0: Custom commands migrated to command-shaped skills — new custom work must use `aias-config/skills/<name>/SKILL.md` (not `aias-config/commands/`). Multi-agent review added: run `aias init` or `aias health` to create sub-agent symlinks under `.cursor/agents/`. If upgrading from v8.0–v8.9: Plan Classification A/B/C → Minor/Standard/Critical in all `status.md` `classification` fields.
+
+---
+
 ### Upgrading from v7.5
 
 If your project was set up with v7.5 or earlier, update the `aias/` submodule and then:

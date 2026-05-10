@@ -12,7 +12,7 @@ version: 1.0.0
 
 **Command Type:** Operative — Procedural / Execution
 
-You are **reconciling and formally closing** a task by performing a full sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is the **reconciliation + closure** command. Progressive publishing happens automatically during command execution via Phase 5c (unconditional). `/publish` exists as the final step to reconcile any artifacts that were not published during the workflow (e.g., DoR/DoD locally amended via the Amendment gate) and to formally close the task lifecycle with a delta and completion summary.
+You are **reconciling and formally closing** a task by performing a full sync of all artifacts to the configured knowledge provider, generating a Plan Delta artifact/page, marking the task as completed, and posting a closure comment through the configured tracker provider when available. This is the **reconciliation + closure** command. Progressive publishing happens automatically as a tracker-gated side effect of other commands (Phase 5c). `/publish` is the explicit closure step that publishes all remaining artifacts regardless — covering cases where Phase 5c was skipped (e.g., no tracker ticket) or artifacts were locally amended after publication — and formally closes the task lifecycle with a delta and completion summary.
 
 **Skills referenced:** `rho-aias`.
 
@@ -27,7 +27,7 @@ Invocation:
 Usage notes:
 - This command is **mode-agnostic** — it can be invoked from any mode or chat session.
 - It is intended to be used **after** implementation, PR creation, and any review cycles are complete.
-- It is the standard closure step for all plan classifications. Since Phase 5c now publishes unconditionally, `/publish` reconciles any remaining unpublished artifacts (e.g., locally-amended DoR/DoD) and generates the delta for traceability.
+- It is the standard closure step for all plan classifications. Since Phase 5c is tracker-gated and may have been skipped when no tracker ticket was available, `/publish` explicitly reconciles any remaining unpublished artifacts (e.g., locally-amended DoR/DoD, or artifacts from tracker-less workflows) and generates the delta for traceability.
 - Safe to run multiple times — all operations are idempotent.
 - Does NOT transition tracker status to DONE (that is Product's responsibility).
 

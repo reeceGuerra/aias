@@ -70,7 +70,7 @@ Rules:
 
 ## 5. Content Rules (Semantics)
 
-- Output MUST be in **Spanish** for explanations and **English** for technical terms, artifact names, command names, and status values.
+- Output MUST be in the project's configured conversation language for explanations and **English** for technical terms, artifact names, command names, and status values.
 - Present information in execution order (what to do first, second, etc.).
 - For profile subcommands (`feature`, `bugfix`, `refactor`, `enrichment`, `delivery`): present the step table from `reference.md` (with Mode/Chat columns) with practical guidance on when and how to invoke each command.
 - For `commands`: build the table dynamically from the skill's command references.
