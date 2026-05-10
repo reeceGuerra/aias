@@ -84,7 +84,7 @@ FILE OUTPUT CONTRACT (must follow)
 STATUS UPDATE (Phase 5)
 - Add `delivery.charter.md` to the `artifacts` map in `status.md` with status `created` or `modified`.
 - Add `charter` to `completed_steps`, set `current_step` to `closure`.
-- **Classification escalation**: if the charter's assessment reveals higher impact than the current classification (e.g., cross-team dependencies, broader org impact), escalate the classification in `status.md` (minor→standard or standard→critical). MUST NOT downgrade. Report escalation in chat.
+- **Classification escalation**: if the charter's assessment reveals higher impact than the current classification (e.g., cross-team dependencies, broader org impact), escalate the classification in `status.md` (minor→standard or standard→critical). MUST NOT downgrade. If `classification` is `null`, do not assign an initial value from `/charter`; keep `null` unless another command already set a base classification. Report escalation in chat.
 - Append to `command_log`: `{command: /charter, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
 - Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config.
 

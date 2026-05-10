@@ -528,7 +528,7 @@ tracker_status: TO DO
 completed_steps: [refinement, closure]
 current_step: null
 refinement_validated: true
-published: null
+published: 2026-01-24
 completed: 2026-01-24
 artifacts:
   analysis.product.md: synced

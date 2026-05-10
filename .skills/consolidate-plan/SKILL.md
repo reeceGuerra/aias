@@ -61,7 +61,7 @@ Rules:
 
 ## 5. Content Rules (Semantics)
 
-- Output may be in **English** or **Spanish** depending on the user's language in the conversation.
+- Output must be in **English**.
 - Do **not** invent gaps or changes; only work with persisted validation todos and the user's feedback.
 - Proposals must be **concrete**: specify which artifact(s) (e.g. `dor.plan.md`, `increments.plan.md`) and what text or structure to add or change.
 - Do **not** update artifacts until the user explicitly instructs to do so.

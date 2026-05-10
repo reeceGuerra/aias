@@ -32,7 +32,7 @@ LANGUAGE
     - Test names and descriptions
 
 COMMANDS AND SKILLS
-- When the user invokes a slash command, follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
+- When the user invokes a slash command, follow the command definition strictly. Commands (as advisory/operative skills) are loaded from `aias/.skills/` or `aias-config/skills/` — they are NOT rules. Do not search rule directories for commands.
 - When a mode or command references a skill by name (e.g., "use the **atlassian-mcp** skill"), follow the skill definition. Skills are loaded from `aias/.skills/` or `aias-config/skills/`.
 - Never execute a command or skill from memory. Always follow the loaded definition.
 - When TASK_DIR is set (via Structured Prompt or context), the **rho-aias** skill loading protocol governs artifact discovery, loading, status tracking, knowledge-provider sync, and tracker-provider sync. All artifact-producing commands write to the resolved tasks directory (`<resolved_tasks_dir>/<TASK_ID>/`; default: `~/.cursor/plans/`).

@@ -24,14 +24,14 @@ For tracker transitions, the active provider must also expose a valid `status_ma
 | Surface | Category-driven resolution | Failure policy |
 |---|---|---|
 | `aias-config/providers/*.md` | yes | fail-fast contract sections |
-| `aias/.commands/report.md` | yes | abort on missing/invalid tracker config |
-| `aias/.commands/publish.md` | yes | abort on missing/invalid knowledge/tracker config |
-| `aias/.commands/pr.md` | yes | abort on missing/invalid vcs/tracker/knowledge config |
-| `aias/.commands/commit.md` | yes | abort on missing/invalid vcs/tracker config |
-| `aias/.commands/enrich.md` | yes | abort on missing/invalid tracker/knowledge config |
-| `aias/.commands/validate-plan.md` | yes | abort on missing/invalid tracker/knowledge config |
-| `aias/.commands/implement.md` | yes | abort on missing/invalid tracker/knowledge config |
-| `aias/.commands/blueprint.md` | yes | abort on missing/invalid tracker/design/knowledge config |
+| `aias/.skills/report/SKILL.md` | yes | abort on missing/invalid tracker config |
+| `aias/.skills/publish/SKILL.md` | yes | abort on missing/invalid knowledge/tracker config |
+| `aias/.skills/pr/SKILL.md` | yes | abort on missing/invalid vcs/tracker/knowledge config |
+| `aias/.skills/commit/SKILL.md` | yes | abort on missing/invalid vcs/tracker config |
+| `aias/.skills/enrich/SKILL.md` | yes | abort on missing/invalid tracker/knowledge config |
+| `aias/.skills/validate-plan/SKILL.md` | yes | abort on missing/invalid tracker/knowledge config |
+| `aias/.skills/implement/SKILL.md` | yes | abort on missing/invalid tracker/knowledge config |
+| `aias/.skills/blueprint/SKILL.md` | yes | abort on missing/invalid tracker/design/knowledge config |
 | `aias/.canonical/*.mdc` | yes | abort on missing/invalid config |
 | `aias/.canonical/delivery.mdc` | yes | abort on missing/invalid tracker/design config |
 | `aias/.canonical/devops.mdc` | yes | abort on missing/invalid vcs config |

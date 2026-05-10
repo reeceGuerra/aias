@@ -105,7 +105,7 @@ This project uses [Rho AIAS](https://github.com/rho-aias/aias) for AI-assisted d
 
 - **Rules**: `aias-config/rules/` — Generated behavioral rules (always-apply and output contracts)
 - **Modes**: `aias-config/modes/` — Generated task-specific modes (planning, dev, QA, debug, review, product, integration)
-- **Commands**: `aias/.commands/` (framework) + `aias-config/commands/` (project) — Command definitions
+- **Commands**: served as advisory/operative skills from `aias/.skills/` (framework) + `aias-config/skills/` (project)
 - **Skills**: `aias/.skills/` (framework) + `aias-config/skills/` (project) — Reusable operational skills
 - **Providers**: `aias-config/providers/` — Provider configuration files
 

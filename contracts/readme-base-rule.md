@@ -171,7 +171,7 @@ CODE PRESERVATION
 Instructs the agent on how to work with the agentic architecture's commands and skills.
 
 **MUST include:**
-- That slash commands (`/X`) are loaded from `aias/.commands/` (framework) or `aias-config/commands/` (project) and MUST be followed strictly
+- That slash commands (`/X`) are loaded as advisory/operative skills from `aias/.skills/` (framework) or `aias-config/skills/` (project) and MUST be followed strictly
 - That commands are NOT rules — the agent MUST NOT search rule directories for commands
 - That skills referenced by modes/commands are loaded from `aias/.skills/` (framework) or `aias-config/skills/` (project)
 - That the agent MUST NOT execute a command or skill from memory
@@ -179,7 +179,7 @@ Instructs the agent on how to work with the agentic architecture's commands and 
 **Example:**
 ```
 COMMANDS AND SKILLS
-- When the user invokes a slash command (e.g., `/commit`, `/enrich`, `/pr`), follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
+- When the user invokes a slash command (e.g., `/commit`, `/enrich`, `/pr`), follow the command definition strictly. Commands (as advisory/operative skills) are loaded from `aias/.skills/` or `aias-config/skills/` — they are NOT rules. Do not search rule directories for commands.
 - When a mode or command references a skill by name (e.g., "use the **atlassian-mcp** skill"), follow the skill definition. Skills are loaded from `aias/.skills/` or `aias-config/skills/`.
 - Never execute a command or skill from memory. Always follow the loaded definition.
 ```
@@ -312,7 +312,7 @@ LANGUAGE
 - Code, identifiers, filenames, docstrings, and commit messages: English.
 
 COMMANDS AND SKILLS
-- When the user invokes a slash command (e.g., `/commit`, `/enrich`, `/pr`), follow the command definition strictly. Commands are loaded from `aias/.commands/` or `aias-config/commands/` — they are NOT rules. Do not search rule directories for commands.
+- When the user invokes a slash command (e.g., `/commit`, `/enrich`, `/pr`), follow the command definition strictly. Commands (as advisory/operative skills) are loaded from `aias/.skills/` or `aias-config/skills/` — they are NOT rules. Do not search rule directories for commands.
 - When a mode or command references a skill by name (e.g., "use the **atlassian-mcp** skill"), follow the skill definition. Skills are loaded from `aias/.skills/` or `aias-config/skills/`.
 - Never execute a command or skill from memory. Always follow the loaded definition.
 
@@ -518,7 +518,7 @@ The canonical location for generated base rules is `aias-config/rules/base.mdc`.
 
 ### Command and Skill Paths
 
-The COMMANDS AND SKILLS section MUST reference `aias/.commands/` (framework) and `aias-config/commands/` (project) for commands, and `aias/.skills/` (framework) and `aias-config/skills/` (project) for skills. These are the canonical locations; tool-specific paths (e.g., `~/.cursor/commands/`) are resolved by each tool's shortcut layer.
+The COMMANDS AND SKILLS section MUST reference `aias/.skills/` (framework) and `aias-config/skills/` (project) for command-shaped advisory/operative skills and skills. These are the canonical locations; tool-specific paths (e.g., `~/.cursor/commands/`) are resolved by each tool's shortcut layer.
 
 ---
 

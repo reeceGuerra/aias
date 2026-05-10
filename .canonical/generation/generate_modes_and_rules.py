@@ -23,8 +23,8 @@ Outputs (shortcuts — only with --shortcuts flag):
 - .windsurf/rules/*.md (always-apply rules only)
 - .github/copilot-instructions.md (aggregated rules)
 - .github/instructions/*.instructions.md (modes with applyTo:)
-- .github/agents/*.md (commands)
-- .codex/commands/*.md (commands)
+- .github/agents/*.md (command-shaped skills → aias/.skills/<name>/SKILL.md)
+- .codex/commands/*.md (command-shaped skills → aias/.skills/<name>/SKILL.md)
 - .agents/skills/<name>/SKILL.md (skills)
 
 Pre-flight validation:

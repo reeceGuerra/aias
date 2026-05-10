@@ -107,7 +107,7 @@ This creates `aias/.skills/<name>/SKILL.md` (framework) or `aias-config/skills/<
 python3 aias/.canonical/generation/aias_cli.py generate --shortcuts
 ```
 
-> **Migrating existing project custom commands?** Run `aias new --migrate-commands` for an interactive migration from `aias-config/commands/` to `aias-config/skills/`.
+> **Migrating existing project custom commands?** Run `aias new --migrate-commands` for an interactive migration from `aias-config/commands/` to `aias-config/skills/` (`aias-config/commands/` is deprecated since v9.0; all new custom work must use `aias-config/skills/`).
 
 ---
 

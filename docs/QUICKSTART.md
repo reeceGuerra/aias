@@ -44,7 +44,7 @@ If your project was set up with v7.5 or earlier, update the `aias/` submodule an
 2. Run `python3 aias/.canonical/generation/aias_cli.py health` — detects legacy locations.
 3. If legacy warnings appear, run `/aias health` in your AI assistant for interactive migration.
 
-Key changes in v7.6: `aias/` is now read-only. Generated rules/modes moved from `aias/.rules/` and `aias/.modes/` to `aias-config/rules/` and `aias-config/modes/`. Provider configs moved from `aias-providers/` to `aias-config/providers/`. Custom commands and skills go to `aias-config/commands/` and `aias-config/skills/`.
+Key changes in v7.6: `aias/` is now read-only. Generated rules/modes moved from `aias/.rules/` and `aias/.modes/` to `aias-config/rules/` and `aias-config/modes/`. Provider configs moved from `aias-providers/` to `aias-config/providers/`. Historical note: custom commands and skills went to `aias-config/commands/` and `aias-config/skills/` in v7.6; `aias-config/commands/` is deprecated since v9.0 and new custom work must use `aias-config/skills/<name>/SKILL.md`.
 
 ---
 
