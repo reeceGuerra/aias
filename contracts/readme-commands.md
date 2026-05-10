@@ -648,7 +648,7 @@ Minimum governance requirements per classification. These are **non-reducible** 
 
 | Classification | Structural Gates (always) | Pre-Implementation Gate | Inter-Increment Gate | Custom Governance |
 |---|---|---|---|---|
-| **Minor** (Local/Low-Risk) | Understand (Confirmation) | None | None | MUST NOT be present |
+| **Minor** (Local/Low-Risk) | Understand (Confirmation) | None | Feedback after each increment | MUST NOT be present |
 | **Standard** (Medium-Impact) | Understand (Confirmation) | None | Feedback after each increment | MAY be present if risk warrants |
 | **Critical** (Critical/Strategic) | Understand (Confirmation) | Approval before first increment | Feedback after each increment | MUST be present with ≥1 Approval gate |
 
@@ -675,7 +675,7 @@ Minimum governance requirements per classification. These are **non-reducible** 
 
 ```
 Step 1: READ classification from status.md
-  ├── classification = minor → Baseline Minor (no inter-increment gates)
+  ├── classification = minor → Baseline Minor (Feedback after each increment)
   ├── classification = standard → Baseline Standard (Feedback after each increment)
   ├── classification = critical → Baseline Critical (Approval before first + Feedback after each)
   └── classification = null (legacy) → GOTO Step 3

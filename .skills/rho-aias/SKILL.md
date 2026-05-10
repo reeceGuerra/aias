@@ -110,7 +110,7 @@ Classification determines governance gates, not publication. Phase 5c fires only
 
 ### Refinement and Amendment (v8.0)
 
-- **Refinement validated**: `/enrich --brief` sets `refinement_validated: true` in `status.md` when brief comment is posted AND knowledge publish succeeds (team has context for refinement). Without `--brief`, `refinement_validated` is `false`. When `true`, classification-based pre-implementation approval gates MAY be relaxed.
+- **Refinement validated**: `/enrich --brief` sets `refinement_validated: true` in `status.md` when brief comment is posted AND knowledge publish succeeds (team has context for refinement). Without `--brief`, `refinement_validated` is `false`. This flag informs context quality only; it MUST NOT relax classification-derived governance gates.
 - **Amendment Approval**: `/validate-plan` and `/consolidate-plan` include an Amendment gate for DoR/DoD changes discovered during planning (`apply_local`/`pause`/`reject`). `apply_local` modifies locally but does not publish via Phase 5c.
 - **DoR Readiness Check**: `/enrich` includes a DoR Readiness Check gate (blocking/non-blocking classification) before writing DoR/DoD artifacts.
 

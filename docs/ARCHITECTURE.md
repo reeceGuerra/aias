@@ -468,7 +468,7 @@ Plans are classified at creation time by `/blueprint` based on complexity:
 | Standard | Medium, multi-increment | Plan + design |
 | Critical | Large, cross-system | Plan + design + charter |
 
-Classification can be escalated by `/charter` but never downgraded. It is used only for governance (gates in `/implement`), not for publishing decisions. When `refinement_validated: true` in `status.md` (set by `/enrich --brief` when brief comment is posted and knowledge publish succeeds), classification-derived governance gates are relaxed.
+Classification can be escalated by `/charter` but never downgraded. It is used only for governance (gates in `/implement`), not for publishing decisions. When `refinement_validated: true` in `status.md` (set by `/enrich --brief` when brief comment is posted and knowledge publish succeeds), it improves refinement-context confidence but does not relax classification-derived governance gates.
 
 ---
 
