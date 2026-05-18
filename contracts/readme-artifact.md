@@ -1,4 +1,4 @@
-# Artifact Contract — Cursor Configuration System (v2.0)
+# Artifact Contract — Cursor Configuration System (v2.3)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -130,11 +130,18 @@ Other values such as `done`, `finished`, `resolved`, or `in_progress` are not pe
 
 Rho AIAS uses `todos` differently depending on the plan artifact:
 
-- `increments.plan.md` — execution todos, produced by `/blueprint`, consumed and updated by `/implement`
-- `technical.plan.md` — validation todos, produced by `/validate-plan`, consumed and updated by `/consolidate-plan`
-- Other `*.plan.md` artifacts — may use the Cursor-first profile for local compatibility, but MUST NOT invent new todo semantics unless explicitly defined by command and contract updates
+- `increments.plan.md` — execution todos, produced by `/blueprint`, consumed and updated by `/implement`. Todos in `increments.plan.md` do NOT use a `kind` field.
+- `technical.plan.md` — validation and amendment todos (v9.5+). Allowed `kind` values are `validation`, `amendment_dor`, and `amendment_dod` (closed enum; see `aias/.skills/rho-aias/reference.md § Todo kind enum`). Todos are produced by `/validate-plan` (registration only — `validation` from gap detection, `amendment_dor` and `amendment_dod` from the body sections `## Proposed DoR Amendments` and `## Proposed DoD Amendments`); consumed and resolved by `/consolidate-plan`. Backward compatibility: a todo without a `kind` field is treated as `validation`.
+- Other `*.plan.md` artifacts — may use the Cursor-first profile for local compatibility, but MUST NOT invent new todo `kind` values unless explicitly defined by command and contract updates.
 
-`/implement` MUST modify only `increments.plan.md` todos. Validation todos live in `technical.plan.md` and are outside `/implement` scope.
+**Amendment routing invariant (v9.5+, technical.plan.md only):**
+
+- `amendment_dor` todos MUST resolve only against `dor.plan.md`. Resolution by `/consolidate-plan` MUST remove the corresponding bullet from `## Proposed DoR Amendments` in `technical.plan.md` body.
+- `amendment_dod` todos MUST resolve only against `dod.plan.md`. Resolution MUST remove the corresponding bullet from `## Proposed DoD Amendments`.
+- Mixing DoR and DoD amendments inside a single Proposed section is FORBIDDEN.
+- The legacy combined section `## Proposed DoR/DoD Amendments` is FORBIDDEN since v9.5. `/validate-plan` v2.0.0+ hard-fails on detection.
+
+`/implement` MUST modify only `increments.plan.md` todos. Validation and amendment todos live in `technical.plan.md` and are outside `/implement` scope.
 
 #### Structured Prompt naming
 
@@ -156,6 +163,93 @@ For the human-written Structured Prompt, ergonomic aliases without underscores m
 - The artifact catalog is **closed** — new artifact types MUST NOT be invented by agents or commands
 - Adding a new artifact type requires updating `SKILL.md`, `reference.md`, `examples.md`, and this contract
 - Every artifact type MUST have: a unique suffix, a single producer command, and a clear purpose
+
+### Canonical Section Titles (transversal invariant, v2.3)
+
+Producer skills (e.g., `/blueprint`, `/enrich`, `/charter`, `/issue`, `/fix`, `/trace`, `/assessment`, `/report`) may organize their internal data-collection phases under enumerated section headings (e.g., `### Category N: <Title>`, `### Phase N — <Step>`). The enumerated heading shape exists for the **author** of the artifact (the skill body, internal phase organization) — it MUST NOT bleed through into the produced artifact.
+
+The artifact-file canonical heading is `## <Title>` without the `Category N:` / `Phase N:` / `Step N:` prefix. This invariant is transversal: it applies to all artifact-producing skills regardless of how many internal categories or phases they enumerate during data collection.
+
+#### Canonical headings per artifact type
+
+| Artifact | Canonical heading map |
+|---|---|
+| `technical.plan.md` | `## Problem Framing`, `## Architecture and Approach`, `## File Structure and Visualization`, `## Proposed DoR Amendments` (when present, v9.5+; DoR gaps, inline-confirmed or unresolved — see `§ Refinement Artifact Mutation Invariant`), `## Proposed DoD Amendments` (when present, v9.5+; DoD gaps, inline-confirmed or unresolved). The legacy combined section `## Proposed DoR/DoD Amendments` is FORBIDDEN since v9.5. The `## Resolution Log` heading is DEPRECATED since v9.6 (Path A removed); pre-existing logs in legacy artifacts MAY remain unchanged but MUST NOT be added or extended. |
+| `increments.plan.md` | `## Governance` (optional, classification-driven), `## Increments` (with per-increment `### <Name>`), `## Self Code Review`, `## Testing` |
+| `specs.design.md` | `## Design Specification` (with sub-sections for component hierarchy, visual states, interaction map, accessibility, design system mapping as needed) |
+| `dor.plan.md` | One `## <Dimension>` per dimension per the active DoR template (e.g., `## Functional`, `## Non-Functional`, `## Technical constraints`, `## Test criteria`, `## Commitment`, `## Out of scope`) |
+| `dod.plan.md` | Criterion checklist per the active DoD template (no enumerated prefixes) |
+| `analysis.product.md` | Sections defined by `/enrich` Output Structure template — canonical headings only, no `Phase N:` prefixes |
+| `report.issue.md` | Sections defined by `/issue` Output Structure template — canonical headings only |
+| `analysis.fix.md` | Sections defined by `/fix` Output Structure template — canonical headings only |
+| `feasibility.assessment.md` | Sections defined by `/assessment` Output Structure template — canonical headings only |
+| `instrumentation.trace.md` | Sections defined by `/trace` Output Structure template — canonical headings only |
+| `delivery.charter.md` | Sections defined by `/charter` Output Structure template (e.g., `## 1) Executive Summary`, `## 2) Plan Reference`, …) — the `N)` prefix IS canonical for charter; it is part of the charter's published heading shape, not an internal-phase enumeration |
+| `delta.publish.md` | Sections defined by `/publish` Output Structure template — canonical headings only |
+
+#### Producer invariants
+
+- The skill body MAY use enumerated headings (`### Category N: <Title>`, `### Phase N — <Step>`) for its internal data-collection phase organization.
+- The produced artifact MUST use the canonical heading without any internal-phase enumeration prefix.
+- When a skill emits a producer-side section header in its template/output structure whose name differs from the artifact-side heading, the canonical artifact heading MUST be declared inline using the phrase: `**Canonical artifact heading:** \`## <Title>\``.
+- Each producer skill MUST declare its Canonical artifact heading mapping explicitly in its `§ Content Rules (Semantics)` section.
+- Emitting `## Category N: <Title>` or `## Phase N — <Step>` as a heading in any artifact file is FORBIDDEN.
+
+Failing to honor this invariant causes internal scaffolding prefixes (e.g., `Category 7:`, `Phase 3 —`) to bleed through into the knowledge provider (e.g., Confluence) as `## Category 7: Risks` instead of the canonical `## File Structure and Visualization`, polluting published artifacts and breaking title canonicity (see `readme-knowledge-publishing-config.md` § Title Canonicity).
+
+---
+
+## Refinement Artifact Mutation Invariant (v2.3+)
+
+`dor.plan.md` and `dod.plan.md` are **refinement artifacts** — they encode the negotiated scope (DoR) and acceptance contract (DoD) that all downstream commands consume as authoritative context. Their integrity depends on a tightly governed mutation surface.
+
+### Authoritative create/modify matrix
+
+| Operation | Allowed commands | Conditions |
+|---|---|---|
+| **CREATE** `dor.plan.md` / `dod.plan.md` | `/enrich` | Primary refinement path. Default for all non-bugfix profiles. |
+| **CREATE** `dor.plan.md` / `dod.plan.md` | `/blueprint` | **Bug exception only.** Allowed iff `profile: bugfix` AND `feasibility.assessment.md` exists AND DoR/DoD do not yet exist (locally or via knowledge provider fallback). |
+| **MODIFY** `dor.plan.md` / `dod.plan.md` | `/enrich --refresh` | Re-derives DoR/DoD from refreshed tracker payload, diffs against on-disk artifact, applies merged result under `Gate: Refresh Approval` (and `Sub-Gate: Amendment Reconciliation` when staged amendments exist). |
+| **MODIFY** `dor.plan.md` / `dod.plan.md` | `/consolidate-plan` | Resolves `amendment_dor` / `amendment_dod` TODOs from `technical.plan.md` frontmatter, applying each via the Update Approval gate at the matched dimension/criterion. |
+| **MODIFY** `dor.plan.md` / `dod.plan.md` | **No other command** | FORBIDDEN. This includes `/blueprint` even when the user resolves a DoR/DoD gap inline in chat — inline answers MUST be captured as `**Inline confirmation**:` sub-field markers inside `## Proposed Do{R,D} Amendments` bullets, not applied directly to the source artifact. |
+
+### Inline confirmation marker
+
+When `/blueprint` surfaces a DoR/DoD gap during Phase 1 and the user resolves it inline in the same chat, the resolved value MUST be captured as a sub-field marker inside the corresponding bullet in `## Proposed DoR Amendments` or `## Proposed DoD Amendments`:
+
+```markdown
+- **<Dimension>**: <gap description>.
+  - **Proposed resolution**: <agent value or "needs <X> from <role>">
+  - **Inline confirmation**: <user value> (YYYY-MM-DD)
+```
+
+**Format invariants:**
+
+- Heading shape `**Inline confirmation**:` is exact-string normative (case sensitive, bold markdown delimiters, trailing colon).
+- Value MUST be free-text user response captured verbatim.
+- Date suffix MUST be `(YYYY-MM-DD)` UTC, parenthesized, separated from value by a single space.
+- Canonical regex (for consumers like `/consolidate-plan` and `/validate-plan`): `^\s*-\s+\*\*Inline confirmation\*\*:\s+(?P<value>.+?)\s+\((?P<date>\d{4}-\d{2}-\d{2})\)\s*$`
+- The sub-bullet MUST be indented exactly two spaces under its parent bullet to match `/validate-plan` v2.1.0+ and `/consolidate-plan` v2.1.0+ multi-line parsers.
+- The marker is **ephemeral** — it lives only inside the Proposed bullet until `/consolidate-plan` resolves the TODO; on apply, the entire bullet (parent + sub-bullets) is removed from the Proposed section.
+
+### Audit trail rationale (why Resolution Log was deprecated in v9.6)
+
+The legacy `## Resolution Log` section was introduced in v9.5 as a one-line append-only audit of inline DoR/DoD modifications by `/blueprint`. It was removed in v9.6 because the audit surface fragmented in three places (`technical.plan.md § Resolution Log`, `status.md command_log`, knowledge-provider page history) without providing strictly stronger guarantees than the consolidated audit path:
+
+- `status.md command_log` records every command invocation (start/end UTC, command name), which captures `/enrich --refresh` and `/consolidate-plan` events that mutate DoR/DoD.
+- Git history on `~/.cursor/plans/<TASK_ID>/dor.plan.md` and `dod.plan.md` (when the task directory is under VCS) provides line-level provenance.
+- Knowledge provider version history (Confluence page versions, Notion page history, etc.) provides remote-side provenance for published artifacts.
+
+Routing all DoR/DoD mutations through `/enrich --refresh` and `/consolidate-plan` consolidates the mutation surface to two commands, both of which leave consistent traces in `command_log`. Pre-existing `## Resolution Log` sections in legacy artifacts (v9.5 era) MAY remain unchanged but MUST NOT be added or extended (`/blueprint` v5.4.0+ no longer emits them).
+
+### Enforcement matrix
+
+| Violation | Detected by | Action |
+|---|---|---|
+| `/blueprint` modifies existing `dor.plan.md` / `dod.plan.md` | Generator postflight test `TestRefinementArtifactImmutability` (see `aias/.canonical/generation/tests/test_unit.py`) | Generation gate fails, commit blocked |
+| `/blueprint` emits new `## Resolution Log` heading | Same postflight test | Generation gate fails |
+| `## Proposed Do{R,D} Amendments` bullet uses non-canonical inline confirmation phrasing | `/consolidate-plan` v2.1.0+ marker parser | Skip inline default, fall through to manual entry; emit advisory |
+| Legacy combined `## Proposed DoR/DoD Amendments` heading | `/validate-plan` v2.0.0+ | Hard-fail with `[STATE: blocked]` and manual-split instructions |
 
 ---
 
