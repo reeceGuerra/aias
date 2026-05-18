@@ -3,17 +3,17 @@ name: validate-plan
 description: "Validates an existing plan artifact for completeness, governance compliance, and Plan Classification correctness. Use before /implement to catch planning gaps. Trigger terms: /validate-plan, validate plan, plan validation, check plan."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 2.1.0
 ---
 
-# Validate Plan (Plan Alignment Validation) — v5
+# Validate Plan (Plan Alignment Validation) — v6.1
 
 ## 1. Identity
 
 **Command Type:** Operative — Procedural / Execution
 
 You are validating the **alignment and completeness** of an implementation plan against the DoR/DoD from refinement.
-This command is responsible for analyzing plan artifacts in the task directory, verifying that the technical plan aligns with the DoR/DoD, identifying gaps across completeness dimensions, processing DoR/DoD amendment proposals from `/blueprint`, and reporting the verdict.
+This command is responsible for analyzing plan artifacts in the task directory, verifying that the technical plan aligns with the DoR/DoD, identifying gaps across completeness dimensions, and registering DoR/DoD amendment proposals from `/blueprint` as `kind: amendment_dor` / `kind: amendment_dod` TODOs in `technical.plan.md` for `/consolidate-plan` to resolve. **v9.5+**: there is no Amendment Approval gate; `/validate-plan` does NOT decide or apply amendments — it only registers them as TODOs.
 
 **Skills referenced:** `rho-aias`.
 
@@ -28,7 +28,9 @@ Usage notes:
 - This command is intended to be used **after** plan artifacts have been created (via `/blueprint` command).
 - It analyzes the plan artifacts in TASK_DIR to identify missing elements and verify alignment with DoR/DoD.
 - The output is raw, unstructured data listing gaps by category.
-- When DoR/DoD amendments are proposed in `technical.plan.md`, the Amendment gate is presented.
+- **v9.5+ Amendment processing**: when `technical.plan.md` contains `## Proposed DoR Amendments` and/or `## Proposed DoD Amendments`, each entry is registered as a TODO in the `technical.plan.md` frontmatter with `kind: amendment_dor` or `kind: amendment_dod` (see § Phase: Process Proposed Amendments). NO Amendment Approval gate is presented — `/validate-plan` does not decide or apply amendments. `/consolidate-plan` v2.1.0+ is the resolver.
+- **v9.6+ Multi-line bullet parsing**: bullets now follow a multi-line shape with optional `**Proposed resolution**:` and `**Inline confirmation**:` sub-fields. The TODO `content` captures only the parent line; sub-fields stay in the body for `/consolidate-plan` to read (see § Register amendments as TODOs).
+- **v9.5+ Legacy hard-fail**: if `technical.plan.md` contains the legacy combined section `## Proposed DoR/DoD Amendments`, `/validate-plan` MUST hard-fail with explicit manual-split instructions (see § Phase: Process Proposed Amendments).
 - Validation gaps MUST be persisted centrally in `technical.plan.md`; chat is only the reporting surface.
 
 ---
@@ -61,40 +63,59 @@ ARTIFACT UPDATE (validation backlog)
   - frontmatter `overview`
   - frontmatter `todos`
   - frontmatter `isProject: false`
-- Each validation todo MUST represent exactly one unresolved gap and MUST include:
+- Each todo MUST represent exactly one unresolved item (validation gap OR amendment) and MUST include:
   - `id`
   - `content`
   - `status: pending`
-  - `artifact`
-  - `dimension`
-- The Markdown body of `technical.plan.md` remains the human-readable technical plan. Validation todos live only in frontmatter.
-- When no gaps exist, `technical.plan.md` MUST NOT retain stale pending validation todos. The validation backlog should be empty or fully completed.
+  - `kind` — one of the closed enum `validation | amendment_dor | amendment_dod` (v9.5+, see `aias/.skills/rho-aias/reference.md` § Todo `kind` enum). When `kind` is absent, treat as `validation` for backward compatibility.
+  - `artifact` — the target artifact the todo resolves against (`technical.plan.md` for `validation`; `dor.plan.md` for `amendment_dor`; `dod.plan.md` for `amendment_dod`).
+  - `dimension` — for `validation`: the validation dimension (Investigation, Definition Alignment, Planning, Detailing, Refinement, Classification, Governance); for `amendment_dor` / `amendment_dod`: the DoR/DoD dimension name (e.g., "Functional", "Non-Functional", "Test criteria").
+- The Markdown body of `technical.plan.md` remains the human-readable technical plan. Validation todos and amendment todos live only in frontmatter.
+- When no gaps and no amendments exist, `technical.plan.md` MUST NOT retain stale pending todos. The backlog should be empty or fully completed.
 
-### Gate: Amendment Approval
+### Phase: Process Proposed Amendments (v9.5+)
 
-**Type:** Decision
-**Fires:** When `technical.plan.md` contains `## Proposed DoR/DoD Amendments`, before the Validation Result gate.
-**Skippable:** No.
+Run this phase BEFORE the Validation Result gate.
 
-**Context output:**
-Present each proposed amendment with context:
-- Which DoR/DoD dimension is affected
-- What the blueprint discovered as a gap
-- Proposed change
+#### Hard fail — legacy single-block
 
-**AskQuestion:**
-- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
-- **Prompt:** "Blueprint proposed <N> amendments to DoR/DoD. How to proceed?"
-- **Options:**
-  - `apply_local`: "Apply amendments locally (do not publish to team)"
-  - `pause`: "Pause — consult the team before proceeding"
-  - `reject`: "Reject amendments — plan adjusts to existing DoR/DoD"
-- **allow_multiple:** false
+If `technical.plan.md` contains the legacy combined section heading `## Proposed DoR/DoD Amendments`, MUST abort immediately and emit the following message verbatim:
 
-**On response:**
-- `apply_local` → Apply amendments to `dor.plan.md`/`dod.plan.md` locally. Mark amended artifacts as `modified` in `status.md`. Do NOT publish these changes via Phase 5c — they remain local until reconciliation via `/publish` or team re-runs `/enrich`.
-- `pause` → Halt validation. Inform user to consult the team and return when amendments are resolved (either via `/enrich` re-run or manual update).
-- `reject` → Discard amendments. Remove `## Proposed DoR/DoD Amendments` from `technical.plan.md`. The plan must adjust to the existing DoR/DoD as-is.
+```
+Legacy single-block detected: ## Proposed DoR/DoD Amendments
+
+The amendments model changed in v9.5. Single-block sections are no
+longer supported. Before continuing:
+  1. Open technical.plan.md
+  2. Manually split the existing block into:
+       ## Proposed DoR Amendments
+       ## Proposed DoD Amendments
+     classifying each item by its target artifact.
+  3. Re-run /validate-plan.
+
+See aias/docs/QUICKSTART.md § Upgrading from v9.4 to v9.5 for examples.
+```
+
+Terminal state on hard-fail: `[STATE: blocked]` with summary `legacy single-block detected; manual split required before continuing`. MUST NOT auto-split. MUST NOT continue validation.
+
+#### Register amendments as TODOs
+
+When the canonical split sections are present in `technical.plan.md` (`## Proposed DoR Amendments` and/or `## Proposed DoD Amendments`):
+
+1. **Bullet parsing (v9.6+ multi-line shape, v9.5 backward compatible):** Each bullet is a parent line followed by zero or more two-space-indented sub-bullets. The parent line has shape `- **<Dimension>**: <gap description>.` (terminating period optional). Sub-bullets MAY include:
+   - `- **Proposed resolution**: <value>` (v9.5+, optional in v9.6+)
+   - `- **Inline confirmation**: <value> (YYYY-MM-DD)` (v9.6+, optional — see `aias/contracts/readme-artifact.md` v2.3 § Refinement Artifact Mutation Invariant for canonical format and regex)
+   - Other free-form sub-bullets (treated as descriptive context; preserved in body, not parsed)
+2. For each bullet:
+   - **Extract `dimension`** from the parent line's `**<Dimension>**:` header (exact-string capture, case sensitive).
+   - **Extract `content`** as the parent line text only (dimension + gap description, normalized to a single-line string for the TODO `content` field). Sub-bullets MUST NOT be appended to `content` — they remain in the body for `/consolidate-plan` to read.
+   - If the item is in `## Proposed DoR Amendments`: append a TODO to `technical.plan.md` frontmatter with `kind: amendment_dor`, `artifact: dor.plan.md`, `dimension: <captured>`, `content: <parent line only>`, `status: pending`.
+   - If the item is in `## Proposed DoD Amendments`: append a TODO with `kind: amendment_dod`, `artifact: dod.plan.md`, otherwise identical.
+3. **Backward compatibility (v9.5 single-line bullets):** When a bullet has no sub-bullets and its parent line includes inline `**Proposed resolution**:` text (the v9.5 shape), the entire parent line is captured into `content` verbatim. The TODO `dimension` is still extracted from the leading `**<Dimension>**:` header. No upgrade migration is required — `/validate-plan` v2.1.0+ parses both shapes.
+4. Mark `technical.plan.md` as `modified` in `status.md` artifacts map.
+5. Continue with normal gap detection (§ 6 Output Structure). Amendment TODOs and validation TODOs may coexist in the same frontmatter.
+
+`/validate-plan` MUST NOT apply amendments. MUST NOT remove the Proposed sections from the body. MUST NOT remove or modify the `**Inline confirmation**:` sub-field. MUST NOT decide which amendments to accept. Resolution is owned exclusively by `/consolidate-plan` v2.1.0+.
 
 ### Gate: Validation Result
 
@@ -124,10 +145,9 @@ Present validation result in chat:
 
 STATUS UPDATE (Phase 5)
 - Append to `command_log`: `{command: /validate-plan, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
-- When plan passes and gate confirmed: update `status.md` — add `validate` to `completed_steps`, set `current_step` to `implement`. Do NOT modify the `status` field (it remains `in_progress` as set by `/blueprint`).
-- When amendments are applied locally: mark `dor.plan.md`/`dod.plan.md` as `modified` in `status.md` artifacts map.
-- When gaps exist: set `current_step` to `consolidate` and mark `technical.plan.md` as `modified` in `status.md` if validation todos were written or refreshed.
-- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config. Exception: DoR/DoD artifacts marked as locally amended (via Amendment gate `apply_local`) are excluded from Phase 5c until reconciled via `/publish`.
+- When plan passes and gate confirmed AND no pending amendments remain: update `status.md` — add `validate` to `completed_steps`, set `current_step` to `implement`. Do NOT modify the `status` field (it remains `in_progress` as set by `/blueprint`).
+- When validation gaps OR amendment TODOs exist: set `current_step` to `consolidate` and mark `technical.plan.md` as `modified` in `status.md`.
+- Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config. **v9.5+**: `dor.plan.md` and `dod.plan.md` are NOT excluded from Phase 5c by `/validate-plan` — that exclusion belonged to the retired `apply_local` flow. `/validate-plan` v2.0.0+ never mutates DoR/DoD; `/consolidate-plan` is the only command that applies amendments and marks them as `modified`.
 
 Rules:
 - Do NOT structure the rest of the chat output as a formatted document.
@@ -209,7 +229,9 @@ This command must **NOT**:
 - Assume a task directory if none was provided; ask for task ID or path
 - Modify the `status` field in `status.md` (it remains `in_progress` as set by `/blueprint`)
 - Trigger any tracker status transition (tracker transitions are owned by `/blueprint`, `/pr` (owns `in_progress → in_review`), and `/commit` (verifies `in_review`))
-- Publish locally-amended DoR/DoD artifacts via Phase 5c (those are reconciled via `/publish`)
+- Apply, decide, or remove DoR/DoD amendments (v9.5+ — `/validate-plan` only registers them as TODOs; `/consolidate-plan` is the resolver)
+- Auto-split the legacy combined `## Proposed DoR/DoD Amendments` section into the canonical split sections (v9.5+ — this is a hard-fail condition; manual split is the only supported migration path)
+- Mutate `dor.plan.md` or `dod.plan.md`
 
 ---
 
