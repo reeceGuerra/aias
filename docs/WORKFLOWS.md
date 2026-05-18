@@ -54,7 +54,7 @@ Use this when you need maximum control over the reasoning step before committing
 flowchart TD
     Start["Task enters framework"]
 
-    Start --> Entry{"Feature, Bugfix,<br/>Refactor, Enrichment,<br/>or Delivery?"}
+    Start --> Entry{"Feature, Bugfix,<br/>Refactor, Enrichment,<br/>Spike, or Delivery?"}
 
     Entry -->|Feature| Product["@product<br/>analysis"]
     Product --> Enrich["/enrich<br/>DoR + DoD + publish"]
@@ -89,6 +89,15 @@ flowchart TD
     EnrichProduct --> EnrichOnly["/enrich<br/>DoR + DoD + publish"]
     EnrichOnly --> EnrichClosure["/publish<br/>closure + delta.publish.md"]
     EnrichClosure --> EnrichDone["Task complete<br/>(no implementation)"]
+
+    Entry -->|Spike| SpikeProduct["@product<br/>analysis"]
+    SpikeProduct --> SpikeEnrich["/enrich<br/>spike DoR template + publish"]
+    SpikeEnrich --> SpikeInvestigate["@dev<br/>investigate (free instruction)"]
+    SpikeInvestigate --> SpikeAssess{"Need feasibility record?"}
+    SpikeAssess -->|Yes| SpikeAssessment["/assessment"]
+    SpikeAssessment --> SpikeClosure["/publish<br/>closure + delta.publish.md"]
+    SpikeAssess -->|No| SpikeClosure
+    SpikeClosure --> SpikeDone["Task complete<br/>(investigation only)"]
 
     Entry -->|Delivery| DeliveryMode["@delivery<br/>/charter"]
     DeliveryMode --> DeliveryClosure["/publish<br/>closure + delta.publish.md"]
@@ -238,6 +247,74 @@ TASK: Assess readiness. When done, /charter.
 **Expected Output:**
 - `delivery.charter.md` written to `<resolved_tasks_dir>/<TASK_ID>/`
 - Contains: Executive Summary, Readiness, Effort Estimation, Viability, Impact, Dependencies & Risks, Mermaid diagrams, Recommendation
+
+---
+
+## Spike Flow
+
+Time-boxed investigation with no predetermined implementation plan. Use for spikes, prototypes, and feasibility exploration where the deliverable is learning, not production code. The `spike` profile is canonically declared in `aias/.skills/rho-aias/reference.md` § Workflow Profiles and exemplified in `examples.md` § Spike Flow.
+
+### Step 1: Product Analysis + Refinement (spike template)
+
+```
+MODE: @product
+TASK ID: <spike-task-id>
+TASK DIR: <spike-task-id>
+CONTEXT: <hypothesis to investigate, time-box, decision the spike will inform>
+TASK: Frame the spike. When done, /enrich <spike-task-id>.
+```
+
+**Expected Output:**
+- `analysis.product.md`, `dor.plan.md` written to `<resolved_tasks_dir>/<TASK_ID>/`
+- `dor.plan.md` uses the spike template: hypothesis, time-box, success criteria, out-of-scope
+- `dod.plan.md` is **NOT** produced for the `spike` profile — spike investigations have no acceptance criteria in the traditional sense
+- All artifacts published to knowledge provider (Phase 5c — tracker-gated)
+
+---
+
+### Step 2: Investigation (Chat Dev)
+
+```
+MODE: @dev
+TASK DIR: <spike-task-id>
+TASK: Investigate <hypothesis>. Time-box: <duration>.
+```
+
+**Expected Output:**
+- Prototypes, notes, code experiments (NOT a production-ready implementation)
+- Documented findings against the spike DoR success criteria
+- `status.md` updated: `current_step: investigate`
+
+---
+
+### Step 3 (Optional): Feasibility Assessment
+
+Only when a formal feasibility record is needed for downstream decision-making.
+
+```
+MODE: @dev
+TASK DIR: <spike-task-id>
+TASK: /assessment
+```
+
+**Expected Output:**
+- `feasibility.assessment.md` written to `<resolved_tasks_dir>/<TASK_ID>/`
+
+---
+
+### Step 4: Closure
+
+```
+/publish
+```
+
+**Expected Output:**
+- All artifacts published to resolved knowledge provider
+- `delta.publish.md` generated
+- `status.md` updated: `status: completed`, `completed: <date>`, `published: <date>`
+- No tracker status transition to DONE — that remains Product's responsibility (manual)
+
+> `/blueprint` is also optional for `spike` — recommended only when the investigation yields a concrete implementation plan that warrants promotion to a follow-up `feature` or `bugfix` task. In that case, the follow-up task is a new TASK_DIR with its own profile, not a continuation of the spike.
 
 ---
 
@@ -873,6 +950,9 @@ For the complete artifact catalog (suffixes, producers, and descriptions), see `
 
 **Need a delivery assessment?**
 → `@delivery` + `/charter`
+
+**Running a time-boxed investigation or spike?**
+→ `@product` + `/enrich` (spike DoR template) → `@dev` (investigate) → (optional) `/assessment` → `/publish`
 
 **Need a product enrichment summary?**
 → `@product` + `/enrich --brief` (posts enrichment brief as Jira comment)
