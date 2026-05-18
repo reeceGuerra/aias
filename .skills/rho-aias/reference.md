@@ -115,7 +115,7 @@ No `cancelled` terminal state exists. Audit trail for deletion lives in (1) `sta
 
 ## Workflow Profiles
 
-Each task follows one of five profiles. The profile determines which steps are expected, which artifacts are produced, and which mode/chat to use at each step. Chat names identify the conversation — if the same chat name appears in multiple steps, those steps happen in the same chat session (one mode per chat, never mix modes).
+Each task follows one of six profiles. The profile determines which steps are expected, which artifacts are produced, and which mode/chat to use at each step. Chat names identify the conversation — if the same chat name appears in multiple steps, those steps happen in the same chat session (one mode per chat, never mix modes).
 
 ### `feature` — New feature implementation
 
