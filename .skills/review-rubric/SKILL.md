@@ -3,7 +3,7 @@ name: review-rubric
 description: "Single source of truth for multi-agent review inspection criteria. Use when performing /self-review or /peer-review with multi-agent dispatch. Each review dimension sub-agent (correctness, quality, architecture, test-coverage, security) and the reflector selects its dimension selector from this skill to drive focused inspection. Trigger terms: review rubric, review criteria, inspection checklist, dimension review, multi-agent review."
 category: knowledge
 disable-model-invocation: false
-version: 1.0.0
+version: 1.1.0
 ---
 
 ## PURPOSE
@@ -22,6 +22,10 @@ Each sub-agent selects exactly one dimension. The reflector selects `reflector`.
 
 **Focus:** Logic errors, edge cases, behavioral regressions, and contract violations.
 
+**Scope:** Flag findings only for code introduced or modified in the current diff. Pre-existing patterns in the working tree are out of scope unless they are directly exercised, called, or contaminated by the modified code path.
+
+**Legacy posture:** When the modified file is dominantly legacy and the change is a localized addition, the reviewer MUST evaluate only the addition's correctness relative to the introduced surface, not against an idealized target state of the file. Flagging legacy logic adjacent to the change but not exercised by it is FORBIDDEN.
+
 Inspection checklist:
 - [ ] All code paths produce the expected output for valid inputs
 - [ ] Boundary and edge cases are handled (empty collections, nil/null, overflow, off-by-one)
@@ -37,6 +41,10 @@ Inspection checklist:
 ### Selector: `quality`
 
 **Focus:** Code clarity, maintainability, naming, duplication, and technical debt.
+
+**Scope:** Flag findings only for code introduced or modified in the current diff. Pre-existing naming, duplication, or technical debt in the working tree is out of scope unless the modified code path extends or amplifies it.
+
+**Legacy posture:** When the modified file is dominantly legacy and the change is a localized addition, the reviewer MUST evaluate the addition's quality relative to the introduced surface, not against an idealized target state of the file. Suggesting refactors of adjacent legacy code that the diff does not touch is FORBIDDEN.
 
 Inspection checklist:
 - [ ] Names (variables, functions, types, modules) are descriptive and consistent with the codebase conventions
@@ -54,6 +62,10 @@ Inspection checklist:
 
 **Focus:** Pattern conformance, layer boundaries, coupling, and scalability.
 
+**Scope:** Flag findings only for architectural decisions introduced or modified by the current diff. Pre-existing architectural debt (legacy layer violations, ambient coupling) is out of scope unless the modified code path reinforces or extends it.
+
+**Legacy posture:** When the modified file is dominantly legacy and the change is a localized addition, the reviewer MUST evaluate whether the addition itself respects the declared architecture, not whether the surrounding legacy code does. Suggesting layer realignments that require touching code outside the diff is FORBIDDEN.
+
 Inspection checklist:
 - [ ] Code placement respects the architectural layers declared in `RHOAIAS.md` / `technical.plan.md` (when available)
 - [ ] No inappropriate coupling between layers (e.g., UI logic in a data layer)
@@ -69,6 +81,10 @@ Inspection checklist:
 ### Selector: `test-coverage`
 
 **Focus:** Test posture, coverage gaps, assertion quality, and untested paths.
+
+**Scope:** Flag findings only for code introduced or modified by the current diff. Pre-existing untested code in the working tree is out of scope unless the modified code path directly exercises or depends on it.
+
+**Legacy posture:** When the modified file is dominantly legacy and the change is a localized addition, the reviewer MUST evaluate test coverage of the addition only. Demanding tests for untouched legacy code, or demanding that legacy modules acquire net-new test infrastructure, is FORBIDDEN.
 
 Inspection checklist:
 - [ ] Unit tests exist for all new functions/methods with meaningful logic
@@ -86,6 +102,10 @@ Inspection checklist:
 
 **Focus:** Injection risks, authentication/authorization gaps, sensitive data exposure, and dependency vulnerabilities.
 
+**Scope:** Flag findings only for security surface introduced or modified by the current diff. Pre-existing security debt in the working tree is out of scope unless the modified code path extends, calls, or amplifies it.
+
+**Legacy posture:** When the modified file is dominantly legacy and the change is a localized addition, the reviewer MUST evaluate whether the addition introduces new security surface, not whether surrounding legacy code has historical issues. Suggesting hardening of legacy code that the diff does not touch is FORBIDDEN.
+
 Inspection checklist:
 - [ ] All user inputs are validated and sanitized before use in queries, file paths, or commands
 - [ ] No SQL, shell, or template injection vectors introduced
@@ -102,7 +122,12 @@ Inspection checklist:
 
 **Focus:** Meta-review — synthesize findings from all 5 dimensions into a prioritized, deduplicated summary.
 
+**Scope:** Operates over the consolidated findings list emitted by the five dimension reviewers. The reflector MUST NOT introduce findings sourced from its own re-reading of the diff; its job is synthesis and gate emission.
+
+**Legacy posture:** The reflector MUST honor the per-dimension Legacy posture by discarding any finding that violates Scope or Legacy posture during the pre-filter step (Step 0 below). If a dimension reviewer produced a legacy-only finding by mistake, the reflector drops it silently and notes the count of pre-filtered findings in the summary footer.
+
 Reflector protocol:
+0. **Pre-filter (v1.1):** Walk every incoming finding and discard those that violate Scope or Legacy posture of their dimension. A finding is FORBIDDEN if it (a) anchors to code outside the diff, (b) targets untouched legacy code adjacent to the change, or (c) demands action that requires editing files not in the diff. Track the count of discarded findings; surface it in the summary footer as `[pre-filtered: N legacy/out-of-scope findings dropped]`.
 1. Collect all findings from the five dimension reviewers.
 2. Apply the deduplication protocol (from `readme-multi-agent-review.md`):
    - Exact duplicate (same file + line + rationale) → keep highest severity; attribute to all dimensions.
