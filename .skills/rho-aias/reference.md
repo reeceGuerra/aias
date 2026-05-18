@@ -77,6 +77,40 @@ When a command writes an artifact:
 4. **Never invent artifact types.** Only the 12 types in the closed catalog + `status.md` are allowed.
 5. **Content language:** English for all artifact content. Use the **technical-writing** skill patterns.
 
+### Todo `kind` enum (closed set, v9.5+)
+
+When a `.plan.md` artifact under the Cursor-first profile carries todos in frontmatter, each todo MAY include a `kind` field with one of the following closed values:
+
+- `validation` — gap in plan artifacts surfaced by `/validate-plan`; resolved by `/consolidate-plan` against the artifact named on the todo (typically `technical.plan.md`).
+- `amendment_dor` — gap in DoR surfaced by `/blueprint` and registered by `/validate-plan` from `## Proposed DoR Amendments` in `technical.plan.md`; resolved by `/consolidate-plan` by applying to `dor.plan.md` and removing the corresponding entry from the Proposed section.
+- `amendment_dod` — gap in DoD surfaced by `/blueprint` and registered by `/validate-plan` from `## Proposed DoD Amendments` in `technical.plan.md`; resolved by `/consolidate-plan` by applying to `dod.plan.md` and removing the corresponding entry.
+
+**Backward compatibility:** if `kind` is absent in a todo entry, treat as `validation` (matches v9.4 and earlier behavior). Authors MAY safely add `kind` to existing todos in flight.
+
+**Producer / consumer ownership:**
+
+| Kind | Produced by | Consumed by | Body section in `technical.plan.md` |
+|---|---|---|---|
+| `validation` | `/validate-plan` | `/consolidate-plan` | n/a (resolved in artifact named on the todo) |
+| `amendment_dor` | `/validate-plan` (from `## Proposed DoR Amendments`) | `/consolidate-plan` (applies to `dor.plan.md`, removes Proposed entry) | `## Proposed DoR Amendments` |
+| `amendment_dod` | `/validate-plan` (from `## Proposed DoD Amendments`) | `/consolidate-plan` (applies to `dod.plan.md`, removes Proposed entry) | `## Proposed DoD Amendments` |
+
+`increments.plan.md` todos do NOT use the `kind` field — they are execution todos produced by `/blueprint` and consumed by `/implement`.
+
+#### TODO lifecycle (v9.6+)
+
+`technical.plan.md` TODOs (kind `validation`, `amendment_dor`, `amendment_dod`) follow a **two-terminal-state** lifecycle:
+
+- `pending` — initial state assigned by `/validate-plan` registration.
+- `completed` — terminal state assigned by `/consolidate-plan` after the user accepts the Update Approval gate proposal and the artifact patch is applied. The TODO entry stays in `technical.plan.md` frontmatter (status switched to `completed`) and its bullet is removed from the Proposed section.
+- **Deleted from frontmatter** — alternative terminal state. The TODO entry is **physically removed** from the `todos` array (the bullet is also removed from the body) when one of the following occurs:
+  - `/enrich --refresh` Amendment Reconciliation sub-gate Case A (`confirm`) — the user chose `apply now (remove TODO)` because the refreshed tracker payload already encodes what the bullet was proposing.
+  - `/enrich --refresh` Amendment Reconciliation sub-gate Case B (`contradict`) — the user chose `tracker wins (remove TODO)` because the refreshed tracker payload contradicts the bullet.
+
+No `cancelled` terminal state exists. Audit trail for deletion lives in (1) `status.md command_log` (the `/enrich --refresh` invocation), (2) git history on `technical.plan.md` (if the task dir is under VCS), and (3) the knowledge provider's version history when the artifact was previously published (Phase 5c).
+
+`increments.plan.md` execution todos retain their independent `pending → in_progress → completed` lifecycle managed by `/implement`.
+
 ---
 
 ## Workflow Profiles
@@ -200,6 +234,7 @@ tracker_status: <provider:pending_dor_label>
 completed_steps: []
 current_step: refinement
 refinement_validated: null
+last_refreshed_at: null
 rhoaias_update: null
 published: null
 completed: null
@@ -212,7 +247,9 @@ command_log:
 ```
 
 The `classification` field is `null` until `/blueprint` assigns it (`minor`, `standard`, or `critical`). See SKILL.md for classification criteria.
-The `refinement_validated` field is `null` initially; set to `true` by `/enrich --brief` when brief comment is posted AND knowledge publish succeeds (team has context for refinement); `false` otherwise. Without `--brief`, `/enrich` always sets `refinement_validated: false`.
+The `refinement_validated` field is `null` initially; set to `true` by `/enrich --brief` when brief comment is posted AND knowledge publish succeeds (team has context for refinement); `false` otherwise. Without `--brief`, `/enrich` always sets `refinement_validated: false`. `/enrich --refresh` does NOT modify this flag.
+
+The `last_refreshed_at` field (v9.6+) is `null` initially; set to `<UTC ISO8601>` by `/enrich --refresh` when `Gate: Refresh Approval` returns `proceed` AND any DoR/DoD mutation was applied. When `--refresh` is aborted, skipped, or detects no drift, the field is NOT modified. The field is optional in legacy artifacts (pre-v9.6) and MAY be omitted from `status.md` until the first successful refresh. Consumers (e.g., `/blueprint` precondition gate, `/commit` advisory) MUST treat absent and `null` identically.
 
 ### RHOAIAS.md Freshness Tracking
 
@@ -251,6 +288,16 @@ command_log:
   - command: /blueprint
     started_at: 2026-01-25T15:00:03Z
     ended_at: 2026-01-25T15:12:21Z
+  - command: /self-review
+    started_at: 2026-05-16T14:30:12Z
+    ended_at: 2026-05-16T14:42:51Z
+    dispatches:
+      - subagent: aias-correctness-reviewer
+        started_at: 2026-05-16T14:31:02Z
+        ended_at: 2026-05-16T14:38:27Z
+      - subagent: aias-reflector
+        started_at: 2026-05-16T14:39:30Z
+        ended_at: 2026-05-16T14:42:33Z
 ```
 
 **Writing rules:**
@@ -261,6 +308,7 @@ command_log:
 4. **Format:** ISO 8601 UTC (`YYYY-MM-DDTHH:MM:SSZ`).
 5. **Without TASK_DIR:** When `/commit`, `/pr`, or `/trace` execute without a resolved `TASK_DIR` (vibe coding / chat-only mode), the `command_log` entry is omitted. Those requests remain "unattributed" in CSV cost correlation.
 6. **Re-execution:** Duplicate entries for the same command are expected when commands are re-executed (e.g., validate-consolidate-validate loops). Each execution appends independently.
+7. **Multi-agent dispatch telemetry (v9.4+):** Commands that dispatch sub-agents (currently only `/self-review`) MAY include an OPTIONAL `dispatches: list[{subagent, started_at, ended_at}]` field on the `command_log` entry. The field captures one row per sub-agent invoked during multi-agent review. The host (the dispatching command) is the ONLY registrar — sub-agents MUST NOT write to `status.md` per `readme-multi-agent-review.md` § Sub-Agent Tool Boundary and § Dispatch Telemetry (host-owned). Absence of `dispatches` is backward-compatible (treat as empty list); it does NOT imply the command failed to dispatch. `/peer-review` MUST NOT write telemetry because it reviews other developers' work and does not assume `TASK_DIR` exists locally.
 
 **Delineation with `completed_steps`:** `completed_steps` tracks workflow progression (which milestones are done). `command_log` tracks execution telemetry (when each command ran and how long it took). Both MUST be maintained independently — they serve different consumers (workflow engine vs cost attribution).
 
@@ -485,6 +533,19 @@ TASK: /assessment
 ```
 
 Provider-specific hierarchy derivation is owned by the resolved provider adapter (not by this skill protocol contract). Repeating hierarchy nodes and artifact pages MUST use provider-safe, scope-aware titles to avoid namespace collisions at the provider level (for example, task-scoped artifact titles prefixed with `<TASK_ID>`) — the exact format is defined by the resolved provider adapter.
+
+### Title format invariant (cross-provider)
+
+Phase 5c MUST emit titles exactly as specified in the resolved knowledge provider config. Title humanization is FORBIDDEN regardless of provider — substituting filenames with human descriptions, swapping canonical separators (em dash, en dash, slash, pipe, comma, middle dot, arrow), or re-casing scope segments breaks `findOrCreatePage` lookup determinism and produces silent duplicates on subsequent publishes.
+
+The canonical title shapes are:
+
+- Artifact pages: `<TASK_ID>: <artifact filename>` (e.g., `MAX-12345: dod.plan.md`, never `MAX-12345: Definition of Done`).
+- Repeating hierarchy nodes: scope-aware titles defined by the provider config (e.g., `iOS: 2026: Q1`, never `iOS — 2026 — Q1`).
+
+Every `createPage`/`updatePage` invocation MUST pass through the provider-specific pre-publish title validator (see `atlassian-mcp/SKILL.md` § Pre-publish Title Validation for the Confluence implementation; other providers declare equivalent validators sourced from their own publishing config). The validator aborts the call if the title does not match the canonical regex; the orchestrator re-derives the title from its canonical source and retries.
+
+This invariant is governed by `readme-knowledge-publishing-config.md` § Rules § Title Canonicity (v1.1+).
 
 ### Progressive sync (Phase 5c) — Conditional (tracker-gated)
 
