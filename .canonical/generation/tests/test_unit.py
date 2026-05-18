@@ -1104,7 +1104,11 @@ class TestDispatchesSchema(unittest.TestCase):
 
     def test_contract_declares_v1_2(self):
         body = _read_text(self.CONTRACT)
-        self.assertRegex(body, r"v1\.2\b", "contract must be bumped to v1.2")
+        self.assertRegex(
+            body,
+            r"^# Multi-Agent Review Contract \(v1\.\d+\)",
+            "readme-multi-agent-review header must declare MAJOR v1",
+        )
 
     def test_contract_documents_dispatches_section(self):
         body = _read_text(self.CONTRACT)
@@ -1147,7 +1151,11 @@ class TestCanonicalSectionTitles(unittest.TestCase):
     def test_contract_declares_canonical_section_titles(self):
         body = _read_text(self.CONTRACT)
         self.assertIn("Canonical Section Titles", body)
-        self.assertRegex(body, r"v2\.[12]\b", "readme-artifact must be at v2.1 or v2.2")
+        self.assertRegex(
+            body,
+            r"^# Artifact Contract.*\(v2\.\d+\)",
+            "readme-artifact header must declare MAJOR v2",
+        )
 
     def test_producers_reference_canonical_heading_rule(self):
         for skill in self.PRODUCERS:
