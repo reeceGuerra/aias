@@ -63,7 +63,7 @@ This guide provides a structured path for adopting Rho AIAS incrementally. You d
 ### What you get
 
 - **Refinement workflow:** `/enrich` produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md` — Definition of Ready and Done before planning.
-- **Plan validation:** `/validate-plan` audits your plan against DoR/DoD and flags gaps.
+- **Plan validation:** `/validate-plan` audits your plan against DoR/DoD and flags gaps. Since v9.5, DoR/DoD amendments proposed by `/blueprint` are registered as TODOs in `technical.plan.md` frontmatter (`kind: amendment_dor` / `kind: amendment_dod`) and resolved by `/consolidate-plan` — there is no separate Amendment Approval gate. Since v9.6, when the user answers a gap inline during `/blueprint`, the answer is captured as a `**Inline confirmation**:` sub-field marker inside the Proposed Amendment bullet (never applied directly to DoR/DoD — that authority is reserved for `/enrich --refresh` and `/consolidate-plan` by the Refinement Artifact Mutation Invariant).
 - **Tracker sync:** Status transitions fire automatically for planning and review phases (`ready` → `in_progress` → `in_review`). The `pending_dor → ready` transition is manual (team responsibility during refinement).
 - **Knowledge publishing:** Phase 5c publishes artifacts when a valid tracker ticket exists (tracker-gated, classification-independent; see rho-aias SKILL.md § Phase 5c).
 - **Code review:** `/self-review` and `/peer-review` provide structured review analysis.
