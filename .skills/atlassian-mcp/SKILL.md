@@ -47,6 +47,35 @@ If this call fails or returns no results: **abort** and ask the user to check At
 - `fields` (array): specific fields to return
 - `expand` (string): expand additional data
 
+### Read patterns — targeted vs exhaustive (v9.4+ guidance, v9.6+ refresh extension)
+
+| Pattern | When to use | Call |
+|---|---|---|
+| **Targeted read** | Status checks, transitions, narrow read-only confirmations where the agent already knows which fields it needs. | `getJiraIssue(cloudId, issueIdOrKey, fields=['summary','status','assignee'])` |
+| **Exhaustive read** | Refinement / enrichment / RCA workflows where the agent must surface **all** custom fields (RCA categorical fields, legacy enrichment fields, project-specific extensions). Whitelisting fields here silently drops custom fields outside the whitelist and leaves the workflow blind. | `getJiraIssue(cloudId, issueIdOrKey, fields=['*all'], expand='renderedFields,names,schema')` |
+| **Exhaustive read + comments (v9.6+)** | `/enrich --refresh` drift detection: must read description + custom fields + comment thread in one call so the diff against on-disk DoR/DoD captures comment-driven amendments (PM/QA edits added after the original `/enrich`). | `getJiraIssue(cloudId, issueIdOrKey, fields=['*all'], expand='renderedFields,names,schema,comment')` |
+
+**Note on `expand` shape:** The `expand` parameter is a **comma-separated string**, not an array. The MCP tool descriptor expects `expand: string` even though earlier framework versions documented it as an array. Always pass `expand='renderedFields,names,schema'` (or with `,comment` appended for `--refresh`).
+
+Rho AIAS adopter skills that MUST use the exhaustive read pattern by contract:
+
+- `/enrich` (refinement reads).
+- `/enrich --refresh` (refinement-refresh reads — exhaustive + comments).
+- `/report` (RCA reads — needs option catalogs + runtime format metadata for every RCA-adjacent field).
+
+Targeted writes (`editJiraIssue` with specific field keys) remain unchanged — only the input read becomes exhaustive. This guidance is framework-specific (informative) for adopters; generic Atlassian MCP usage MAY choose targeted reads when the field set is known statically.
+
+### Comment thread parsing for refinement refresh (v9.6+)
+
+When `/enrich --refresh` reads the comment thread, the parsing heuristic is:
+
+1. Iterate comments chronologically (oldest first).
+2. For each comment, attempt to attribute its body text to DoR/DoD dimensions or DoD criteria. Attribution is heuristic and best-effort — the agent uses semantic interpretation (e.g., "we also need to support iPad Pro 12.9" attributes to a device matrix dimension). When attribution is uncertain, treat the comment as orthogonal to existing dimensions and add a candidate `add` entry to the refresh diff.
+3. Comments authored by the AI itself (signed `Rho AIAS via <Tool>` or matching the `addCommentToJiraIssue` payload pattern of `/enrich --brief`) MUST be excluded from the drift signal — they were the original derivation, not new input.
+4. Comments older than the original `/enrich` invocation (per `status.md command_log`) are still parsed; their content is the baseline that the original DoR/DoD already encodes. Drift signal comes from comments newer than the last `/enrich` (or `/enrich --refresh`) invocation, identified via `command_log` `ended_at` or `status.md last_refreshed_at`.
+
+The parsing is informative only — the agent surfaces candidate drift via the `Gate: Refresh Approval` preview, where the user decides per-dimension whether to apply.
+
 ---
 
 ### Search Jira Issues (JQL)
@@ -423,6 +452,40 @@ Before any write workflow pushes content to Jira fields, the agent MUST resolve 
 5. **Execute writes** using resolved formats only. Never assume a format without resolution.
 
 If runtime metadata contradicts the mapping, use runtime metadata for the write and report mapping drift to the user.
+
+---
+
+## PRE-PUBLISH TITLE VALIDATION
+
+Before any `createConfluencePage` or `updateConfluencePage` call, the agent MUST run the title through the `validateTitleBeforePublish` sub-routine derived from the resolved knowledge publishing config (see `readme-knowledge-publishing-config.md` § Rules § Title Canonicity and the project-specific provider config, e.g., `aias-config/providers/atlassian/confluence-config.md` § Title Canonicity (FORBIDDEN PATTERNS)).
+
+### Sub-routine
+
+```
+function validateTitleBeforePublish(cloudId, pageType, title):
+  config = loadResolvedKnowledgePublishingConfig()
+  pattern = config.titleRegexFor(pageType)   # e.g. artifactRegex or hierarchyRegex
+  if not regex_match(pattern, title):
+    abort("FORBIDDEN_TITLE: '<title>' does not match canonical pattern for pageType=<pageType>.
+           Re-derive the title from the canonical filename or hierarchy convention
+           defined in the provider config before publishing.")
+  return true
+```
+
+### Mandatory invocation points
+
+- Immediately before invoking `createConfluencePage(cloudId, spaceId, title, body, ...)`.
+- Immediately before invoking `updateConfluencePage(cloudId, pageId, body, title=...)` when `title` is being changed.
+
+### Abort semantics
+
+- The validator aborts the **specific publish call**, not the entire workflow. The orchestrator MAY recover by re-deriving the canonical title (e.g., from filename or hierarchy convention) and retrying the publish.
+- The agent MUST NOT silently mutate the title to make it pass the regex; it MUST re-derive deterministically from the canonical source.
+- Title humanization in any form (filename → description, separator substitution, case drift) is FORBIDDEN — see the FORBIDDEN PATTERNS section in the project's `confluence-config.md` for the closed list.
+
+### Cross-provider applicability
+
+This validator is provider-agnostic in shape but provider-specific in its regex source. Other knowledge providers (Notion, etc.) SHOULD declare equivalent regexes in their own `<provider>-config.md` files and reuse the same sub-routine pattern.
 
 ---
 
