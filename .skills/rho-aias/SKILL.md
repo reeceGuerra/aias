@@ -3,7 +3,7 @@ name: rho-aias
 description: Canonical skill protocol for artifact-driven development workflows. Use when the user works on a task that produces or consumes artifacts under <resolved_tasks_dir>/<TASK_ID>/ (default ~/.cursor/plans/) — including planning, implementation, enrichment, publishing, or any command that reads/writes task artifacts.
 category: knowledge
 disable-model-invocation: false
-version: 9.3.0
+version: 9.6.0
 ---
 
 # Agentic-Driven Development
