@@ -1012,5 +1012,529 @@ class TestReviewSubagentIntegrity(unittest.TestCase):
         self.assertEqual(checks["Review sub-agents (legacy)"][0], "WARN")
 
 
+# ---------------------------------------------------------------------------
+# Phase 9 (v9.4 + v9.5) — Contract invariants on canonical sources
+#
+# These tests validate canonical source-of-truth files (sub-agents, skills,
+# contracts) rather than pure code paths. They guard against regressions in
+# the invariants introduced by BL-S73, BL-S74, BL-S77, and BL-S79.
+# ---------------------------------------------------------------------------
+
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[4]
+
+
+def _read_text(path: pathlib.Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+class TestSubagentToolBoundary(unittest.TestCase):
+    """BL-S74 — every canonical sub-agent declares Tool Boundary in body.
+
+    Sub-agents MUST NOT invoke tool runtimes. The contract is enforced
+    textually: each canonical sub-agent file MUST contain a body section
+    that mentions Tool Boundary AND prohibits tool calls AND points at the
+    Context Gap escape hatch.
+    """
+
+    CANONICAL_DIR = REPO_ROOT / "aias" / ".canonical" / "subagents"
+    REQUIRED_AGENTS = (
+        "aias-architecture-reviewer.md",
+        "aias-correctness-reviewer.md",
+        "aias-quality-reviewer.md",
+        "aias-reflector.md",
+        "aias-security-auditor.md",
+        "aias-test-auditor.md",
+    )
+
+    def test_all_canonical_files_present(self):
+        for name in self.REQUIRED_AGENTS:
+            path = self.CANONICAL_DIR / name
+            self.assertTrue(path.exists(), f"missing canonical sub-agent: {path}")
+
+    def test_tool_boundary_heading_present(self):
+        for name in self.REQUIRED_AGENTS:
+            with self.subTest(agent=name):
+                body = _read_text(self.CANONICAL_DIR / name)
+                self.assertIn(
+                    "Tool Boundary",
+                    body,
+                    f"{name} body must include a 'Tool Boundary' section",
+                )
+
+    def test_tool_boundary_prohibits_tool_calls(self):
+        for name in self.REQUIRED_AGENTS:
+            with self.subTest(agent=name):
+                body = _read_text(self.CANONICAL_DIR / name).lower()
+                self.assertIn("must not", body, f"{name} must include MUST NOT directive")
+                self.assertTrue(
+                    any(kw in body for kw in ("invoke", "tool", "mcp")),
+                    f"{name} Tool Boundary must reference tool invocation prohibition",
+                )
+
+    def test_context_gap_escape_documented(self):
+        for name in self.REQUIRED_AGENTS:
+            with self.subTest(agent=name):
+                body = _read_text(self.CANONICAL_DIR / name)
+                self.assertIn(
+                    "Context Gap",
+                    body,
+                    f"{name} must document the [Context Gap] finding escape hatch",
+                )
+
+    def test_frontmatter_invariants_unchanged(self):
+        """BL-S74 must not relax readonly/is_background invariants."""
+        for name in self.REQUIRED_AGENTS:
+            with self.subTest(agent=name):
+                body = _read_text(self.CANONICAL_DIR / name)
+                self.assertIn("readonly: true", body)
+                self.assertIn("is_background: false", body)
+
+
+class TestDispatchesSchema(unittest.TestCase):
+    """BL-S73 — readme-multi-agent-review v1.2 documents dispatches[] schema.
+
+    The contract MUST describe the host-owned telemetry schema with all
+    required fields (subagent, started_at, ended_at) and clarify that
+    /peer-review writes no telemetry.
+    """
+
+    CONTRACT = REPO_ROOT / "aias" / "contracts" / "readme-multi-agent-review.md"
+    REFERENCE = REPO_ROOT / "aias" / ".skills" / "rho-aias" / "reference.md"
+
+    def test_contract_declares_v1_2(self):
+        body = _read_text(self.CONTRACT)
+        self.assertRegex(body, r"v1\.2\b", "contract must be bumped to v1.2")
+
+    def test_contract_documents_dispatches_section(self):
+        body = _read_text(self.CONTRACT)
+        self.assertIn("Dispatch Telemetry", body)
+        for field in ("subagent", "started_at", "ended_at"):
+            with self.subTest(field=field):
+                self.assertIn(field, body, f"dispatches[] schema must mention '{field}'")
+
+    def test_contract_clarifies_self_review_only(self):
+        body = _read_text(self.CONTRACT).lower()
+        self.assertIn("self-review", body)
+        self.assertIn("peer-review", body)
+
+    def test_reference_extends_command_log_schema(self):
+        body = _read_text(self.REFERENCE)
+        self.assertIn("dispatches", body)
+
+
+class TestCanonicalSectionTitles(unittest.TestCase):
+    """BL-S77 — producer skills MUST NOT bleed internal category labels.
+
+    The invariant: `## Category N: <title>` is an internal data-collection
+    label and MUST NOT appear as a heading in produced artifacts. The skill
+    must declare its canonical artifact heading explicitly.
+    """
+
+    SKILLS_DIR = REPO_ROOT / "aias" / ".skills"
+    PRODUCERS = (
+        "blueprint",
+        "enrich",
+        "charter",
+        "issue",
+        "fix",
+        "trace",
+        "assessment",
+        "report",
+    )
+    CONTRACT = REPO_ROOT / "aias" / "contracts" / "readme-artifact.md"
+
+    def test_contract_declares_canonical_section_titles(self):
+        body = _read_text(self.CONTRACT)
+        self.assertIn("Canonical Section Titles", body)
+        self.assertRegex(body, r"v2\.[12]\b", "readme-artifact must be at v2.1 or v2.2")
+
+    def test_producers_reference_canonical_heading_rule(self):
+        for skill in self.PRODUCERS:
+            with self.subTest(skill=skill):
+                path = self.SKILLS_DIR / skill / "SKILL.md"
+                self.assertTrue(path.exists(), f"missing skill: {path}")
+                body = _read_text(path)
+                self.assertIn(
+                    "Canonical",
+                    body,
+                    f"{skill} must declare Canonical headings explicitly",
+                )
+
+    def test_blueprint_does_not_emit_category_prefix_in_output(self):
+        """Producer guidance must not instruct emitting '## Category N: …' as an artifact heading.
+
+        We allow internal data-collection labels (### Category N: in skill body)
+        but the skill MUST flag them as internal-only.
+        """
+        path = self.SKILLS_DIR / "blueprint" / "SKILL.md"
+        body = _read_text(path)
+        # The skill MUST contain the anti-pattern guidance.
+        self.assertIn("Canonical artifact heading", body)
+
+
+class TestKindEnumSchema(unittest.TestCase):
+    """BL-S79 — TODO kind enum is a closed set: validation | amendment_dor | amendment_dod.
+
+    Backward compatibility: absent `kind` is treated as `validation`.
+    """
+
+    REFERENCE = REPO_ROOT / "aias" / ".skills" / "rho-aias" / "reference.md"
+    CONTRACT = REPO_ROOT / "aias" / "contracts" / "readme-artifact.md"
+    VALID_KINDS = ("validation", "amendment_dor", "amendment_dod")
+
+    def test_reference_declares_kind_enum(self):
+        body = _read_text(self.REFERENCE)
+        self.assertIn("kind", body)
+        for kind in self.VALID_KINDS:
+            with self.subTest(kind=kind):
+                self.assertIn(kind, body, f"reference must document '{kind}'")
+
+    def test_reference_documents_backward_compat(self):
+        body = _read_text(self.REFERENCE).lower()
+        self.assertIn("backward", body)
+        self.assertIn("validation", body)
+
+    def test_contract_extends_todo_ownership(self):
+        body = _read_text(self.CONTRACT)
+        self.assertIn("amendment_dor", body)
+        self.assertIn("amendment_dod", body)
+
+
+class TestLegacySingleBlockHardFail(unittest.TestCase):
+    """BL-S79 — /validate-plan v2.0 MUST hard-fail on legacy combined section.
+
+    The legacy `## Proposed DoR/DoD Amendments` block is FORBIDDEN. The skill
+    body must document the hard-fail mechanism and point to QUICKSTART.
+    """
+
+    VALIDATE_PLAN = REPO_ROOT / "aias" / ".skills" / "validate-plan" / "SKILL.md"
+    QUICKSTART = REPO_ROOT / "aias" / "docs" / "QUICKSTART.md"
+
+    def test_validate_plan_documents_hard_fail(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("Proposed DoR/DoD Amendments", body)
+        self.assertTrue(
+            "hard-fail" in body.lower() or "hard fail" in body.lower(),
+            "validate-plan must document the hard-fail behaviour",
+        )
+
+    def test_validate_plan_references_split_sections(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("Proposed DoR Amendments", body)
+        self.assertIn("Proposed DoD Amendments", body)
+
+    def test_validate_plan_is_major_v2(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertRegex(body, r"version:\s*2\.\d+\.\d+", "validate-plan must be v2.x (MAJOR)")
+
+    def test_quickstart_documents_migration(self):
+        body = _read_text(self.QUICKSTART)
+        self.assertIn("Upgrading from v9.4 to v9.5", body)
+        self.assertIn("Proposed DoR/DoD Amendments", body)
+
+
+class TestAmendmentRoutingInvariant(unittest.TestCase):
+    """BL-S79 — consolidate-plan v2.0 routes by kind with strict targeting.
+
+    - kind: validation     → named artifact (e.g., technical.plan.md)
+    - kind: amendment_dor  → dor.plan.md (only)
+    - kind: amendment_dod  → dod.plan.md (only)
+    """
+
+    CONSOLIDATE = REPO_ROOT / "aias" / ".skills" / "consolidate-plan" / "SKILL.md"
+    RHO_AIAS = REPO_ROOT / "aias" / ".skills" / "rho-aias" / "SKILL.md"
+
+    def test_consolidate_plan_is_major_v2(self):
+        body = _read_text(self.CONSOLIDATE)
+        self.assertRegex(body, r"version:\s*2\.\d+\.\d+", "consolidate-plan must be v2.x (MAJOR)")
+
+    def test_consolidate_plan_routes_each_kind(self):
+        body = _read_text(self.CONSOLIDATE)
+        for kind in ("amendment_dor", "amendment_dod", "validation"):
+            with self.subTest(kind=kind):
+                self.assertIn(kind, body, f"consolidate-plan must route '{kind}'")
+
+    def test_consolidate_plan_targets_correct_artifacts(self):
+        body = _read_text(self.CONSOLIDATE)
+        self.assertIn("dor.plan.md", body)
+        self.assertIn("dod.plan.md", body)
+
+    def test_rho_aias_documents_routing_invariant(self):
+        body = _read_text(self.RHO_AIAS)
+        self.assertIn("Amendment routing invariant", body)
+
+
+class TestProposedBlockSplit(unittest.TestCase):
+    """BL-S79 — blueprint emits two separate sections, never single-block.
+
+    The skill body must declare both canonical Proposed sections AND must
+    forbid the combined section.
+    """
+
+    BLUEPRINT = REPO_ROOT / "aias" / ".skills" / "blueprint" / "SKILL.md"
+    VALIDATE_PLAN = REPO_ROOT / "aias" / ".skills" / "validate-plan" / "SKILL.md"
+
+    def test_blueprint_declares_two_sections(self):
+        body = _read_text(self.BLUEPRINT)
+        self.assertIn("Proposed DoR Amendments", body)
+        self.assertIn("Proposed DoD Amendments", body)
+
+    def test_blueprint_forbids_combined_section(self):
+        body = _read_text(self.BLUEPRINT)
+        self.assertIn("Proposed DoR/DoD Amendments", body)
+        self.assertTrue(
+            "FORBIDDEN" in body or "forbidden" in body.lower(),
+            "blueprint must explicitly forbid the legacy combined section",
+        )
+
+    def test_blueprint_documents_inline_capture_not_modification(self):
+        """v9.6+ — blueprint MUST document inline capture as Proposed bullet sub-field,
+        NOT inline modification of dor.plan.md / dod.plan.md."""
+        body = _read_text(self.BLUEPRINT)
+        self.assertIn(
+            "Inline confirmation",
+            body,
+            "blueprint must document the **Inline confirmation**: sub-field marker (v9.6+)",
+        )
+        self.assertNotIn(
+            "Resolution Log",
+            body,
+            "blueprint must not reference the deprecated Resolution Log section (removed in v9.6)",
+        )
+        self.assertNotIn(
+            "Path A",
+            body,
+            "blueprint must not reference Path A — Inline UNKNOWN resolution (removed in v9.6)",
+        )
+
+    def test_validate_plan_aligns_split_invariant(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("Proposed DoR Amendments", body)
+        self.assertIn("Proposed DoD Amendments", body)
+
+
+class TestRefinementArtifactImmutability(unittest.TestCase):
+    """v9.6+ — blueprint MUST NOT modify dor.plan.md / dod.plan.md; only enrich
+    and consolidate-plan are authorized mutators per readme-artifact.md v2.3."""
+
+    BLUEPRINT = REPO_ROOT / "aias" / ".skills" / "blueprint" / "SKILL.md"
+    CONTRACT = REPO_ROOT / "aias" / "contracts" / "readme-artifact.md"
+
+    def test_contract_documents_mutation_invariant(self):
+        body = _read_text(self.CONTRACT)
+        self.assertIn("Refinement Artifact Mutation Invariant", body)
+        self.assertIn("v2.3", body)
+
+    def test_contract_lists_authorized_modifiers(self):
+        body = _read_text(self.CONTRACT)
+        self.assertIn("/enrich --refresh", body)
+        self.assertIn("/consolidate-plan", body)
+
+    def test_blueprint_non_goals_forbid_direct_modification(self):
+        body = _read_text(self.BLUEPRINT)
+        forbid_section_idx = body.find("Non-Goals")
+        self.assertGreater(forbid_section_idx, -1)
+        non_goals = body[forbid_section_idx:]
+        self.assertIn("Modify `dor.plan.md`", non_goals)
+        self.assertTrue(
+            "under ANY circumstance" in non_goals or "under any circumstance" in non_goals,
+            "blueprint Non-Goals must forbid DoR/DoD modification unconditionally (v9.6+)",
+        )
+
+    def test_blueprint_phase_0_bug_exception_create_only(self):
+        body = _read_text(self.BLUEPRINT)
+        self.assertIn("bug exception", body.lower())
+        self.assertIn("profile is NOT", body)
+
+
+class TestInlineConfirmationMarkerConsistency(unittest.TestCase):
+    """v9.6+ — the **Inline confirmation**: sub-field marker must be documented
+    consistently across blueprint, validate-plan, consolidate-plan, contract."""
+
+    BLUEPRINT = REPO_ROOT / "aias" / ".skills" / "blueprint" / "SKILL.md"
+    VALIDATE_PLAN = REPO_ROOT / "aias" / ".skills" / "validate-plan" / "SKILL.md"
+    CONSOLIDATE_PLAN = REPO_ROOT / "aias" / ".skills" / "consolidate-plan" / "SKILL.md"
+    CONTRACT = REPO_ROOT / "aias" / "contracts" / "readme-artifact.md"
+
+    def test_blueprint_documents_marker(self):
+        body = _read_text(self.BLUEPRINT)
+        self.assertIn("**Inline confirmation**", body)
+        self.assertIn("(YYYY-MM-DD)", body)
+
+    def test_validate_plan_documents_marker_parsing(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("**Inline confirmation**", body)
+        self.assertIn("multi-line", body.lower())
+
+    def test_consolidate_plan_documents_marker_default(self):
+        body = _read_text(self.CONSOLIDATE_PLAN)
+        self.assertIn("**Inline confirmation**", body)
+        self.assertIn("default", body.lower())
+
+    def test_contract_documents_canonical_regex(self):
+        body = _read_text(self.CONTRACT)
+        self.assertIn("Inline confirmation", body)
+        self.assertIn(r"\d{4}-\d{2}-\d{2}", body)
+
+
+class TestEnrichRefreshFlag(unittest.TestCase):
+    """BL-S81 — enrich must document --refresh flag, Phase 1b, and the two
+    governance gates."""
+
+    ENRICH = REPO_ROOT / "aias" / ".skills" / "enrich" / "SKILL.md"
+
+    def test_enrich_version_bumped(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("version: 1.3.0", body)
+
+    def test_enrich_documents_refresh_flag(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("--refresh", body)
+
+    def test_enrich_documents_phase_1b(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("Phase 1b", body)
+
+    def test_enrich_documents_refresh_approval_gate(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("Gate: Refresh Approval", body)
+
+    def test_enrich_documents_amendment_reconciliation_subgate(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("Sub-Gate: Amendment Reconciliation", body)
+
+    def test_enrich_documents_case_a_b_c(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("Case A", body)
+        self.assertIn("Case B", body)
+        self.assertIn("Case C", body)
+
+
+class TestStatusMdRefreshField(unittest.TestCase):
+    """BL-S81 — status.md Format must declare last_refreshed_at as an optional
+    field (v9.6+)."""
+
+    REFERENCE = REPO_ROOT / "aias" / ".skills" / "rho-aias" / "reference.md"
+
+    def test_status_md_documents_last_refreshed_at(self):
+        body = _read_text(self.REFERENCE)
+        self.assertIn("last_refreshed_at", body)
+
+    def test_status_md_describes_refresh_semantics(self):
+        body = _read_text(self.REFERENCE)
+        self.assertIn("UTC ISO8601", body)
+        self.assertIn("/enrich --refresh", body)
+
+    def test_status_md_treats_absent_as_null(self):
+        body = _read_text(self.REFERENCE)
+        self.assertTrue(
+            "absent and `null` identically" in body or "absent" in body.lower(),
+            "reference.md must clarify that absent last_refreshed_at == null",
+        )
+
+
+class TestValidatePlanMultilineParsing(unittest.TestCase):
+    """BL-S82 — validate-plan v2.1.0 must document multi-line bullet parsing
+    + backward compatibility with v9.5 single-line bullets."""
+
+    VALIDATE_PLAN = REPO_ROOT / "aias" / ".skills" / "validate-plan" / "SKILL.md"
+
+    def test_version_bumped_to_2_1_0(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("version: 2.1.0", body)
+
+    def test_documents_multiline_parsing(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("multi-line", body.lower())
+        self.assertIn("Bullet parsing", body)
+
+    def test_documents_backward_compatibility(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertIn("Backward compatibility", body)
+        self.assertIn("single-line", body.lower())
+
+    def test_content_field_captures_parent_only(self):
+        body = _read_text(self.VALIDATE_PLAN)
+        self.assertTrue(
+            "parent line only" in body or "parent line" in body,
+            "validate-plan must state TODO content captures parent line only",
+        )
+
+
+class TestConsolidatePlanMarkerParser(unittest.TestCase):
+    """BL-S82 — consolidate-plan v2.1.0 must parse **Inline confirmation**:
+    marker and use it as Update Approval default."""
+
+    CONSOLIDATE_PLAN = REPO_ROOT / "aias" / ".skills" / "consolidate-plan" / "SKILL.md"
+
+    def test_version_bumped_to_2_1_0(self):
+        body = _read_text(self.CONSOLIDATE_PLAN)
+        self.assertIn("version: 2.1.0", body)
+
+    def test_documents_marker_parser(self):
+        body = _read_text(self.CONSOLIDATE_PLAN)
+        self.assertIn("Inline confirmation marker", body)
+
+    def test_documents_discretion_clarifications(self):
+        body = _read_text(self.CONSOLIDATE_PLAN)
+        self.assertIn("Team notification is dev discretion", body)
+        self.assertIn("Tracker freshness is dev discretion", body)
+
+    def test_removes_entire_multiline_bullet(self):
+        body = _read_text(self.CONSOLIDATE_PLAN)
+        self.assertIn("entire multi-line bullet", body)
+
+
+class TestExpandStringNotation(unittest.TestCase):
+    """BL-S83 — expand parameter must be documented as a comma-separated string
+    (not an array) in all skills that call Atlassian MCP."""
+
+    ATLASSIAN = REPO_ROOT / "aias" / ".skills" / "atlassian-mcp" / "SKILL.md"
+    ENRICH = REPO_ROOT / "aias" / ".skills" / "enrich" / "SKILL.md"
+    REPORT = REPO_ROOT / "aias" / ".skills" / "report" / "SKILL.md"
+
+    def test_atlassian_uses_string_expand(self):
+        body = _read_text(self.ATLASSIAN)
+        self.assertIn("expand='renderedFields,names,schema'", body)
+        self.assertNotIn("expand=['renderedFields', 'names', 'schema']", body)
+
+    def test_atlassian_documents_comments_expand(self):
+        body = _read_text(self.ATLASSIAN)
+        self.assertIn("expand='renderedFields,names,schema,comment'", body)
+
+    def test_enrich_uses_string_expand(self):
+        body = _read_text(self.ENRICH)
+        self.assertIn("expand='renderedFields,names,schema'", body)
+        self.assertNotIn("expand=['renderedFields', 'names', 'schema']", body)
+
+    def test_report_uses_string_expand(self):
+        body = _read_text(self.REPORT)
+        self.assertIn("expand='renderedFields,names,schema'", body)
+        self.assertNotIn("expand=['renderedFields', 'names', 'schema']", body)
+
+
+class TestV96DocsConsistency(unittest.TestCase):
+    """Wave 4 — CHANGELOG records v9.6 entry; user-facing docs reference the
+    v9.6 mechanisms."""
+
+    CHANGELOG = REPO_ROOT / "aias" / "CHANGELOG.md"
+    ARCHITECTURE = REPO_ROOT / "aias" / "docs" / "ARCHITECTURE.md"
+    QUICKSTART = REPO_ROOT / "aias" / "docs" / "QUICKSTART.md"
+
+    def test_changelog_has_v96_entry(self):
+        body = _read_text(self.CHANGELOG)
+        self.assertIn("v9.6", body)
+        self.assertIn("Refinement Contract Hardening", body)
+
+    def test_architecture_mentions_refresh(self):
+        body = _read_text(self.ARCHITECTURE)
+        self.assertIn("--refresh", body)
+
+    def test_quickstart_documents_v95_to_v96_upgrade(self):
+        body = _read_text(self.QUICKSTART)
+        self.assertIn("v9.5 to v9.6", body)
+
+
 if __name__ == "__main__":
     unittest.main()
