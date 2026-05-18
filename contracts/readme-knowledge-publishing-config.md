@@ -1,4 +1,4 @@
-# Knowledge Publishing Config Contract — Cursor Configuration System (v1.0)
+# Knowledge Publishing Config Contract — Cursor Configuration System (v1.1)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -103,6 +103,7 @@ The config MUST declare operational invariants as an explicit rules list. At min
 - Title matching rule (case sensitivity, exactness)
 - Content completeness rule (publish full content, never truncate)
 - Graceful degradation rule (behavior when provider is unreachable)
+- **Title Canonicity rule (v1.1, cross-provider invariant — MUST):** Humanization of canonical artifact titles, repeating hierarchy node titles, or scope-aware title segments is FORBIDDEN regardless of provider. The publishing config MUST declare an explicit, deterministic title format (filename-based for artifacts, scope-aware for repeating nodes) and the agent MUST emit titles exactly as specified. Substituting filenames with human descriptions (e.g., `dod.plan.md` → "Definition of Done"), swapping the canonical separator for alternatives (em dash, en dash, slash, pipe, comma, middle dot, arrow), or re-casing scope segments breaks `findOrCreatePage` lookup determinism and produces silent duplicates on subsequent publishes. The publishing config SHOULD ship a regex or equivalent declarative pattern for each title shape so a pre-publish validator can refuse non-canonical writes before they reach the provider.
 
 ### Example
 
