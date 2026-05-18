@@ -10,7 +10,7 @@ Quick reference for getting started with the Rho AIAS configuration system.
 
 The framework ships the `/aias` skill at `aias/.skills/aias/SKILL.md`, but your IDE doesn't know about it until you make it available. Before running `/aias init` in a chat agent, choose one of these paths:
 
-| Path | When to use | Steps |
+| Option | When to use | Steps |
 |---|---|---|
 | **A. Copy the skill** | Your IDE supports custom skills or commands (e.g., Cursor) | Copy `aias/.skills/aias/SKILL.md` → `.cursor/skills/aias/SKILL.md` (or equivalent path for your tool). After `aias init` generates shortcuts, this manual copy is no longer needed for future skills. |
 | **B. Use the CLI directly** | Your IDE does not support custom skills, or you prefer the terminal | Run `python3 aias/.canonical/generation/aias_cli.py init` — no skill registration required. |
@@ -26,7 +26,7 @@ The fastest way to set up a new project is with the `aias` CLI:
 python3 aias/.canonical/generation/aias_cli.py init
 ```
 
-Or, if you copied the command (Path A):
+Or, if you copied the command (Option A):
 
 ```
 /aias init
