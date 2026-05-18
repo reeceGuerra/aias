@@ -3,10 +3,10 @@ name: enrich
 description: "Enriches a task with tracker data, DoR/DoD artifacts, and design context. Use at task intake to prepare for planning. Can update Jira fields when --fields flag is present. Trigger terms: /enrich, enrich task, enrich ticket, populate DoR."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.3.0
 ---
 
-# Enrich (Tracker-Backed Task Refinement) — v5
+# Enrich (Tracker-Backed Task Refinement) — v5.3
 
 ## 1. Identity
 
@@ -28,15 +28,22 @@ Invocation:
 - `/enrich <TASK_ID> --brief`
 - `/enrich <TASK_ID> --fields`
 - `/enrich <TASK_ID> --brief --fields`
+- `/enrich <TASK_ID> --refresh`
+- `/enrich <TASK_ID> --refresh --brief`
+- `/enrich <TASK_ID> --refresh --brief --fields`
 - `/enrich --brief` (when TASK_ID is provided via Structured Prompt)
 - `/enrich --brief --fields`
+- `/enrich --refresh`
 
 Flags:
 
 - `--brief` — Post an enrichment brief as a Jira comment for team context during refinement. Fires the Brief Comment Preview gate. Required for `refinement_validated: true`.
 - `--fields` — Write structured fields (Description, AC, Test Steps) to the tracker. Fires the Tracker Write Preview gate.
+- `--refresh` (v9.6+) — Re-derive DoR/DoD from the current tracker payload (description + custom fields + comments), diff against on-disk artifacts, and apply merged result under `Gate: Refresh Approval`. Fires `Sub-Gate: Amendment Reconciliation` per bullet when `technical.plan.md § Proposed Do{R,D} Amendments` are non-empty. Sets `last_refreshed_at: <UTC>` in `status.md` on successful apply.
 
 Without flags, `/enrich` performs analysis, writes local artifacts, and publishes to the knowledge provider (Confluence). No writes to Jira.
+
+**Rationale for `--refresh` (v9.6+):** During implementation, the tracker ticket frequently evolves (PM tightens the device matrix, QA adds an edge case in a comment, design publishes the missing flow). Without a refresh path, the dev has three bad options: (1) hand-edit the local DoR/DoD and lose audit, (2) re-run `/enrich` clean and lose any inline-confirmed amendments still in flight, (3) keep working against stale DoR/DoD and discover the drift at PR time. `--refresh` consolidates the merge through a single governance surface (Refresh Approval + Amendment Reconciliation) with `command_log` audit, preserving in-flight Proposed Amendments unless the user explicitly retires them.
 
 Usage notes:
 
@@ -45,10 +52,13 @@ Usage notes:
 - DoR/DoD artifacts (`dor.plan.md`, `dod.plan.md`) are written to TASK_DIR after the readiness check.
 - `--brief` posts an enrichment brief as a Jira comment (after user confirmation via gate). Without `--brief`, no Jira comment is posted.
 - `--fields` writes structured tracker fields (Description, AC, Test Steps). Without `--fields`, no tracker fields are modified.
-- The absence of `--brief` or `--fields` is not a gate bypass — it is a branch not activated. The gates only apply when the corresponding flag enables the external write path.
+- `--refresh` requires DoR/DoD to already exist locally; if missing it falls back to the canonical first-run flow (refresh is a no-op when there is nothing to merge against). It does NOT modify `refinement_validated` — that flag remains a historical indicator of `--brief` + publish success.
+- The absence of `--brief`, `--fields`, or `--refresh` is not a gate bypass — it is a branch not activated. The gates only apply when the corresponding flag enables the external write or refresh path.
 - `Enhanced by` headers exist only in the remote push representation (`--fields`). They do NOT appear in `analysis.product.md` or the local preview content.
 - This command does NOT transition the tracker status. The `pending_dor → ready` transition is a manual team responsibility during refinement.
 - This command works best after `@product` has provided product analysis (JTBD, 5 Whys, User Journey, MoSCoW), but it can also be used standalone.
+
+**Phase ordering with combined flags:** When `--refresh` is combined with `--brief` and/or `--fields`, the canonical execution order is: Phase 1 → Phase 1b (Refresh) → Phase 2 → Phase 3 → Phase 3-DoR → Phase 3b (when `--fields`) → Phase 4. The refresh resolves drift before re-classification, so downstream Completeness Checklist and tracker writes operate on the merged DoR/DoD. If Phase 1b's `Gate: Refresh Approval` is `abort`, the command halts before Phase 2 (no downstream side effects).
 
 ---
 
@@ -73,6 +83,9 @@ This command may use **only** the following inputs:
   - `report.issue.md` (for bugfix DoR derivation)
   - `analysis.fix.md` (for bugfix DoR derivation)
   - `feasibility.assessment.md` (for bugfix DoR derivation)
+- When `--refresh` is active (v9.6+), additional inputs:
+  - `dor.plan.md` and `dod.plan.md` (current on-disk artifacts to diff against)
+  - `technical.plan.md` (read `## Proposed DoR Amendments`, `## Proposed DoD Amendments`, and frontmatter `todos` for the Amendment Reconciliation sub-gate)
 - Service configs:
   - `aias-config/providers/tracker-config.md`
   - `aias-config/providers/knowledge-config.md`
@@ -83,6 +96,7 @@ Rules:
 - All inputs must be explicit. Do not infer task ids or tracker ticket ids from vague references.
 - If tracker or knowledge service config is missing, invalid, or unresolvable, STOP and request provider configuration.
 - If resolved tracker provider cannot read the ticket, STOP and inform the user.
+- For `--refresh`, if `dor.plan.md` or `dod.plan.md` is missing locally, emit an advisory `--refresh is a no-op when local DoR/DoD do not exist; falling back to canonical first-run flow` and continue as if `--refresh` were absent.
 
 ---
 
@@ -90,33 +104,54 @@ Rules:
 
 ### File Output
 
-| Artifact | Content |
-|----------|---------|
-| `analysis.product.md` | Gap summary, enhanced ticket content, product analysis |
-| `dor.plan.md` | Definition of Ready — scope, criteria, and constraints for the task |
-| `dod.plan.md` | Definition of Done — checklist of criteria for QA readiness |
+| Artifact | Content | When |
+|----------|---------|------|
+| `analysis.product.md` | Gap summary, enhanced ticket content, product analysis | First-run + refresh (always rewritten) |
+| `dor.plan.md` | Definition of Ready — scope, criteria, and constraints for the task | First-run (create); `--refresh` (modify, post-Refresh Approval) |
+| `dod.plan.md` | Definition of Done — checklist of criteria for QA readiness | First-run (create); `--refresh` (modify, post-Refresh Approval) |
+| `technical.plan.md` | Updated `## Proposed Do{R,D} Amendments` sections + frontmatter `todos` array when `Sub-Gate: Amendment Reconciliation` produces a `remove` or `tracker` outcome | Only with `--refresh` and only when reconciliation deletes TODOs |
 
 ### Local Artifact
 
 Write `analysis.product.md` to TASK_DIR with the full enriched content (gap summary, enhanced ticket content, product analysis).
 
-### Brief Comment Output (only with `--brief`)
+### Brief Comment Output (only with `--brief`, v9.4+ restructure)
 
-When the `--brief` flag is present, an enrichment brief is posted as a Jira comment via `addCommentToJiraIssue`. The brief is an executive summary derived from `analysis.product.md` with the following sections:
+When the `--brief` flag is present, an enrichment brief is posted as a Jira comment via `addCommentToJiraIssue`. The brief is a **collaborative refinement note** that proposes the agent's understanding of the ticket to the team. It is not an evaluation, a grade, or a checklist of deficiencies. The brief follows the `Collaborative Refinement Tone` pattern from `technical-writing/SKILL.md` § 7.
+
+**Output title:** `## Refinement Notes — <TASK_ID>`
+
+**Structure (in order):**
 
 | Section | Content | Condition |
-|---------|---------|-----------|
-| **Gap Summary** | Table of completeness dimensions (present / incomplete / missing) | Always |
-| **Problem Statement** | What problem is being solved and for whom | Always |
-| **User Flow** | Entry point → action → intermediate states → exit | Always |
-| **UI Specification** | Design reference or visual states summary | Only if task has UI scope; otherwise "Not applicable — no UI changes in scope" |
-| **API / Data Contract** | Endpoints, payloads, schemas involved | Only if task has API scope; otherwise "Not applicable — no API changes in scope" |
-| **Dependencies** | Modules, packages, or external services affected | Always |
-| **Out of Scope** | Explicit boundaries of what is NOT included | Always |
-| **User Journey** | End-to-end user journey from trigger to outcome | Always |
-| **Acceptance Criteria** | Verifiable criteria for "done" | Always |
+|---|---|---|
+| Opening paragraph | 1–2 sentences in the agent's own words paraphrasing the team's apparent intent. MUST NOT address or name the ticket author. The reader is the whole team. | Always |
+| `### What's solid` | Bullets the dimensions the ticket already covers well. Acknowledges signal; not flattery. | Always (when at least one dimension is solid; otherwise omit) |
+| `### What we already infer / propose to add` | Bullets the dimensions the agent has filled in (User flow, UI Spec, API/Data, Dependencies, NFRs, Test criteria — only those applicable). Each bullet attributes its inference to a source ("from the parent epic", "from the linked design", "from the chat context", "from the architecture") and ends with "please confirm" or "to validate". | Always (when at least one dimension was inferred) |
+| `### Open clarifications` | Bullets the items that need explicit human input. Phrased as questions. Replaces the evaluative `[Missing]` markers. | Only when there are unresolved items |
+| `### Out of scope (declared)` | Bullets what is NOT included in this task. Each item labeled with source ("from the ticket", "we propose to exclude"). | Always |
+| `### Acceptance Criteria (consolidated)` | Bullets the final AC list as proposed. Each item is a verifiable criterion per `technical-writing/SKILL.md` § 2. | Always |
+| `### Next steps` | Bullets the actions needed next. MUST NOT assign roles or individuals. The developer reading the comment tags whoever they think can help. | Always |
 
-The brief comment MUST NOT include local filesystem paths, machine-specific references, or `Enhanced by` headers.
+**Content invariants:**
+
+- **Language**: MUST be in English regardless of chat conversation language. The brief lands in a shared tracker that mixes languages; English is the canonical tracker convention.
+- **Tone**: MUST follow `Collaborative Refinement Tone` pattern (paraphrase, not evaluate). FORBIDDEN to use evaluative language ("missing", "incomplete", "lacks", "fails to specify"); SHOULD use collaborative language ("we infer", "we propose", "to confirm", "open question").
+- **Gap Summary stays local**: The completeness dimensions table from `analysis.product.md` is internal-only. The brief MUST NOT include it. Posting that table externally reads as a scoreboard of the ticket author's work, contradicting the collaborative posture.
+- **Next steps without role assignment**: `### Next steps` MUST list items only. MUST NOT assign actions to Product, UX, QA, or any role. Examples: "validate the user flow we proposed", "confirm the out-of-scope items", "attach the design reference if available". The dev decides who to tag.
+- **No greetings, no sign-offs**: FORBIDDEN to greet the author by name/role or sign the comment ("— AI", "— Rho AIAS"). The collaborator posture is implied by the structure; an explicit sign-off makes it sound like a memo from outside the team.
+- **No filesystem leakage**: FORBIDDEN to include local filesystem paths, machine-specific references, or `Enhanced by` headers.
+
+**Substitutions (mandatory):**
+
+| Replace evaluative | With collaborative |
+|---|---|
+| "missing X" / "X is missing" | "to confirm: X" or "we did not see X in the ticket — open question" |
+| "incomplete" / "lacks Y" | "we propose to add Y as we infer it from <source>" |
+| "needs Z" / "Z required" | "we infer Z; please confirm" |
+| "the ticket fails to specify" | "we did not find a definition of" |
+| "this is unclear" | "open clarification" |
+| `[Missing]` / `[Incomplete]` markers | `What we already infer / propose to add` or `Open clarifications` |
 
 ### Tracker Field Write (only with `--fields`)
 
@@ -234,6 +269,118 @@ Present tracker write preview in chat:
 
 **Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
 
+### Gate: Refresh Approval (only with `--refresh`, v9.6+)
+
+**Type:** Confirmation
+**Fires:** Phase 1b, after the agent has re-derived DoR/DoD from the refreshed tracker payload and diffed them against the on-disk artifacts.
+**Skippable:** No.
+
+**Context output:**
+Present the diff in chat with per-dimension/criterion classification:
+
+```
+REFRESH DIFF for <TASK_ID>:
+  dor.plan.md:
+    [add] <Dimension>: <new content snippet>
+    [modify] <Dimension>: <old> → <new>
+    [remove] <Dimension>: <content being removed> (reason: <tracker no longer carries this>)
+    [unchanged] <Dimension>: <no change>
+  dod.plan.md:
+    [add] <Criterion>: <new content snippet>
+    [modify] <Criterion>: <old> → <new>
+    [remove] <Criterion>: <content being removed>
+    [unchanged] <Criterion>: <no change>
+
+  Drift source: <tracker description | custom field <X> | comment <author, date>>
+  Net change: +N additions / M modifications / K removals
+```
+
+When the diff is empty (no drift detected), emit `[STATE: completed] no drift detected — DoR/DoD unchanged` and skip both this gate and the Amendment Reconciliation sub-gate.
+
+**AskQuestion:**
+- **Runtime compatibility:** If `AskQuestion` is unavailable, use the Text Gate Protocol from `readme-commands.md` with the same prompt, option ids, labels, and `allow_multiple` semantics.
+- **Prompt:** "Refresh diff for <TASK_ID> — apply to local DoR/DoD?"
+- **Options:**
+  - `proceed`: "Apply merged DoR/DoD and continue"
+  - `adjust`: "Show me a specific dimension/criterion to override before applying"
+  - `abort`: "Abort refresh — keep local DoR/DoD unchanged"
+- **allow_multiple:** false
+
+**On response:**
+- `proceed` → Apply merged DoR/DoD; fire **Sub-Gate: Amendment Reconciliation** (only when `## Proposed DoR Amendments` or `## Proposed DoD Amendments` is non-empty in `technical.plan.md`). After reconciliation, write artifacts to TASK_DIR, mark them as `modified` in `status.md`, set `last_refreshed_at: <UTC>`.
+- `adjust` → User picks a specific dimension/criterion; agent shows the conflict in isolation and re-presents this gate.
+- `abort` → Halt refresh. Emit `[STATE: blocked] refresh aborted by user — local DoR/DoD unchanged`. Do NOT modify `last_refreshed_at`. Do NOT proceed to Phase 2 if this was a pure `--refresh` invocation.
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. No additional rules.
+
+### Sub-Gate: Amendment Reconciliation (only with `--refresh`, when Proposed sections are non-empty, v9.6+)
+
+**Type:** Confirmation (iterated per bullet)
+**Fires:** Inside Phase 1b, after `Gate: Refresh Approval` returns `proceed` AND `technical.plan.md` contains at least one non-empty `## Proposed DoR Amendments` or `## Proposed DoD Amendments` section.
+**Skippable:** No.
+
+**Matching algorithm (per bullet, exact-string):**
+
+1. Iterate every bullet in `## Proposed DoR Amendments` and `## Proposed DoD Amendments`.
+2. Extract the parent dimension/criterion from the bullet (e.g., `**Non-Functional**`).
+3. Look up the same dimension/criterion in the refreshed DoR/DoD derivation (exact-string match on the dimension/criterion name, case sensitive).
+4. Classify the bullet into one of three cases:
+   - **Case A — confirm**: refreshed DoR/DoD now carries content semantically equivalent to the bullet's `**Proposed resolution**:` value or `**Inline confirmation**:` value (when present). Tracker now confirms what the bullet was proposing.
+   - **Case B — contradict**: refreshed DoR/DoD now carries content that contradicts the bullet's proposed value (different acceptance criterion, different test scope, etc.).
+   - **Case C — orthogonal**: the refreshed DoR/DoD does not mention this dimension/criterion at all (or mentions it but in an unrelated context). The proposed amendment is unaffected by the refresh.
+5. Case C bullets are kept verbatim — no prompt fires. Only Case A and Case B fire the sub-gate prompt.
+
+**Per-bullet context output (Case A — confirm):**
+
+```
+[Case A — tracker confirms] <Section>: <Dimension>
+  Local bullet:    <full bullet content>
+  Tracker says:    <refreshed value>
+  Suggested:       apply now (remove TODO from frontmatter, remove bullet from body)
+```
+
+**AskQuestion (Case A):**
+- **Prompt:** "Tracker now confirms <Dimension>. Apply now and remove TODO?"
+- **Options:**
+  - `apply`: "Apply now (remove TODO from frontmatter, remove bullet from body)"
+  - `keep`: "Keep TODO (defer apply to /consolidate-plan)"
+  - `skip`: "Skip this refresh dimension (keep both bullet and refreshed value pending — re-evaluate next refresh)"
+- **allow_multiple:** false
+
+**Per-bullet context output (Case B — contradict):**
+
+```
+[Case B — tracker contradicts] <Section>: <Dimension>
+  Local bullet:    <full bullet content>
+  Tracker says:    <contradicting value>
+  Suggested:       tracker wins (the bullet was based on stale context)
+```
+
+**AskQuestion (Case B):**
+- **Prompt:** "Tracker contradicts <Dimension>. Which value wins?"
+- **Options:**
+  - `tracker`: "Tracker wins (remove TODO from frontmatter, remove bullet from body, accept refreshed value)"
+  - `bullet`: "Bullet wins (keep TODO, override the refreshed DoR/DoD at this dimension with the bullet's proposed value)"
+  - `manual`: "Manual abort — open the artifact in the editor and resolve myself"
+- **allow_multiple:** false
+
+**On response:**
+
+| Case | Choice | DoR/DoD outcome | TODO outcome (technical.plan.md frontmatter) | Bullet outcome (technical.plan.md body) |
+|---|---|---|---|---|
+| A | `apply` | Refreshed value applied | TODO **deleted** | Bullet removed |
+| A | `keep` | Refreshed value applied | TODO retained (`status: pending`) | Bullet retained |
+| A | `skip` | Refreshed value NOT applied at this dimension; on-disk dimension retains old value | TODO retained | Bullet retained |
+| B | `tracker` | Refreshed value applied | TODO **deleted** | Bullet removed |
+| B | `bullet` | Refreshed value NOT applied at this dimension; on-disk dimension keeps the bullet's `**Proposed resolution**:` (or `**Inline confirmation**:`) value | TODO retained | Bullet retained |
+| B | `manual` | Refresh ABORTS for the entire artifact (DoR or DoD) at this point | No mutation | No mutation |
+
+**Manual abort persistence (Case B `manual`):** When the user chooses `manual`, the entire refresh stops at this bullet. Already-applied dimensions earlier in the iteration are **rolled back** — no partial DoR/DoD mutation is committed. The on-disk state is identical to pre-Refresh-Approval. `last_refreshed_at` is NOT set. Emit `[STATE: blocked] manual reconciliation requested — refresh rolled back; resolve <dimension> in <artifact> manually, then re-run /enrich --refresh`. Audit: append `command_log` entry as normal (the invocation happened).
+
+**Race condition note:** Between the original `/enrich` and this `--refresh`, another agent or human MAY have edited `technical.plan.md` body without going through `/consolidate-plan` (e.g., direct editor edit). The matching algorithm uses exact-string match on the dimension/criterion name from the bullet's `**<Dimension>**:` header — it does NOT attempt fuzzy/semantic matching. If a bullet's dimension name does not appear in the refreshed DoR/DoD, it is classified as Case C (orthogonal) by default. The user MAY re-run with manual edits if Case C classification is incorrect.
+
+**Anti-bypass:** Inherits Gate Invocation Protocol. The iteration MUST visit every Case A and Case B bullet (Case C bullets are silent). Skipping bullets via `--fast` is FORBIDDEN — the user MUST individually decide each non-orthogonal bullet.
+
 ### Gate: DoR Readiness Check
 
 **Type:** Confirmation
@@ -278,6 +425,10 @@ Saved artifacts to: <absolute_path>/
   - analysis.product.md
   - dor.plan.md
   - dod.plan.md
+  [- technical.plan.md (modified by --refresh reconciliation)]
+[Refresh: applied (N additions, M modifications, K removals) | skipped | aborted | not requested (no --refresh)]
+[Amendment reconciliation: N confirms, M contradicts, K orthogonal | not applicable]
+[last_refreshed_at: <UTC ISO8601> | unchanged]
 [Knowledge provider: published | skipped | failed]
 [Brief comment: posted | skipped | not requested (no --brief)]
 [Tracker fields: updated (<list>) | skipped | not requested (no --fields)]
@@ -301,18 +452,19 @@ After writing local artifacts:
    - `completed: null`
    - `artifacts: {}`
    - `command_log: []`
-2. Add `analysis.product.md`, `dor.plan.md`, and `dod.plan.md` to `artifacts` map with status `created` or `modified`.
-3. Add `refinement` to `completed_steps`. Set `current_step` based on the profile: if `enrichment` → `closure`; otherwise → `blueprint`.
+2. Add `analysis.product.md`, `dor.plan.md`, and `dod.plan.md` to `artifacts` map with status `created` or `modified`. When `--refresh` applied changes to DoR/DoD, mark them as `modified`. When Amendment Reconciliation mutated `technical.plan.md`, mark it as `modified` too.
+3. Add `refinement` to `completed_steps`. Set `current_step` based on the profile: if `enrichment` → `closure`; otherwise → `blueprint`. **Do NOT advance `current_step` on a pure `--refresh` invocation** when `refinement` is already in `completed_steps` — `--refresh` is a maintenance operation, not a step progression.
 4. Run Phase 5c: sync non-synced artifacts to resolved knowledge provider. Phase 5c fires only when a valid tracker ticket exists for TASK_ID (P1–P3 preconditions; see **rho-aias** skill § Phase 5c). If preconditions are not met, skip silently — artifacts remain in created/modified state for `/publish` to reconcile. After each successful publish, inject TOC per resolved provider config.
-5. Set `refinement_validated` in `status.md`: `true` if `--brief` was used, brief comment was posted, AND knowledge publish succeeded (team has context for refinement); `false` otherwise. This evaluation happens **after** Phase 5c and after the brief comment (if `--brief`).
-6. Append to `command_log`: `{command: /enrich, started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. See `reference.md` § Command Log for full rules.
+5. Set `refinement_validated` in `status.md`: `true` if `--brief` was used, brief comment was posted, AND knowledge publish succeeded (team has context for refinement); `false` otherwise. This evaluation happens **after** Phase 5c and after the brief comment (if `--brief`). `--refresh` does NOT modify this flag (it remains the historical indicator of `--brief` + publish success on the original refinement).
+6. When `--refresh` Phase 1b applied changes (Refresh Approval = `proceed`), set `last_refreshed_at: <UTC ISO8601>` in `status.md` (obtain via `date -u +%Y-%m-%dT%H:%M:%SZ`). When Refresh Approval = `abort` or `skip`, do NOT modify `last_refreshed_at`.
+7. Append to `command_log`: `{command: /enrich [--refresh] [--brief] [--fields], started_at: <UTC>, ended_at: <UTC>}` — obtain timestamps via `date -u +%Y-%m-%dT%H:%M:%SZ`. The `command` value MUST include the active flags so the command_log is a faithful audit of what was invoked. See `reference.md` § Command Log for full rules.
 
 ---
 
 ## 5. Content Rules (Semantics)
 
 - Output must be in **English**.
-- Apply the **technical-writing** skill patterns: Problem Framing, Acceptance Criteria, Risk Articulation, Conciseness.
+- Apply the **technical-writing** skill patterns: Problem Framing, Acceptance Criteria, Risk Articulation, Conciseness, and — for any tracker-facing output produced under `--brief` — Collaborative Refinement Tone (v9.4+, see `technical-writing/SKILL.md` § 7).
 - When generating file impact or acceptance criteria with increment granularity, apply the **incremental-decomposition** skill.
 - Do **NOT** invent information that cannot be inferred from the ticket, chat context, or project architecture.
 - When information is missing and cannot be inferred, mark it as **[Needs input]** with a targeted question.
@@ -321,6 +473,23 @@ After writing local artifacts:
 - The local artifact and local preview MUST stay provider-agnostic and MUST NOT contain `Enhanced by` headers.
 - Classification signals from tracker metadata MAY be used to shape `Description`, but `/enrich` MUST surface ambiguity or conflict through the Classification Comprehension gate instead of deciding silently.
 - DoR Test criteria define **what** must be tested (scenarios, happy path, edge/corner cases, failure scenarios). They do NOT define **how** to implement the tests — that is the responsibility of `/blueprint` (Category 5: Testing).
+
+### Brief comment invariants (v9.4+, when `--brief` is present)
+
+- **Language**: The brief comment MUST be in English regardless of the chat conversation language. This is independent of the agent's chat language and is the canonical tracker convention for shared cross-team tickets.
+- **Tone**: MUST follow `Collaborative Refinement Tone` (`technical-writing/SKILL.md` § 7). Evaluative language is FORBIDDEN; collaborative language is REQUIRED.
+- **Gap Summary stays local**: The brief MUST NOT include the Gap Summary table from `analysis.product.md`. The table is internal-only.
+- **Next Steps without role assignment**: `### Next steps` MUST list items only. MUST NOT assign actions to Product, UX, QA, or any role.
+- **No greetings, no sign-offs**: The brief MUST NOT greet the ticket author by name/role or sign the comment.
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use canonical heading names without producer-side enumeration prefixes (`Category N:`, `Phase N —`, `Step N:`).
+
+- `analysis.product.md`: section headings (e.g., `## Gap Summary`, `## Acceptance Criteria`) come from the `/enrich` output template verbatim; the agent MUST NOT prepend any internal-phase marker.
+- `dor.plan.md`: each `## <Dimension>` heading follows the active DoR template (e.g., feature, bugfix, refactor, spike) verbatim; no `Phase N:` or `Step N:` prefixes.
+- `dod.plan.md`: criterion checklist follows the active DoD template verbatim; no enumeration prefixes on the criteria.
+- Brief comment posted to the tracker (`## Refinement Notes — <TASK_ID>`): the sub-section headings (`### What's solid`, `### What we already infer / propose to add`, `### Open clarifications`, `### Out of scope (declared)`, `### Acceptance Criteria (consolidated)`, `### Next steps`) are canonical verbatim.
 
 ---
 
@@ -331,8 +500,30 @@ After writing local artifacts:
 1. Follow **rho-aias** skill loading protocol (Phases 0–3) to resolve TASK_DIR and load existing artifacts.
 2. Resolve tracker provider from `aias-config/providers/tracker-config.md`; if missing/invalid/unresolvable, abort and request provider configuration.
 3. Load `field_mapping_source` from the resolved tracker config (MANDATORY for write commands). If field mapping is missing or unresolvable, STOP with `MISSING_FIELD_MAPPING` and request configuration via `/aias configure-providers`.
-4. Use the resolved provider to read the ticket: description, acceptance criteria, comments, linked issues, status.
+4. **Exhaustive tracker read (v9.4+, v9.6+ refresh extension)**: Use the resolved provider to read the ticket with the broadest read pattern available — refinement/enrichment commands MUST NOT whitelist fields, otherwise custom fields outside the whitelist (RCA categorical fields, legacy enrichment fields, project-specific extensions, etc.) are silently dropped from the Completeness Checklist and the enrichment runs blind to half the ticket. For Atlassian MCP, call `getJiraIssue(cloudId, issueIdOrKey, fields=['*all'], expand='renderedFields,names,schema')`. **When `--refresh` is active (v9.6+)**, also include `comment` in the expand string so the comment thread is returned in the same call: `expand='renderedFields,names,schema,comment'`. The refresh diff (Phase 1b) reads tracker description + custom fields + the comment thread to detect drift since the original `/enrich` run. Unknown fields that surface in the response MUST be exposed in the Completeness Checklist using the schema-given label. This rule overrides any targeted-fields guidance from earlier versions for refinement workflows; write commands (`/enrich --fields`, `/report`) keep targeted writes — only reads become exhaustive.
+   - **Tracker unreachable handling:** If the read call fails (network error, auth error, ticket archived/deleted), STOP with `[STATE: blocked]` and a diagnostic message. When `--refresh` triggered the call, the on-disk DoR/DoD remain unchanged — no partial merge is attempted.
+   - **Provider portability:** This sub-clause documents Atlassian MCP (Jira) specifics. Other tracker providers (Linear, GitHub Issues, etc.) MUST be invoked through their canonical exhaustive read pattern as documented in their respective MCP/skill (see `aias/.skills/<provider>-mcp/SKILL.md` when present). The semantic invariant — read description + custom fields + comment thread in one call — is provider-agnostic; the syntactic shape of the call is not.
 5. If `@product` analysis is present in the chat context, collect it as supplementary input.
+
+### Phase 1b — Refresh from tracker (only with `--refresh`, v9.6+)
+
+This phase runs only when `--refresh` is active AND `dor.plan.md` and `dod.plan.md` exist locally. Otherwise it is skipped silently. The phase enforces the **Refinement Artifact Mutation Invariant** (`aias/contracts/readme-artifact.md` v2.3 § Refinement Artifact Mutation Invariant) — `/enrich --refresh` is one of the two commands authorized to modify DoR/DoD.
+
+**Step ordering (11 steps):**
+
+1. Read on-disk `dor.plan.md` and `dod.plan.md` into memory.
+2. Read on-disk `technical.plan.md` (frontmatter `todos` + body `## Proposed DoR Amendments` + body `## Proposed DoD Amendments`) into memory. If `technical.plan.md` does not exist, treat Proposed sections as empty and skip the Amendment Reconciliation sub-gate (it will not fire).
+3. Re-derive a fresh DoR/DoD from the refreshed tracker payload (description + custom fields + comment thread already read in Phase 1 step 4 with `expand='renderedFields,names,schema,comment'`).
+4. Compute the diff per dimension/criterion. Classify each as `add | modify | remove | unchanged`. For each `modify`, store both old and new values for the gate preview.
+5. If the diff is empty (only `unchanged` entries), emit `[STATE: completed] no drift detected — DoR/DoD unchanged`, do NOT modify any artifact, do NOT modify `last_refreshed_at`, and return. **The phase ends here for no-drift cases.**
+6. Fire **Gate: Refresh Approval** with the diff preview. If the user chooses `abort`, halt with `[STATE: blocked] refresh aborted by user — local DoR/DoD unchanged` and return without mutating any artifact. If the user chooses `adjust`, show the specific dimension/criterion and re-present the gate.
+7. On `proceed`, if `technical.plan.md § Proposed Do{R,D} Amendments` are non-empty, fire **Sub-Gate: Amendment Reconciliation** per bullet (Case A and Case B only — Case C bullets are silent). Track per-bullet outcomes for steps 8–10.
+8. **Manual abort handling (Case B `manual` in step 7):** Roll back any DoR/DoD mutation already staged in memory for this refresh; do NOT write any artifact; do NOT modify `last_refreshed_at`; emit `[STATE: blocked] manual reconciliation requested — refresh rolled back` and return.
+9. Write merged `dor.plan.md` and `dod.plan.md` to TASK_DIR. When Amendment Reconciliation produced any `apply (Case A)` or `tracker (Case B)` outcome, also write the updated `technical.plan.md` (with the resolved bullets removed from the body and the corresponding TODOs deleted from frontmatter).
+10. Mark `dor.plan.md` and `dod.plan.md` as `modified` in `status.md`; mark `technical.plan.md` as `modified` only when step 9 modified it.
+11. Set `last_refreshed_at: <UTC ISO8601>` in `status.md`. Phase 1b ends; control returns to the main Phase ordering (Phase 2 follows when `--refresh` is combined with downstream flags; Phase 1b is the terminal phase for a pure `--refresh` invocation, which then jumps directly to Phase 5 status update + Phase 5c publish).
+
+**Provider portability:** Phase 1b is documented above against Atlassian MCP semantics. Other tracker providers MUST be invoked through their canonical exhaustive read pattern (description + custom fields + comments in a single call when supported). The diff/merge logic is provider-agnostic.
 
 ### Phase 2 — Analyze (Completeness Checklist)
 
@@ -452,10 +643,10 @@ Include the resolved write plan in the **Gate: Tracker Write Preview** context o
 
 1. Show in chat: Gap Summary table + Enhanced Ticket content + DoR/DoD summary.
 2. Write `analysis.product.md` to TASK_DIR.
-3. Write `dor.plan.md` and `dod.plan.md` to TASK_DIR.
+3. Write `dor.plan.md` and `dod.plan.md` to TASK_DIR. (Pure `--refresh` invocations skip steps 1–3 here because Phase 1b already wrote the merged DoR/DoD; `analysis.product.md` is not re-derived in pure refresh.)
 4. Run Phase 5 (status update + Phase 5c knowledge publish). After each successful publish, inject TOC per resolved provider config (see **rho-aias** skill § Phase 5c).
-5. If `--brief`: generate brief comment from `analysis.product.md` (executive summary — see Brief Comment Output) → fire **Gate: Brief Comment Preview** → if confirmed, post brief as comment via `addCommentToJiraIssue` → update `refinement_validated` to `true` in `status.md`.
-6. If `--fields`: execute Phase 3b (Field Write Plan) → fire **Gate: Tracker Write Preview** → write the remote enrichment payload to the resolved tracker provider.
+5. If `--brief`: generate brief comment from `analysis.product.md` (executive summary — see Brief Comment Output) → fire **Gate: Brief Comment Preview** → if confirmed, post brief as comment via `addCommentToJiraIssue` → update `refinement_validated` to `true` in `status.md`. (Skip on pure `--refresh` without `--brief`.)
+6. If `--fields`: execute Phase 3b (Field Write Plan) → fire **Gate: Tracker Write Preview** → write the remote enrichment payload to the resolved tracker provider. (Skip on pure `--refresh` without `--fields`.)
 7. End-of-Response Confirmation.
 
 SERVICE RESOLUTION PSEUDOFLOW:
