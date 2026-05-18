@@ -3,7 +3,7 @@ name: charter
 description: "Escalates a task scope or delivery constraints after new information emerges during implementation. Use when the original plan must be formally revised mid-task. Updates status.md classification. Trigger terms: /charter, scope change, re-charter, escalate classification."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Charter (Delivery Assessment) — v3
@@ -107,6 +107,14 @@ END-OF-RESPONSE CONFIRMATION (must follow)
 - Do **NOT** include implementation code, detailed technical steps, or file structure.
 - Effort estimates must use relative sizing (S/M/L/XL), never hours or days.
 - Mermaid diagrams must be syntactically valid and renderable.
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading name without producer-side enumeration prefixes (`Category N:`, `Phase N —`, `Step N:`).
+
+- `delivery.charter.md` headings follow the template in § 6 verbatim. The `## N) <Title>` numeric prefix IS canonical for charter (e.g., `## 1) Executive Summary`, `## 2) Plan Reference`) and is part of the published heading shape.
+- The agent MUST NOT introduce additional enumerated prefixes (`Category N:`, `Phase N —`) into the artifact.
+- Sub-section headings (`### Open Questions`, `### Technical Viability`, etc.) MUST follow the template verbatim.
 
 ---
 
