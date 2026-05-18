@@ -3,7 +3,7 @@ name: rho-aias
 description: Canonical skill protocol for artifact-driven development workflows. Use when the user works on a task that produces or consumes artifacts under <resolved_tasks_dir>/<TASK_ID>/ (default ~/.cursor/plans/) — including planning, implementation, enrichment, publishing, or any command that reads/writes task artifacts.
 category: knowledge
 disable-model-invocation: false
-version: 9.1.0
+version: 9.3.0
 ---
 
 # Agentic-Driven Development
@@ -109,11 +109,33 @@ Classification determines governance gates, not publication. Phase 5c fires only
 - Validated by `/validate-plan` (gap if missing).
 - `/charter` can **escalate** (minor→standard, standard→critical) but **never downgrade**.
 
-### Refinement and Amendment (v8.0)
+### Refinement and Amendment (v9.6+)
 
-- **Refinement validated**: `/enrich --brief` sets `refinement_validated: true` in `status.md` when brief comment is posted AND knowledge publish succeeds (team has context for refinement). Without `--brief`, `refinement_validated` is `false`. This flag informs context quality only; it MUST NOT relax classification-derived governance gates.
-- **Amendment Approval**: `/validate-plan` and `/consolidate-plan` include an Amendment gate for DoR/DoD changes discovered during planning (`apply_local`/`pause`/`reject`). `apply_local` modifies locally but does not publish via Phase 5c.
+- **Refinement Artifact Mutation Invariant (v9.6+)**: `dor.plan.md` and `dod.plan.md` are **created** by `/enrich` (refinement flow, primary path) or by `/blueprint` (bug exception only — when `profile: bugfix` and bug-flow artifacts exist without DoR/DoD from `/enrich`). Once they exist, they are **modified** ONLY by `/enrich --refresh` (re-read tracker + comments) or by `/consolidate-plan` (amendment TODO resolution). No other command may mutate them — not even with user confirmation in chat. Inline user answers during `/blueprint` are captured as a `**Inline confirmation**: <text> (YYYY-MM-DD)` sub-field marker inside the corresponding `## Proposed Do{R,D} Amendments` bullet (full contract in `aias/contracts/readme-artifact.md` v2.3 § Refinement Artifact Mutation Invariant).
+- **Refinement validated**: `/enrich --brief` sets `refinement_validated: true` in `status.md` when brief comment is posted AND knowledge publish succeeds (team has context for refinement). Without `--brief`, `refinement_validated` is `false`. `/enrich --refresh` does NOT modify this flag (semantically it is a historical indicator of brief+publish success, not of tracker-sync state). This flag informs context quality only; it MUST NOT relax classification-derived governance gates.
 - **DoR Readiness Check**: `/enrich` includes a DoR Readiness Check gate (blocking/non-blocking classification) before writing DoR/DoD artifacts.
+- **`/enrich --refresh` flow (v9.6+)**: re-reads tracker fields + comment thread, diffs against on-disk DoR/DoD, fires `Gate: Refresh Approval` for the merge, and fires `Sub-Gate: Amendment Reconciliation` (per bullet, iterated) when `## Proposed Do{R,D} Amendments` sections have content. Sets `status.md last_refreshed_at` UTC on successful apply. See `aias/.skills/enrich/SKILL.md` for full Phase ordering.
+- **Staged amendments (all gaps, inline-confirmed or unresolved)**: `/blueprint` stages every detected gap in two separate sections in `technical.plan.md` body:
+  - `## Proposed DoR Amendments` (canonical heading, no `Category` prefix)
+  - `## Proposed DoD Amendments` (canonical heading, no `Category` prefix)
+- **Amendment bullet shape (v9.6+, multi-line)**:
+  ```
+  - **<Dimension>**: <gap description>.
+    - **Proposed resolution**: <agent value or "needs <X> from <role>">
+    - **Inline confirmation** (optional): <user value> (YYYY-MM-DD)
+  ```
+- **Amendment routing invariant**:
+  - DoR-targeted amendments live ONLY in `dor.plan.md` (or staged in `technical.plan.md § Proposed DoR Amendments` before resolution).
+  - DoD-targeted amendments live ONLY in `dod.plan.md` (or staged in `technical.plan.md § Proposed DoD Amendments`).
+  - Mixing DoR and DoD changes in a single Proposed section is FORBIDDEN.
+  - The legacy combined section `## Proposed DoR/DoD Amendments` is FORBIDDEN since v9.5.
+  - Inline-confirmed items MUST appear in the Proposed section with the `**Inline confirmation**:` sub-field marker (v9.6+, reverses v9.5 Path A behavior).
+- **Amendment resolution flow (unified TODO model)**:
+  - `/validate-plan` v2.1.0+ parses multi-line bullets, reads both Proposed sections, and registers each entry as a TODO in `technical.plan.md` frontmatter with `kind: amendment_dor` or `kind: amendment_dod`. The TODO `content` field captures ONLY the parent line (dimension + gap description); sub-bullets stay in the body. It does NOT decide, apply, or remove Proposed entries. There is NO Amendment Approval gate.
+  - `/consolidate-plan` v2.1.0+ iterates TODOs (any `kind`: `validation`, `amendment_dor`, `amendment_dod`) with `status: pending`. For amendment TODOs, it reads the corresponding bullet from the body (matched by exact-string on dimension/criterion). If the bullet contains an `**Inline confirmation**:` sub-field, that value is the default proposed during the Update Approval gate. On apply, the entire bullet (parent + sub-bullets) is removed from the Proposed section.
+- **Todo lifecycle (v9.6+)**: `pending → completed` (consolidate-plan applies) or **deleted from frontmatter** (when `/enrich --refresh` Amendment Reconciliation sub-gate Case A `remove` or Case B `tracker` supersedes the amendment). No `cancelled` terminal state. Audit trail lives in `status.md command_log` + artifact git history + knowledge provider version history.
+- **Legacy hard-fail**: `/validate-plan` v2.0.0+ hard-fails when it detects the legacy combined `## Proposed DoR/DoD Amendments` heading. No auto-split heuristic is provided. Manual split is the only supported migration path. See `aias/docs/QUICKSTART.md § Upgrading from v9.4 to v9.5`.
+- **Phase 5c**: publishes all `modified` artifacts (`dor.plan.md`, `dod.plan.md`, `technical.plan.md`) without special gating. The old `apply_local` / `apply_and_publish` dichotomy is removed since v9.5.
 
 ### Governance in Artifacts
 
