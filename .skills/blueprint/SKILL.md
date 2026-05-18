@@ -3,10 +3,10 @@ name: blueprint
 description: "Collects and structures all data required for an implementation plan into TASK_DIR artifacts. Use after @planning reasoning to produce technical.plan.md, increments.plan.md, dod.plan.md, and dor.plan.md. Trigger terms: /blueprint, blueprint plan, create plan, structure plan."
 category: operative
 disable-model-invocation: true
-version: 5.0.0
+version: 5.4.0
 ---
 
-# Blueprint (Plan Data Collection + Structuring) — v5
+# Blueprint (Plan Data Collection + Structuring) — v5.4
 
 ## 1. Identity
 
@@ -112,9 +112,9 @@ Write the following artifacts to TASK_DIR:
 
 | Artifact | Content |
 |----------|---------|
-| `technical.plan.md` | Problem framing, architectural approach, file structure, visualization, proposed DoR/DoD amendments (if any) |
+| `technical.plan.md` | Problem framing, architectural approach, file structure, visualization, `## Proposed DoR Amendments` (only when DoR gaps exist, inline-confirmed or unresolved), `## Proposed DoD Amendments` (only when DoD gaps exist, inline-confirmed or unresolved). Legacy combined section `## Proposed DoR/DoD Amendments` is FORBIDDEN since v9.5. |
 | `increments.plan.md` | Cursor-first `.plan.md` artifact with frontmatter `name`, `overview`, `todos`, `isProject`, plus body content for increments, goals, steps, improvement margin, self-review, testing |
-| `specs.design.md` | Design specification from resolved design provider (only when design context exists) |
+| `specs.design.md` | Design specification. Generated when **either** a design URL is provided (full extraction via resolved design provider) **or** the DoR declares `orientation: user_facing` even without a design URL (minimal specs derived from DoR + chat context; see Category 6 conditions). |
 | `dor.plan.md` | **Bug exception only:** Generated when bug flow artifacts exist but no DoR/DoD from `/enrich` |
 | `dod.plan.md` | **Bug exception only:** Generated when bug flow artifacts exist but no DoR/DoD from `/enrich` |
 
@@ -201,6 +201,26 @@ When `refinement_validated: true` in `status.md` (set by `/enrich --brief` when 
 - **Design Specification** (category 6) is only collected when a design URL is provided and design context is available.
 - DoR Test criteria (from `dor.plan.md`) define **what** must be tested. Category 5 (Testing) defines **how** to implement those tests: input is the DoR Test criteria; output is a test implementation strategy.
 
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading name, not the producer-side data-collection category label.
+
+- The agent MUST NOT emit `## Category N: <title>` (or `### Category N: <title>`) into any written artifact. Producer-side `Category N:` headings live in this skill body only; the artifact-side heading drops the `Category N:` prefix.
+- Canonical artifact heading mapping (transversal, summarized; full map in `readme-artifact.md`):
+
+| Producer category | Target artifact | Canonical artifact heading |
+|---|---|---|
+| Category 1: Problem Framing | `technical.plan.md` | `## Problem Framing` |
+| Category 2: Architecture & Approach | `technical.plan.md` | `## Architecture and Approach` |
+| Category 3: Increments | `increments.plan.md` | `## Increments` with `### <Increment Name>` per increment |
+| Category 4: Self Code Review | `increments.plan.md` | `## Self Code Review` |
+| Category 5: Testing | `increments.plan.md` | `## Testing` |
+| Category 6: Design Specification | `specs.design.md` | `## Design Specification` |
+| Category 7: File Structure + Visualization | `technical.plan.md` | `## File Structure and Visualization` |
+
+- Governance section (when emitted) uses `## Governance` in `increments.plan.md`, no `Category` prefix.
+- Amendment blocks (when emitted) use `## Proposed DoR Amendments` and `## Proposed DoD Amendments` in `technical.plan.md`, no `Category` prefix.
+
 ---
 
 ## 6. Collection Protocol
@@ -219,8 +239,9 @@ Before collecting any data, verify DoR/DoD precondition and confirm understandin
    d. If BOTH found: read page content, write to TASK_DIR (create TASK_DIR if needed), set artifact sync status to `synced` in `status.md`, continue.
    e. If only one found or none → fall through.
    - This fallback only searches for `dor.plan.md` and `dod.plan.md` — it does not download other artifacts.
-3. If still not found BUT `feasibility.assessment.md` exists → **bug exception**: generate DoR/DoD bugfix artifacts derived from `report.issue.md` + `analysis.fix.md` + `feasibility.assessment.md`, then continue.
-4. If still not found AND no assessment exists → **STOP**: "DoR/DoD not found in TASK_DIR or knowledge provider. Run `/enrich <TASK_ID>` to define scope and criteria before planning."
+3. If still not found BUT `feasibility.assessment.md` exists AND `profile: bugfix` in `status.md` → **bug exception**: generate DoR/DoD bugfix artifacts derived from `report.issue.md` + `analysis.fix.md` + `feasibility.assessment.md`, then continue. **Bug exception is the ONLY create path for `/blueprint`** — it applies exclusively to `profile: bugfix` flows (v9.6+).
+4. **Non-bugfix profile precondition (v9.6+):** If still not found AND profile is NOT `bugfix` (i.e., `feature | refactor | enrichment | delivery | spike` per `aias/.skills/rho-aias/reference.md` § Workflow Profiles), abort with `[STATE: blocked]` and message: "Refinement artifacts missing for non-bugfix profile. Run `/enrich <TASK_ID>` first to create `dor.plan.md` and `dod.plan.md`, then re-run `/blueprint`."
+5. If still not found AND no assessment exists → **STOP**: "DoR/DoD not found in TASK_DIR or knowledge provider. Run `/enrich <TASK_ID>` to define scope and criteria before planning."
 
 **Step 2 — DoR/DoD Context Loading:**
 
@@ -301,10 +322,41 @@ Present a planning checkpoint summary:
 
 Collect all 7 categories. DoR/DoD are consumed as context — they are NOT re-collected.
 
-**DoR alignment check:** While collecting categories, verify that the proposed plan covers the functional requirements from the DoR. If gaps are detected between the DoR/DoD and the technical plan:
-- Do NOT modify `dor.plan.md` or `dod.plan.md`.
-- Register gaps as `## Proposed DoR/DoD Amendments` in `technical.plan.md`.
-- These amendments are resolved by `/validate-plan` via the Amendment gate.
+**DoR alignment check (v9.6+ TODO model, single-path):** While collecting categories, verify that the proposed plan covers the functional requirements from the DoR. **Any gap detected between DoR/DoD and the technical plan MUST be staged as a proposed amendment** in the corresponding split section (`## Proposed DoR Amendments` or `## Proposed DoD Amendments`) in `technical.plan.md`. Blueprint **MUST NOT modify** `dor.plan.md` or `dod.plan.md` even when the user resolves a gap inline in chat — inline answers are captured as a `**Inline confirmation**:` sub-field marker within the Proposed bullet, and `/consolidate-plan` applies them via the standard Update Approval gate. The legacy combined section `## Proposed DoR/DoD Amendments` is FORBIDDEN since v9.5.
+
+#### Staged amendments (all gaps, inline-confirmed or unresolved)
+
+Every gap detected during Phase 1 is staged as a proposed amendment in `technical.plan.md`. Split routing is mandatory:
+
+- **DoR-targeted gaps** → `## Proposed DoR Amendments` (section in `technical.plan.md`). Items here describe gaps in `dor.plan.md` to be applied by `/consolidate-plan` to `dor.plan.md`.
+- **DoD-targeted gaps** → `## Proposed DoD Amendments` (section in `technical.plan.md`). Items here describe gaps in `dod.plan.md` to be applied by `/consolidate-plan` to `dod.plan.md`.
+
+Each amendment entry uses a uniform multi-line shape (per `readme-artifact.md` v2.3 § Refinement Artifact Mutation Invariant):
+
+```markdown
+## Proposed DoR Amendments
+
+- **<Dimension>**: <gap description>.
+  - **Proposed resolution**: <agent's proposed value or "needs <X> from <role>">
+  - **Inline confirmation** (optional, only when user resolved in chat): <user value> (YYYY-MM-DD)
+
+## Proposed DoD Amendments
+
+- **<Criterion>**: <gap description>.
+  - **Proposed resolution**: <agent's proposed value or "needs <X> from <role>">
+  - **Inline confirmation** (optional, only when user resolved in chat): <user value> (YYYY-MM-DD)
+```
+
+The `**Inline confirmation**:` sub-field is **optional**. Include it only when the user answers a DoR/DoD gap directly in the same `/blueprint` chat. The value is captured verbatim with the resolution date in `YYYY-MM-DD` UTC. `/consolidate-plan` v2.1.0+ parses this marker and uses it as the default proposed value during its Update Approval gate.
+
+**Routing invariant (FORBIDDEN patterns):**
+
+- Mixing DoR and DoD items in a single Proposed section is FORBIDDEN.
+- Emitting a legacy single-block `## Proposed DoR/DoD Amendments` is FORBIDDEN (since v9.5). `/validate-plan` v2.1.0 hard-fails on detection of this legacy heading.
+- Inline-confirmed items MUST appear in the Proposed section with the `**Inline confirmation**:` sub-field marker — they are applied by `/consolidate-plan` like any other amendment (the marker provides the default value).
+- Direct modification of `dor.plan.md` or `dod.plan.md` from `/blueprint` is FORBIDDEN under any circumstance (v9.6+). Bug exception in § Phase 0 applies to **create** only, not modify.
+
+If neither `## Proposed DoR Amendments` nor `## Proposed DoD Amendments` has content after Phase 1, OMIT the heading entirely (do NOT emit empty sections).
 
 ### Phase 2: ANALYZE
 
@@ -332,7 +384,11 @@ The `## Governance` section follows the Governance-in-Artifact Schema defined in
 
 Collect data for each of the following categories. Each category maps to a specific artifact file.
 
+> **Canonical heading invariant (v9.4+, see `readme-artifact.md` § Canonical Section Titles):** The `### Category N: <Title>` shape below is the **producer-side** structure used during data collection. The canonical heading in the **produced artifact** drops the `Category N:` prefix. Each category lists its canonical artifact heading explicitly. Emitting `## Category N:` into `technical.plan.md`, `increments.plan.md`, or `specs.design.md` is FORBIDDEN — it bleeds internal scaffolding into the knowledge provider.
+
 ### Category 1: Problem Framing → `technical.plan.md`
+
+**Canonical artifact heading:** `## Problem Framing`
 
 - What we are building or fixing (1–2 lines)
 - Why it matters (user impact, bug impact, or technical motivation)
@@ -340,12 +396,16 @@ Collect data for each of the following categories. Each category maps to a speci
 
 ### Category 2: Architecture & Approach → `technical.plan.md`
 
+**Canonical artifact heading:** `## Architecture and Approach`
+
 - Architectural approach aligned with project guidelines
 - Use Cases involved (high level)
 - DI implications (if any)
 - Constraints from existing patterns or legacy code
 
 ### Category 3: Increments (required) → `increments.plan.md`
+
+**Canonical artifact heading:** `## Increments`, with each increment under `### <Increment Name>` (no `Category` or numeric prefix on the artifact side; the producer-side `Category 3:` label is internal to this skill only).
 
 Structure the implementation as **named increments**. Apply the **incremental-decomposition** skill.
 
@@ -372,11 +432,15 @@ The Markdown body remains the human-readable plan. Frontmatter tracks execution 
 
 ### Category 4: Self Code Review → `increments.plan.md`
 
+**Canonical artifact heading:** `## Self Review` (no `Category` prefix). Lives inside `increments.plan.md` alongside `## Increments` and `## Testing`.
+
 - How implementation will be validated before sending to QA
 - Compliance with project standards
 - Alignment with DoR Technical constraints (from `dor.plan.md`)
 
 ### Category 5: Testing → `increments.plan.md`
+
+**Canonical artifact heading:** `## Testing` (no `Category` prefix).
 
 **Input:** Test criteria from `dor.plan.md` (what must be tested — scenarios, happy path, edge cases, failure scenarios).
 **Output:** Test implementation strategy — how to cover the DoR test criteria.
@@ -391,11 +455,31 @@ Category 5 does NOT re-define the test scenarios (those are in the DoR). It defi
 
 ### Category 6: Design Specification (conditional) → `specs.design.md`
 
-**Only collect when a design URL is provided.** Resolve design provider from `aias-config/providers/design-config.md`. If config/provider is unavailable, abort and request configuration. Extract component hierarchy, layout/visual properties, typography, interactive states, and token references.
+**Canonical artifact heading:** `## Design Specification` (with sub-sections for component hierarchy, visual states, interaction map, accessibility, and design system mapping as `### <Sub-Section>`, no `Category` prefix).
 
-If the active mode defines a **DESIGN SYSTEM MAPPING** section, apply it: map raw design values (colors, typography, spacing) to the project's design tokens. Present both the raw value and the mapped token for each property so the developer can verify the match.
+**Trigger conditions (v9.4+):** Collect this category when **either** condition is true:
+
+- **(a)** A design URL is provided AND the design provider is resolvable from `aias-config/providers/design-config.md`.
+- **(b)** The DoR declares `orientation: user_facing` in `dor.plan.md`, regardless of design URL availability.
+
+**Behavior by condition:**
+
+| Condition | Behavior |
+|---|---|
+| (a) only — design URL with resolvable provider | Full extraction via the resolved design provider. Extract component hierarchy, layout/visual properties, typography, interactive states, and token references. |
+| (b) only — `user_facing` DoR with no design URL | Generate a **minimal `specs.design.md`** derived from DoR Functional + DoR Technical constraints + chat context. The artifact MUST include the explicit note: `> **Design provider was not consulted** — this specification is derived from DoR and context only and SHOULD be revisited with a design reference before implementation.` Do NOT invent visual states, colors, typography, or token mappings the DoR does not declare. |
+| (a) AND (b) — design URL and `user_facing` DoR | Full extraction via the design provider PLUS a DoR alignment commentary section that highlights any divergence between the design and the DoR's declared functional intent. |
+| Neither — no design URL and orientation is not `user_facing` | Omit `specs.design.md`. |
+
+For condition (a) and (a) AND (b): if the design provider config is missing, invalid, or unresolvable while a design URL was provided, abort and request configuration (Phase 3 fail-fast).
+
+For condition (b) only: design provider unavailability is NOT a blocker. The minimal `specs.design.md` MUST be generated using DoR + chat context.
+
+If the active mode defines a **DESIGN SYSTEM MAPPING** section, apply it: map raw design values (colors, typography, spacing) to the project's design tokens. Present both the raw value and the mapped token for each property so the developer can verify the match. Under condition (b) only (no design provider), design system mapping is omitted because there are no raw design values to map; the note above must declare that absence.
 
 ### Category 7: File Structure + Visualization → `technical.plan.md`
+
+**Canonical artifact heading:** `## File Structure and Visualization` (no `Category` prefix).
 
 - Files to create (with suggested paths)
 - Files to modify
@@ -413,7 +497,7 @@ This command must **NOT**:
 - Push to git or publish to external services without explicit user instruction
 - Write artifacts outside TASK_DIR
 - Create artifact types not in the closed catalog
-- Modify `dor.plan.md` or `dod.plan.md` directly (propose amendments in `technical.plan.md` instead)
+- **Modify `dor.plan.md` or `dod.plan.md` directly under ANY circumstance (v9.6+).** Blueprint MAY only **create** `dor.plan.md` / `dod.plan.md` under the bug exception (§ Phase 0, Step 1, item 3 — `profile: bugfix` with `feasibility.assessment.md` present). Any change to existing DoR/DoD content — inline-confirmed or otherwise — MUST be staged as a proposed amendment in `## Proposed DoR Amendments` or `## Proposed DoD Amendments` (with the `**Inline confirmation**:` sub-field marker when the user resolved inline) and resolved by `/consolidate-plan`. The legacy combined section `## Proposed DoR/DoD Amendments` remains FORBIDDEN since v9.5.
 - Proceed without DoR/DoD (except bug exception with assessment artifacts)
 
 SERVICE RESOLUTION PSEUDOFLOW:
