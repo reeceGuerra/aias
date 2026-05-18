@@ -127,6 +127,142 @@ command_log:
     ended_at: 2026-01-20T15:12:21Z
 ```
 
+### Amendments TODO model (`/validate-plan` v2.1.0+ + `/consolidate-plan` v2.1.0+, v9.6+)
+
+The example below shows how the unified TODO model routes amendments from `/blueprint` through `/validate-plan` (registration only) to `/consolidate-plan` (resolution). In v9.6+, inline user answers during `/blueprint` chat are captured as an `**Inline confirmation**:` sub-field — `/blueprint` no longer modifies `dor.plan.md` / `dod.plan.md` directly.
+
+**`technical.plan.md` after `/blueprint` (Phase 1 staged three DoR gaps and one DoD gap; one bullet captures an inline-confirmed value):**
+
+```markdown
+---
+name: User profile editor — technical plan
+overview: Implements profile editing with photo upload.
+todos: []
+isProject: false
+---
+
+## Problem Framing
+…
+
+## Architecture and Approach
+…
+
+## File Structure and Visualization
+…
+
+## Proposed DoR Amendments
+- **Test criteria**: login flow integration tests not enumerated.
+  - **Proposed resolution**: extend the existing `LoginFlowTests` suite with profile-edit happy path
+  - **Inline confirmation**: extend LoginFlowTests with profile-edit + cancel + retry cases (2026-01-20)
+- **Non-Functional**: image upload size limit not specified.
+  - **Proposed resolution**: 5MB cap with WEBP/JPEG-only validation (inferred from DS guidelines)
+- **Technical constraints**: storage provider not declared.
+  - **Proposed resolution**: reuse existing Firebase Storage bucket; please confirm
+
+## Proposed DoD Amendments
+- **Verification**: regression suite scope undefined.
+  - **Proposed resolution**: extend `LoginFlowTests` suite with profile-edit cases
+```
+
+Notice that `dor.plan.md` and `dod.plan.md` on disk are **unchanged** after `/blueprint`, even though the Test criteria gap was resolved inline. The inline answer is captured in the `**Inline confirmation**:` sub-field; `/consolidate-plan` will apply it under the Update Approval gate.
+
+**`technical.plan.md` frontmatter after `/validate-plan` (amendments registered as TODOs; `content` captures parent line only):**
+
+```yaml
+---
+name: User profile editor — technical plan
+overview: Implements profile editing with photo upload.
+todos:
+  - id: amendment-dor-test-criteria-login-flow
+    content: "Test criteria: login flow integration tests not enumerated."
+    status: pending
+    kind: amendment_dor
+    artifact: dor.plan.md
+    dimension: Test criteria
+  - id: amendment-dor-non-functional-upload-cap
+    content: "Non-Functional: image upload size limit not specified."
+    status: pending
+    kind: amendment_dor
+    artifact: dor.plan.md
+    dimension: Non-Functional
+  - id: amendment-dor-technical-storage-provider
+    content: "Technical constraints: storage provider not declared."
+    status: pending
+    kind: amendment_dor
+    artifact: dor.plan.md
+    dimension: Technical constraints
+  - id: amendment-dod-verification-regression-scope
+    content: "Verification: regression suite scope undefined."
+    status: pending
+    kind: amendment_dod
+    artifact: dod.plan.md
+    dimension: Verification
+  - id: validation-investigation-data-source
+    content: "Investigation: backend endpoint not validated against API contract."
+    status: pending
+    kind: validation
+    artifact: technical.plan.md
+    dimension: Investigation
+isProject: false
+---
+```
+
+**After `/consolidate-plan` resolves all four amendment TODOs (and the one validation TODO):**
+
+- For the `Test criteria` TODO, `/consolidate-plan` reads the bullet, detects the `**Inline confirmation**:` sub-field, and uses the inline value as the default in the Update Approval gate. The dev confirms (or overrides) and `dor.plan.md` is patched at the Test criteria dimension.
+- For the remaining DoR TODOs (Non-Functional, Technical constraints), the Proposed resolution is the default; the dev decides per bullet.
+- `dod.plan.md` is updated at Verification and marked `modified`.
+- `technical.plan.md` body: the **entire** multi-line bullet (parent + sub-bullets) for each resolved amendment is removed from `## Proposed DoR Amendments` and `## Proposed DoD Amendments`. When a section becomes empty, the heading is removed too.
+- Frontmatter: each resolved TODO has `status: completed`.
+- Phase 5c publishes `dor.plan.md`, `dod.plan.md`, and `technical.plan.md` as normal `modified` artifacts (no `apply_local` exclusion).
+
+**Legacy hard-fail example:** if a task in flight still carries `## Proposed DoR/DoD Amendments` (combined single block, v9.4 and earlier), `/validate-plan` v2.0.0+ aborts with `[STATE: blocked]` and the explicit manual-split instructions defined in `aias/.skills/validate-plan/SKILL.md § Phase: Process Proposed Amendments § Hard fail`. No auto-split is performed.
+
+**Backward compatibility:**
+- TODOs without a `kind` field are treated as `kind: validation` (matches v9.4 and earlier).
+- v9.5 single-line Proposed bullets (no `**Inline confirmation**:` sub-field) continue to parse — `/validate-plan` v2.1.0 falls back to capturing the entire bullet line into `content`.
+
+### `/enrich --refresh` (v9.6+) — drift detection from tracker comments
+
+The user is mid-implementation when the PM updates the tracker ticket: tightens the device matrix in the description and adds a comment with new edge cases. The dev re-runs `/enrich --refresh` to pull those updates into the local DoR/DoD without losing in-flight Proposed Amendments.
+
+**Phase 1b sequence (summary):**
+
+1. Re-read tracker via the resolved provider (Atlassian MCP `getJiraIssue` with `expand: 'renderedFields,names,schema,comment'`).
+2. Re-derive a fresh DoR/DoD from the updated tracker payload.
+3. Diff the fresh derivation against the on-disk `dor.plan.md` / `dod.plan.md`.
+4. Fire `Gate: Refresh Approval` showing per-dimension/criterion change preview (`add | modify | remove | unchanged`).
+5. If `technical.plan.md` has non-empty `## Proposed Do{R,D} Amendments`, fire `Sub-Gate: Amendment Reconciliation` per bullet:
+   - **Case A — confirm**: tracker now states what the bullet was proposing → `apply now (remove TODO) | keep TODO | skip refresh`.
+   - **Case B — contradict**: tracker contradicts the bullet → `tracker wins (remove TODO) | bullet wins (keep TODO) | manual abort`.
+   - **Case C — orthogonal**: no conflict → bullet kept verbatim, no prompt.
+6. On `proceed`, write merged artifacts, mark DoR/DoD as `modified` in `status.md`, set `last_refreshed_at: <UTC>` in `status.md`, append `/enrich --refresh` to `command_log`.
+7. Phase 5c publishes modified artifacts as normal.
+
+**Status.md after refresh:**
+
+```yaml
+profile: feature
+classification: standard
+task_id: MAX-12345
+last_refreshed_at: 2026-01-22T09:14:08Z
+artifacts:
+  dor.plan.md: modified
+  dod.plan.md: modified
+command_log:
+  - command: /enrich
+    started_at: 2026-01-20T14:30:00Z
+    ended_at: 2026-01-20T14:35:47Z
+  - command: /blueprint
+    started_at: 2026-01-20T15:00:03Z
+    ended_at: 2026-01-20T15:12:21Z
+  - command: /enrich --refresh
+    started_at: 2026-01-22T09:13:12Z
+    ended_at: 2026-01-22T09:14:08Z
+```
+
+If `Case A apply now` or `Case B tracker` fires for any TODO, the TODO is **deleted** from `technical.plan.md` frontmatter (no `cancelled` state — the audit lives in `command_log` + git history + knowledge provider version history per `aias/contracts/readme-artifact.md` v2.3).
+
 ### After `/validate-plan` (passes)
 
 ```yaml
@@ -880,6 +1016,92 @@ artifacts:
 ```
 
 Next command execution publishes all `modified` artifacts back to `synced`.
+
+---
+
+## Multi-Agent Dispatch Telemetry (`/self-review`, v9.4+)
+
+When `/self-review` runs with `TASK_DIR` resolved and `status.md` present, the host MUST record dispatch telemetry as part of the `command_log` entry. The schema extends the base `command_log` entry with an OPTIONAL `dispatches: list[{subagent, started_at, ended_at}]` field (see `reference.md` § Command Log writing rule 7 and `aias/contracts/readme-multi-agent-review.md` § Dispatch Telemetry (host-owned)).
+
+### `/self-review` after `/pr` (Standard plan, all 6 sub-agents)
+
+```yaml
+profile: feature
+classification: standard
+task_id: MAX-12345
+status: in_review
+tracker_status: IN REVIEW
+completed_steps: [refinement, blueprint, validate, implement, commit, pr]
+current_step: closure
+refinement_validated: true
+rhoaias_update: done
+published: null
+completed: null
+artifacts:
+  analysis.product.md: synced
+  dor.plan.md: synced
+  dod.plan.md: synced
+  technical.plan.md: synced
+  increments.plan.md: synced
+  specs.design.md: synced
+command_log:
+  - command: /enrich
+    started_at: 2026-05-16T14:30:12Z
+    ended_at: 2026-05-16T14:35:47Z
+  - command: /blueprint
+    started_at: 2026-05-16T15:00:03Z
+    ended_at: 2026-05-16T15:12:21Z
+  - command: /validate-plan
+    started_at: 2026-05-16T15:13:00Z
+    ended_at: 2026-05-16T15:14:05Z
+  - command: /implement
+    started_at: 2026-05-16T15:20:00Z
+    ended_at: 2026-05-16T16:10:00Z
+  - command: /commit
+    started_at: 2026-05-16T16:11:00Z
+    ended_at: 2026-05-16T16:12:30Z
+  - command: /pr
+    started_at: 2026-05-16T16:13:00Z
+    ended_at: 2026-05-16T16:15:42Z
+  - command: /self-review
+    started_at: 2026-05-16T16:30:12Z
+    ended_at: 2026-05-16T16:42:51Z
+    dispatches:
+      - subagent: aias-correctness-reviewer
+        started_at: 2026-05-16T16:31:02Z
+        ended_at: 2026-05-16T16:38:27Z
+      - subagent: aias-quality-reviewer
+        started_at: 2026-05-16T16:31:02Z
+        ended_at: 2026-05-16T16:37:18Z
+      - subagent: aias-architecture-reviewer
+        started_at: 2026-05-16T16:31:02Z
+        ended_at: 2026-05-16T16:39:04Z
+      - subagent: aias-test-auditor
+        started_at: 2026-05-16T16:31:02Z
+        ended_at: 2026-05-16T16:36:53Z
+      - subagent: aias-security-auditor
+        started_at: 2026-05-16T16:31:02Z
+        ended_at: 2026-05-16T16:38:11Z
+      - subagent: aias-reflector
+        started_at: 2026-05-16T16:39:30Z
+        ended_at: 2026-05-16T16:42:33Z
+```
+
+### Backward compatibility: legacy `/self-review` entry without `dispatches[]`
+
+Pre-v9.4 entries (or hosts that operate without `TASK_DIR`) MAY omit `dispatches[]` entirely. The schema treats absence as an empty list — it does NOT imply failure to dispatch sub-agents:
+
+```yaml
+command_log:
+  - command: /self-review
+    started_at: 2026-04-10T10:15:03Z
+    ended_at: 2026-04-10T10:28:12Z
+    # no dispatches[] field — pre-v9.4 entry, treat as []
+```
+
+### `/peer-review` does NOT write telemetry
+
+`/peer-review` reviews other developers' work and does not assume `TASK_DIR` exists for the reviewer's local workspace. It MUST NOT append a `command_log` entry. Telemetry of who reviewed which PR lives in the VCS provider (PR review history), not in the local reviewer's `status.md`.
 
 ---
 
