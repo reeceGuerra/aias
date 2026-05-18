@@ -3,10 +3,10 @@ name: handoff
 description: "Formats an operational handoff summary for transitioning context between modes or sessions. Use at the end of a chat session or before switching to a different mode. Trigger terms: /handoff, handoff, transition context, end of session, switch mode."
 category: advisory
 disable-model-invocation: true
-version: 1.1.0
+version: 1.2.0
 ---
 
-# Handoff (Operational Cross-Chat Transfer) — v1.1
+# Handoff (Operational Cross-Chat Transfer) — v1.2
 
 ## 1. Identity
 
@@ -85,8 +85,16 @@ Rules:
   - `codex`: modes not supported (fall back to `aias-config/modes/<mode>.mdc`), `.codex/commands/<command>.md`
   - When a tool does not support a given type (per `readme-tool-adapter.md`), fall back directly to `aias-config/modes/<mode>.mdc` for modes or `aias-config/skills/<command>/SKILL.md` for commands — never to `aias/.skills/` or `aias/.modes/`.
   - If `binding.generation.tools` is missing or the tool is unknown, emit `aias-config/modes/<mode>.mdc` for modes and `aias-config/skills/<command>/SKILL.md` for commands.
-  - Always verify the resolved path exists before emitting. If missing, fall back to the `aias-config/` path as described above.
-  - Path resolution applies to both MODE and COMMAND for framework-defined entries (source: `aias/.skills/`, `aias-config/modes/`). Project-specific skills in `aias-config/skills/` are out of scope for handoff resolution.
+- **Path resolution — existence check (v1.2):** Path existence MUST be verified using an `lstat`-equivalent check that DOES NOT follow symlinks. The shortcut location (e.g., `.cursor/skills/<command>/SKILL.md`) is frequently a symlink pointing to `aias-config/skills/<command>/SKILL.md`; a follow-the-target check that fails on broken targets is acceptable, but a check that returns "missing" merely because the symlink target lives elsewhere is FORBIDDEN. When in doubt, treat the symlink itself as the canonical existence signal. Only fall back to `aias-config/` when the shortcut path neither exists as a regular file nor as a symlink.
+- **Path resolution — input normalization (v1.2):** Before resolving MODE or COMMAND names, apply the minimal normalization pipeline below to user-provided values; nothing more, nothing less:
+  1. Strip a single leading `/` if present (`/blueprint` → `blueprint`).
+  2. Lower-case the value (`Blueprint` → `blueprint`).
+  3. Preserve kebab-case structure intact (`self-review` stays `self-review`; do NOT collapse hyphens or replace them with spaces/underscores).
+  4. Trim surrounding whitespace.
+  Heavier normalizations (alias expansion, fuzzy matching, semantic substitution) are FORBIDDEN — they create silent misroutes when an unknown name resembles a known one.
+- **Path resolution — catalog validation (v1.2):** After normalization, MUST validate the value against the closed catalog of installed skills (the union of `aias-config/skills/` and any tool-specific shortcuts directory). Unknown names MUST NOT be accepted optimistically. When the normalized value is not in the catalog, emit the shortcut path as best-effort and append `[fallback reason: skill not found in installed catalog]` to the COMMAND line per § 6.
+- **Path resolution — fallback reporting (v1.2):** When the resolution path falls back to `aias-config/` for any reason (shortcut location does not exist, tool does not support the type, unknown tool, unknown skill name), the COMMAND or MODE line MUST end with the bracketed annotation `[fallback reason: <reason>]`. Acceptable reasons include: `shortcut path not found`, `tool does not support skills`, `tool does not support modes`, `unknown tool in binding.generation.tools`, `binding.generation.tools missing`, `skill not found in installed catalog`. Silent fallback is FORBIDDEN.
+- Path resolution applies to both MODE and COMMAND for framework-defined entries (source: `aias/.skills/`, `aias-config/modes/`). Project-specific skills in `aias-config/skills/` are out of scope for handoff resolution.
 
 ---
 
@@ -94,8 +102,8 @@ Rules:
 
 ````markdown
 ```markdown
-MODE: <resolved mode shortcut path or "Unspecified">
-COMMAND: <resolved command shortcut path or "Open">
+MODE: <resolved mode shortcut path or "Unspecified"> [fallback reason: <reason>]?
+COMMAND: <resolved command shortcut path or "Open"> [fallback reason: <reason>]?
 REPO: <repo or "Unspecified">
 TASK ID: <task id or "Unspecified">
 DIR: <task dir or "Unspecified">
