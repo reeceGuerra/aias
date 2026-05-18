@@ -1,6 +1,6 @@
 # Workflows — End-to-End Guide
 
-This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **current** architecture (v9.0+) with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, and separated refinement/planning phases.
+This document describes the complete workflows for common development tasks using Rho AIAS modes and commands. It reflects the **current** architecture (v9.6+) with unified task directories, Plan Classification, tracker sync, tracker-gated knowledge-provider publishing, separated refinement/planning phases, host-resolved multi-agent review (sub-agents are tool-less inspection engines), `/self-review` dispatch telemetry in `status.md`, the unified TODO model for DoR/DoD amendments (`kind: validation | amendment_dor | amendment_dod`), the **Refinement Artifact Mutation Invariant** (only `/enrich` + `/blueprint` bug exception can CREATE; only `/enrich --refresh` + `/consolidate-plan` can MODIFY), and `/enrich --refresh` for tracker drift reconciliation without losing in-flight Proposed Amendments.
 
 ---
 
@@ -24,10 +24,10 @@ Commands use a **structured interactive mechanism** for gates. `AskQuestion` is 
 **Gate types:** Confirmation, Decision, Feedback, Approval, Precondition. Each gate follows the Gate Invocation Protocol: Context → Gate → Action.
 
 Key gates across the workflow:
-- `/enrich` — Classification Comprehension (when classification is ambiguous), Brief Comment Preview (only with `--brief`), Tracker Write Preview (only with `--fields`), DoR Readiness Check (before writing DoR/DoD)
+- `/enrich` — Classification Comprehension (when classification is ambiguous), Brief Comment Preview (only with `--brief`), Tracker Write Preview (only with `--fields`), DoR Readiness Check (before writing DoR/DoD), Refresh Approval + Amendment Reconciliation (only with `--refresh`, v9.6+)
 - `/blueprint` — Comprehension (skippable with `--fast`), Preview (always fires)
-- `/validate-plan` — Amendment Approval (when DoR/DoD amendments proposed), Validation Result
-- `/consolidate-plan` — Update Approval (technical artifacts), Amendment Approval (DoR/DoD artifacts)
+- `/validate-plan` — Validation Result (v9.5+: NO Amendment Approval gate; amendments are registered as TODOs in `technical.plan.md` frontmatter with `kind: amendment_dor` / `kind: amendment_dod`; v9.6+ parses multi-line bullets and preserves the `**Inline confirmation**:` sub-field marker; legacy combined `## Proposed DoR/DoD Amendments` triggers hard-fail)
+- `/consolidate-plan` — Update Approval (v9.5+: single gate covering all `kind` values; routing by `kind` happens deterministically — `validation` → named artifact, `amendment_dor` → `dor.plan.md`, `amendment_dod` → `dod.plan.md`. v9.6+ uses the `**Inline confirmation**:` marker value as the Update Approval default and removes the entire multi-line bullet (parent + sub-bullets) on apply)
 - `/implement` — Ready, Pre-Implementation Approval (Critical), Inter-Increment Feedback
 - `/pr` — PR Confirmation (before creating/updating a PR)
 - `/publish` — Publish Confirmation (before publishing)
@@ -59,13 +59,10 @@ flowchart TD
     Entry -->|Feature| Product["@product<br/>analysis"]
     Product --> Enrich["/enrich<br/>DoR + DoD + publish"]
     Enrich --> Planning["@planning<br/>/blueprint<br/>ready → in_progress"]
-    Planning --> Validate["/validate-plan"]
-    Validate --> Amendments{"DoR/DoD<br/>amendments?"}
-    Amendments -->|Yes| AmendGate["Amendment gate:<br/>apply_local / pause / reject"]
-    AmendGate --> Validate
-    Amendments -->|No| Gaps{"Planning gaps?"}
-    Gaps -->|Yes| Consolidate["/consolidate-plan"] --> Validate
-    Gaps -->|No| Dev["@dev<br/>/implement"]
+    Planning --> Validate["/validate-plan<br/>register amendments as TODOs<br/>(kind: amendment_dor/dod)"]
+    Validate --> Todos{"Pending todos?<br/>(validation + amendments)"}
+    Todos -->|Yes| Consolidate["/consolidate-plan<br/>resolve each TODO by kind"] --> Validate
+    Todos -->|No| Dev["@dev<br/>/implement"]
     Dev --> Commit["/commit"]
     Commit --> SelfReview["@review<br/>/self-review<br/>(optional; recommended for Standard/Critical plans)"]
     SelfReview --> PR["/pr<br/>in_progress → in_review"]
@@ -149,7 +146,7 @@ Use `/blueprint --fast` for trivial or well-understood tasks.
 - Plan artifacts written to `<resolved_tasks_dir>/<TASK_ID>/`:
   - `technical.plan.md`, `increments.plan.md`
   - `specs.design.md` (when Figma context exists)
-- Proposed DoR/DoD amendments in `technical.plan.md` (if gaps detected)
+- Proposed DoR amendments in `## Proposed DoR Amendments` section of `technical.plan.md` (if unresolved DoR gaps detected) AND/OR proposed DoD amendments in `## Proposed DoD Amendments` section (if unresolved DoD gaps detected). When the user answers a gap inline during `/blueprint`, the answer is captured as a `**Inline confirmation**: <value> (YYYY-MM-DD)` sub-field marker inside the bullet — `/blueprint` MUST NOT modify `dor.plan.md` or `dod.plan.md` (Refinement Artifact Mutation Invariant, v9.6+). The marker becomes the default for `/consolidate-plan`'s Update Approval gate.
 - Canonical transition **ready → in_progress** (provider-mapped)
 - `status.md` updated: `status: in_progress`
 
@@ -163,7 +160,8 @@ Use `/blueprint --fast` for trivial or well-understood tasks.
 
 **Expected Output:**
 - Validation verdict: "Plan ready for implementation" or list of gaps
-- Amendment gate (if amendments proposed): `apply_local` / `pause` / `reject`
+- v9.5+: when `technical.plan.md` carries `## Proposed DoR Amendments` and/or `## Proposed DoD Amendments`, each entry is registered as a TODO in the frontmatter with `kind: amendment_dor` / `kind: amendment_dod` for `/consolidate-plan` to resolve. No Amendment Approval gate is presented.
+- v9.5+: hard-fail with `[STATE: blocked]` if the legacy combined section `## Proposed DoR/DoD Amendments` is detected; manual split into the two canonical sections is the only supported migration path.
 - `status.md` updated: `current_step: implement` (status remains `in_progress`)
 
 ---
@@ -496,6 +494,36 @@ TASK: Analyze with product frameworks (JTBD, 5 Whys, User Journey, MoSCoW).
 - With `--brief`: team has brief comment on Jira for refinement context
 - With `--fields`: tracker ticket enriched with curated field representation
 
+### Refreshing DoR/DoD from tracker drift (`--refresh`, v9.6+)
+
+Between the original `/enrich` and downstream commands, the tracker ticket can evolve (PM updates scope, QA adds an edge case in a comment, design publishes a missing flow). `/enrich --refresh` reconciles tracker drift into the local DoR/DoD without losing in-flight Proposed Amendments — and respects the **Refinement Artifact Mutation Invariant** (only `/enrich --refresh` and `/consolidate-plan` are authorized to MODIFY existing DoR/DoD artifacts).
+
+```
+MODE: @product
+TASK ID: MAX-12761
+TASK DIR: MAX-12761
+CONTEXT: Tracker was updated last week — PM tightened the device matrix
+         in a comment + QA added a new acceptance criterion in a field.
+TASK: /enrich MAX-12761 --refresh
+```
+
+**What happens:**
+1. Phase 1 (Read) — exhaustive ticket re-read via `getJiraIssue(expand='renderedFields,names,schema,comment')` (description + custom fields + comment thread)
+2. Phase 1b (Refresh) — re-derive fresh DoR/DoD from tracker, diff against on-disk artifacts (add | modify | remove | unchanged per dimension/criterion)
+3. **Gate: Refresh Approval** — present diff preview; user chooses `proceed | adjust | abort`
+4. **Sub-Gate: Amendment Reconciliation** (only if `## Proposed Do{R,D} Amendments` are non-empty) — per bullet:
+   - Case A: tracker confirms the bullet → `apply now | keep as proposed`
+   - Case B: tracker contradicts the bullet → `tracker wins | keep proposed | manual` (`manual` rolls back the entire refresh)
+   - Case C: orthogonal → no prompt
+5. Phase 4 (Write) — merged DoR/DoD written; affected Proposed bullets removed/preserved per reconciliation outcomes
+6. Phase 5 (Status) — `dor.plan.md` / `dod.plan.md` marked `modified` in `status.md`; `last_refreshed_at: <UTC>` set; `command_log` entry includes `[--refresh]` flag
+
+**Constraints:**
+- `--refresh` does NOT modify `refinement_validated` (that flag remains the historical indicator of the original `/enrich --brief` + publish success)
+- `--refresh` is incompatible with `--brief` and `--fields` (read-only by design)
+- `--refresh` is independent of `/consolidate-plan` — drift detection and amendment resolution are separate governance surfaces by design
+- If DoR/DoD do not exist locally yet, `--refresh` falls back to the standard `/enrich` create flow (no `Refresh Approval` gate)
+
 ---
 
 ## Exploration Flow
@@ -539,8 +567,11 @@ TASK: Review the current branch changes. When done, /self-review.
 ```
 
 **Expected Output:**
+- Phase 0 — Pre-Resolve Sub-Agent Context: `/self-review` host resolves working-tree diff, file blobs of modified files, TASK_DIR artifacts, project context, and rules BEFORE dispatching sub-agents (v9.4+)
 - Full multi-agent panel dispatched (5 dimension reviewers in parallel, then reflector — always)
-- Severity-ordered findings consolidated by reflector
+- Sub-agents are tool-less inspection engines (v9.4+): receive the dispatch payload, return findings; emit `[Context Gap]` when a required artifact is missing instead of attempting tool calls
+- Severity-ordered findings consolidated by reflector; `## Context Gaps` section surfaces any consolidated gaps
+- Dispatch telemetry written to `status.md` `command_log` as `dispatches: [{subagent, started_at, ended_at}]` per sub-agent (v9.4+)
 - Explicit readiness verdict for peer review / PR
 - No VCS-ready snippets, because there is no remote diff anchor
 
@@ -553,10 +584,13 @@ TASK: Review PR 482. When done, /peer-review 482.
 ```
 
 **Expected Output:**
+- Phase 0 — Pre-Resolve Sub-Agent Context: `/peer-review` host resolves PR diff (VCS MCP), PR metadata, file blobs, TASK_DIR artifacts, project context, and rules BEFORE dispatching sub-agents. Tool-permission failures during diff retrieval fire a Gate: VCS Permission Recovery (`grant` / `manual` / `abort`) (v9.4+)
 - Full multi-agent panel dispatched (5 dimension reviewers in parallel, then reflector — always)
+- Sub-agents are tool-less inspection engines (v9.4+): no MCP, no shell, no git, no file writes; findings produced from the dispatch payload only
 - Severity-ordered findings consolidated by reflector
 - VCS-ready snippets with `File`, `Applies to diff`, and copy-paste review comments
 - One PR-level general review comment
+- No `status.md` telemetry written (peer-review reviews other devs' work and has no `TASK_DIR`)
 
 ### Operational handoff between chats
 
@@ -611,6 +645,7 @@ profile: feature
 task_id: MAX-XXXXX
 classification: null
 refinement_validated: null
+last_refreshed_at: null
 rhoaias_update: null
 started: 2026-01-25
 status: pending_dor
@@ -650,6 +685,10 @@ The `command_log` field is an append-only list recording each command execution 
 | `synced` | Matches resolved knowledge provider version |
 | `modified` | Changed since last knowledge sync |
 
+### Last Refresh Timestamp (v9.6+)
+
+The `last_refreshed_at` field is an optional UTC ISO-8601 timestamp recording the last successful `/enrich --refresh` invocation. Absent or `null` means refresh has never been invoked for this task (or the field predates v9.6). Independent of `refinement_validated` — `--refresh` updates the timestamp but does NOT modify `refinement_validated`.
+
 ### RHOAIAS.md Freshness Tracking
 
 The `rhoaias_update` field tracks whether `RHOAIAS.md` (project context) needs updating for the current task. `/blueprint` sets this field after analyzing the plan categories against the current `RHOAIAS.md` sections.
@@ -679,7 +718,7 @@ Phase 5c behavior:
 - After successful sync, the artifact is marked `synced` in `status.md`.
 - On failure (missing/invalid config, unresolved mapping/binding, or runtime provider unavailability): abort dependent sync operation and request correction.
 
-**Exception:** DoR/DoD artifacts that were locally amended via the Amendment gate (in `/validate-plan` or `/consolidate-plan`) are excluded from Phase 5c until reconciled via `/publish`.
+**v9.5+ note:** the legacy `apply_local` Phase 5c exclusion is retired. `dor.plan.md` and `dod.plan.md` modifications applied via the unified TODO model in `/consolidate-plan` participate in Phase 5c as normal `modified` artifacts. There is no separate "locally amended but not published" state.
 
 **Classification role:** Plan Classification (Minor/Standard/Critical) is used **only for governance** (gates in `/implement`), not for publishing decisions.
 
