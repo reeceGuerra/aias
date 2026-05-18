@@ -1,4 +1,4 @@
-# Multi-Agent Review Contract (v1.1)
+# Multi-Agent Review Contract (v1.2)
 
 > **Keyword convention**: This contract uses RFC-2119 keywords (MUST, MUST NOT, SHOULD, MAY).
 > See [readme-commands.md](readme-commands.md) § RFC-2119 Keyword Policy for definitions.
@@ -185,6 +185,158 @@ When the selected tool set includes `cursor`:
 - Legacy symlinks in `.cursor/agents/` pointing to `aias/.cursor/agents/` or `aias/.canonical/subagents/` MUST emit `[LEGACY]` warning with instruction to re-run `aias generate --shortcuts`.
 - Missing sub-agent → emit `[MISSING]` warning with the expected path.
 - Incorrect frontmatter → emit `[INVARIANT VIOLATION]` with the field name and expected value.
+
+---
+
+## Sub-Agent Tool Boundary (invariant, v1.2)
+
+Review sub-agents are **pure inspection engines**. They MUST NOT invoke ANY tool runtime during a dispatch — this is an invariant, not a SHOULD. The forbidden surface is exhaustive:
+
+| Forbidden | Examples |
+|---|---|
+| MCP tool calls | Atlassian MCP, GitHub MCP, Figma MCP, any other MCP server |
+| Shell commands | `git`, `gh`, `ls`, `cat`, `python`, any subprocess |
+| File writes | Editing any file, including `status.md` (host-only per § Dispatch Telemetry) |
+| Read tool calls outside host-resolved context | Reading files not in the dispatch payload, walking the filesystem, opening files by path |
+| Web fetches | HTTP requests, browser actions, URL resolution |
+| Sub-agent fan-out | Dispatching further sub-agents (only the host orchestrates) |
+
+The sub-agent's contract is minimal and closed:
+
+- **Input**: the dispatch prompt assembled by the host (review-rubric selector + pre-resolved context payload).
+- **Process**: apply the dimension selector against the payload.
+- **Output**: findings list (one row per finding, severity-tagged, anchored to file:line of the diff).
+
+If a sub-agent encounters context it would normally want to fetch (the full content of a referenced file, the git log of a function, the runtime behavior of a dependency), it MUST NOT attempt to retrieve it. It MUST emit a `[Context Gap]` finding instead (see § Context Gap Handling). The reflector consolidates gaps for human review.
+
+### Rationale for the invariant
+
+Empirical evidence (operational feedback 2026-05-09 → 2026-05-16): when the host runs on a different model than the sub-agents (e.g., Codex orchestrating Sonnet/Opus sub-agents), MCP and shell permissions do not propagate predictably. Sub-agents either (a) pause asking for permission the user has already granted to the host, breaking parallel dispatch, or (b) silently fail to read context the host already has, surfacing findings that disappear when manually re-verified on the actual branch. Forbidding tool use from sub-agents and making the host the only context provider eliminates both failure modes deterministically.
+
+### Cross-tool compatibility
+
+This invariant is platform-neutral. Cursor sub-agents, Claude Code sub-agents, and any future tool with a sub-agent abstraction MUST adopt the same boundary when projecting this contract.
+
+---
+
+## Host Context Resolution (companion invariant, v1.2)
+
+The host (`/peer-review`, `/self-review`, future hosts) is the **only context provider** for sub-agents. Before dispatching, the host MUST pre-resolve every context surface that any of the 6 sub-agents could plausibly require:
+
+1. **Diff** — full PR diff (`/peer-review`) or working-tree diff (`/self-review`).
+2. **File blobs** — full content of every file touched by the diff. The host fetches blobs via the VCS provider MCP or local filesystem; sub-agents never re-fetch.
+3. **Branch snapshot** — read-only access to the branch under review. The host MAY `gh pr checkout <PR>` to make the working tree match the PR; if checkout is not authorized, the host MUST fall back to serialized blobs via VCS MCP. Sub-agents never run checkout themselves.
+4. **TASK_DIR artifacts** — when `TASK_DIR` resolves, the host loads `dod.plan.md`, `technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `specs.design.md` (when present) and passes them as part of the dispatch payload.
+5. **Project context** — `RHOAIAS.md` of the repo under review, plus any nested `RHOAIAS.md` resolved by Phase 0 nested context discovery.
+6. **Mode + base rule** — the active mode rule (`@review`) and base rule, so sub-agents see the same governance the host operates under.
+7. **Metadata** — PR title, PR description, author, target branch, head commit SHA (for `/peer-review`).
+
+### Gate: VCS Permission Recovery (`/peer-review` only)
+
+If the VCS provider returns `unauthorized` during context resolution (PR diff fetch, file blob fetch, or `gh pr checkout`), the host MUST emit a Decision gate with three options:
+
+- `grant` — user resolves authorization and the host retries.
+- `manual` — user supplies the diff and blobs out-of-band (paste into chat); host proceeds with what was provided and notes the limitation in the review output.
+- `abort` — host halts with `[STATE: inconclusive]` and reports the missing context.
+
+The host MUST NOT silently fall back to a partial review when context resolution fails. Silent partial review reproduces the failure mode this invariant was designed to eliminate.
+
+### Dispatch payload contract
+
+The dispatch payload to each sub-agent MUST include:
+
+```
+{
+  "dimension": "correctness | quality | architecture | test-coverage | security | reflector",
+  "diff": "<full unified diff>",
+  "file_blobs": { "<path>": "<full content>", ... },
+  "task_dir_artifacts": { "<filename>": "<full content>", ... } | null,
+  "project_context": { "rhoaias_md": "<content>", "stack_profile": "<content>" } | null,
+  "mode_rule": "<content>",
+  "base_rule": "<content>",
+  "vcs_metadata": { "pr_number": ..., "author": ..., "head_sha": ... } | null
+}
+```
+
+Sub-agents read only from this payload. The reflector additionally receives the consolidated findings list emitted by the 5 dimension reviewers.
+
+---
+
+## Context Gap Handling (v1.2)
+
+When a sub-agent identifies context it would normally want to fetch (e.g., the implementation of a callee not present in the diff, the history of a regression, the runtime behavior of a library version), it MUST emit a `[Context Gap]` finding using this shape:
+
+```
+[Context Gap] [<Dimension>] <file>:<line> — <what is missing> — would normally check by <what the sub-agent would do if it had tools>
+```
+
+The sub-agent MUST NOT attempt to retrieve the missing context. The reflector collects all `[Context Gap]` findings and surfaces them in a dedicated section of the final review output:
+
+```
+## Context Gaps
+
+The following gaps were identified by dimension reviewers. The host did not provide enough
+context for definitive findings on these items. Consider re-running with expanded context
+or resolving manually:
+
+- [Correctness] src/auth.py:42 — implementation of `validate_token()` not in diff —
+  would normally check by reading the function body
+- [Architecture] src/views.py:18 — `BaseView` parent class definition not visible —
+  would normally check by reading the parent class
+```
+
+The human reviewer decides whether to re-run `/peer-review` or `/self-review` with explicit expanded context (e.g., adding the referenced files to the dispatch payload manually) or to accept the review as-is with the gaps noted.
+
+### When gaps justify re-dispatch
+
+The reflector SHOULD NOT auto-trigger re-dispatch. Re-dispatch decisions are owned by the human. The reflector's job is to make gaps visible, not to chase them.
+
+---
+
+## Dispatch Telemetry (host-owned, v1.2)
+
+Multi-agent dispatch SHOULD be recorded as telemetry in `status.md` `command_log` when (and only when) the dispatching host can resolve `TASK_DIR` and a valid `status.md` exists. This produces an auditable trail of when each sub-agent ran and how long it took, enabling cost attribution and pipeline observability.
+
+### Telemetry schema
+
+The `command_log` entry for a multi-agent-dispatching host MUST follow this shape:
+
+```yaml
+command_log:
+  - command: /<host-command>
+    started_at: <ISO 8601 UTC>
+    ended_at: <ISO 8601 UTC>
+    dispatches:
+      - subagent: <sub-agent name>
+        started_at: <ISO 8601 UTC>
+        ended_at: <ISO 8601 UTC>
+      - subagent: <sub-agent name>
+        started_at: <ISO 8601 UTC>
+        ended_at: <ISO 8601 UTC>
+```
+
+The `dispatches[]` field is OPTIONAL. When absent, treat as an empty list (backward compatibility with v1.0/v1.1 `command_log` entries and with hosts that do not produce telemetry).
+
+### Host as only registrar
+
+The host (e.g., `/self-review`) is the ONLY component allowed to write `dispatches[]` to `status.md`. Sub-agents (`aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-architecture-reviewer`, `aias-test-auditor`, `aias-security-auditor`, `aias-reflector`) MUST NOT write to `status.md` — they are pure inspection engines (see § Sub-Agent Tool Boundary). The host records each sub-agent's `started_at` at dispatch and `ended_at` at return.
+
+### Scope: which hosts write telemetry
+
+| Host | Telemetry behavior |
+|---|---|
+| `/self-review` | MUST write `dispatches[]` when `TASK_DIR` resolves AND `status.md` exists; MUST NOT write otherwise. |
+| `/peer-review` | MUST NOT write `dispatches[]` — `/peer-review` reviews other developers' work and does not assume `TASK_DIR` exists for the reviewer's local workspace. |
+| Future hosts | MUST declare telemetry behavior explicitly in their skill body; default is the `/self-review` policy. |
+
+### Timestamp acquisition and degraded mode
+
+- Hosts MUST obtain timestamps via a deterministic system source (`date -u +%Y-%m-%dT%H:%M:%SZ` or equivalent). When the environment does not permit shell access, hosts MAY use the date/time provided by the runtime context.
+- Hosts MUST NOT invent timestamps. If a reliable timestamp cannot be obtained, the host MUST write `started_at: null` / `ended_at: null` and document the limitation in chat.
+
+### Cross-reference
+
+The closed schema for `command_log` and its writing rules live in `aias/.skills/rho-aias/reference.md` § Command Log. The `dispatches[]` extension is declared optional there for backward compatibility.
 
 ---
 
