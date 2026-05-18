@@ -120,6 +120,10 @@ Skills live in `aias/.skills/`. Advisory and operative skills (commands) are inv
 
 The six sub-agents are: `aias-architecture-reviewer`, `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-security-auditor`, `aias-test-auditor`, and `aias-reflector`. They are **always dispatched** by `/peer-review` and `/self-review` — unconditionally, regardless of Plan Classification — and are governed by `aias/contracts/readme-multi-agent-review.md`. Key frontmatter invariants: `readonly: true`, `is_background: false`; `model` is advisory. Sub-agent health is validated by `aias health` when `cursor` is the configured tool.
 
+**Sub-Agent Tool Boundary (v9.4+):** sub-agents are pure inspection engines. They MUST NOT invoke any tool runtime (no MCP, no shell, no git, no file writes, no Read tool calls outside the host-resolved workspace, no web fetches). The host (`/peer-review` or `/self-review`) is the only context provider — it pre-resolves PR/working-tree diff, file blobs of modified files, `TASK_DIR` artifacts, project context (`RHOAIAS.md`), and base/mode rules before dispatch (Phase 0 — Pre-Resolve Sub-Agent Context). If a sub-agent needs context not present in the dispatch payload, it MUST emit a `[Context Gap]` finding instead of attempting a tool call; reflector consolidates them under `## Context Gaps`. This boundary is contractual (a normative MUST/MUST NOT in `readme-multi-agent-review.md` v1.2) rather than runtime-enforced — the framework's enforcement layer is documentation + dispatch protocol, and host-side pre-resolution is the operational mechanism that makes the boundary practical without requiring runtime sandbox plumbing.
+
+**Dispatch Telemetry (v9.4+):** when multi-agent review fires AND the host owns a `TASK_DIR` + `status.md`, the host MUST append a `command_log` entry with optional `dispatches: [{subagent, started_at, ended_at}]` field. Only `/self-review` writes telemetry; `/peer-review` reviews other developers' work and has no `TASK_DIR`, so telemetry would be ungrounded. Legacy `command_log` entries without `dispatches[]` remain valid for backward compatibility.
+
 Immutability rule: MCP service skills only change on validated API, MCP, or security triggers — not on framework version bumps.
 
 Contract: `aias/contracts/readme-skill.md`.
@@ -461,7 +465,35 @@ Each artifact tracks its own sync state relative to the configured knowledge pro
 
 ### Progressive Knowledge Sync (Tracker-Gated, Classification-Independent)
 
-Artifacts are published progressively and tracker-gated — after every command that writes to the task directory, when the task has a valid tracker ticket (P1-P3 preconditions). Plan Classification does NOT affect publishing (Minor, Standard, and Critical plans publish identically). `/publish` serves as the explicit reconciliation and closure step that publishes all remaining artifacts regardless of Phase 5c outcome (including tracker-less workflows and locally-amended DoR/DoD), generates a Plan Delta, and marks the task as `completed`.
+Artifacts are published progressively and tracker-gated — after every command that writes to the task directory, when the task has a valid tracker ticket (P1-P3 preconditions). Plan Classification does NOT affect publishing (Minor, Standard, and Critical plans publish identically). `/publish` serves as the explicit reconciliation and closure step that publishes all remaining artifacts regardless of Phase 5c outcome (including tracker-less workflows), generates a Plan Delta, and marks the task as `completed`.
+
+### Unified TODO model for amendments (v9.6+)
+
+DoR/DoD gaps surfaced during `/blueprint` flow through a unified TODO model. The model is governed by the **Refinement Artifact Mutation Invariant** (`aias/contracts/readme-artifact.md` v2.3 § Refinement Artifact Mutation Invariant), which restricts mutation authority to a small set of commands:
+
+| Operation | Authorized commands | Notes |
+|---|---|---|
+| CREATE `dor.plan.md` / `dod.plan.md` | `/enrich` (primary), `/blueprint` (bug exception only) | Bug exception: `profile: bugfix` + `feasibility.assessment.md` present + DoR/DoD missing locally and remotely |
+| MODIFY `dor.plan.md` / `dod.plan.md` | `/enrich --refresh`, `/consolidate-plan` | All other commands FORBIDDEN, including `/blueprint` even with explicit user confirmation in chat |
+
+When `/blueprint` detects a DoR/DoD gap during Phase 1, the gap is staged as a multi-line bullet in `## Proposed DoR Amendments` or `## Proposed DoD Amendments` (split routing; the legacy combined `## Proposed DoR/DoD Amendments` is FORBIDDEN since v9.5). If the user answers the gap inline in the same chat, the answer is captured as a `**Inline confirmation**: <value> (YYYY-MM-DD)` sub-field marker inside the bullet — **never applied directly to the source artifact**. The marker provides the default value for `/consolidate-plan`'s Update Approval gate when the TODO is later resolved.
+
+Resolution is split between two commands:
+
+- `/validate-plan` v2.1.0+ parses multi-line bullets, reads both Proposed sections, and registers each entry as a TODO in `technical.plan.md` frontmatter with `kind: amendment_dor` or `kind: amendment_dod` (alongside any `kind: validation` TODOs from its own gap detection). The TODO `content` captures only the parent line; sub-fields stay in the body for `/consolidate-plan` to read. It does NOT decide, apply, or remove the Proposed entries. There is no Amendment Approval gate.
+- `/consolidate-plan` v2.1.0+ iterates the TODOs (any `kind`) and applies each to its target artifact: `validation` → named artifact; `amendment_dor` → `dor.plan.md` + removal of the entire multi-line bullet (parent + sub-bullets) from `## Proposed DoR Amendments`; `amendment_dod` → `dod.plan.md` + removal from `## Proposed DoD Amendments`. When parsing the bullet, `/consolidate-plan` reads the `**Inline confirmation**:` marker (if present) and uses its value as the Update Approval gate default. When a Proposed section is empty, the heading is removed.
+
+The closed `kind` enum is documented in `aias/.skills/rho-aias/reference.md § Todo kind enum`. TODOs without `kind` are treated as `validation` (backward compatible with v9.4 and earlier). The TODO lifecycle is `pending → completed | deleted-from-frontmatter` — there is no `cancelled` terminal state. Deletion occurs when `/enrich --refresh` Amendment Reconciliation Case A (`apply now`) or Case B (`tracker wins`) supersedes a TODO; audit lives in `command_log` + git history + knowledge provider page versions.
+
+The legacy combined block migration uses hard-fail (not auto-split): `/validate-plan` v2.0.0+ aborts with `[STATE: blocked]` when it detects `## Proposed DoR/DoD Amendments` and points to QUICKSTART § Upgrading from v9.4 to v9.5 for manual-split instructions.
+
+### `/enrich --refresh` for tracker drift (v9.6+)
+
+Between the original `/enrich` and downstream commands (`/blueprint`, `/implement`, etc.), the tracker ticket can evolve — PM tightens the device matrix, QA adds an edge case in a comment, design publishes a missing flow. `/enrich --refresh` provides a single governance surface for reconciling tracker drift into the local DoR/DoD without losing in-flight Proposed Amendments.
+
+The flow re-reads the tracker exhaustively (description + custom fields + comment thread via one `getJiraIssue(expand='renderedFields,names,schema,comment')` call), re-derives DoR/DoD, diffs against on-disk artifacts, and fires `Gate: Refresh Approval` showing per-dimension/criterion change preview (`add | modify | remove | unchanged`). When `## Proposed Do{R,D} Amendments` are non-empty, it additionally fires `Sub-Gate: Amendment Reconciliation` per bullet — Case A (tracker confirms the bullet), Case B (tracker contradicts the bullet), or Case C (orthogonal, no prompt). Manual abort (Case B `manual`) rolls back the entire refresh. On successful apply, `status.md last_refreshed_at` is set to the current UTC.
+
+`--refresh` does NOT modify `refinement_validated` (that flag remains the historical indicator of the original `/enrich --brief` + publish success). It is also independent of `/consolidate-plan` — drift detection and amendment resolution are two separate governance surfaces by design (combining them was explicitly rejected during v9.6 design).
 
 ### Plan Classification
 
