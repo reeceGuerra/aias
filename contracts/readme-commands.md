@@ -23,7 +23,7 @@ It is the reference against which advisory and operative skills are designed, re
 Commands in this system are:
 - Deterministic
 - Procedural or formatting-oriented
-- Designed to work reliably with the **Structured Prompt** contract and a **two-message workflow**
+- Designed to work reliably with the **Structured Prompt** contract (primary invocation surface) and the **two-message workflow** (supported alternative for mid-flight reasoning review)
 
 Commands **do not**:
 - Perform deep reasoning
