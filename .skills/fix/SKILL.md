@@ -3,7 +3,7 @@ name: fix
 description: "Analyzes a bug or error to produce a root cause analysis and proposed fix approach in analysis.fix.md. Use when investigating a defect before assessment and planning. Trigger terms: /fix, analyze bug, root cause, fix analysis."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Fix (Debug Analysis) — v3
@@ -107,6 +107,10 @@ END-OF-RESPONSE CONFIRMATION (must follow)
 - Do **NOT** include implementation code or full file contents.
 - Treat proposed solutions as hypotheses until validated.
 - Prioritize evidence over guesses.
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading names defined in the § 6 Output Structure (Template) verbatim. The agent MUST NOT introduce enumerated prefixes (`Category N:`, `Phase N —`, `Step N:`) into the produced `analysis.fix.md`.
 
 ---
 
