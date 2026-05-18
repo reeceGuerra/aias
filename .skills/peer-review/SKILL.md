@@ -3,10 +3,10 @@ name: peer-review
 description: "Reviews a pull request or third-party work using the configured VCS provider. Use when reviewing a PR URL or PR number. Always dispatches multi-agent review sub-agents. Trigger terms: /peer-review, peer review, review PR, code review."
 category: advisory
 disable-model-invocation: true
-version: 2.1.0
+version: 2.2.0
 ---
 
-# Peer Review (PR / Third-Party Review) — v2
+# Peer Review (PR / Third-Party Review) — v2.2
 
 ## 1. Identity
 
@@ -87,15 +87,49 @@ Rules:
 
 ## 6. Output Structure (Template)
 
+### Phase 0 — Pre-Resolve Sub-Agent Context (v2.2, mandatory)
+
+Per `readme-multi-agent-review.md` § Sub-Agent Tool Boundary and § Host Context Resolution, sub-agents MUST NOT invoke any tool runtime. The host is the ONLY context provider. Before invoking any sub-agent, `/peer-review` MUST resolve every context surface and assemble the dispatch payload.
+
+1. **Resolve PR diff and metadata** via the configured VCS provider MCP:
+   - PR diff (unified format, all hunks).
+   - PR metadata (number, title, description, author, target branch, head commit SHA).
+2. **Fetch file blobs** for every file touched by the diff:
+   - Prefer `gh pr checkout <PR>` so the working tree matches the PR; sub-agents see the actual code, not just the diff.
+   - If checkout is not authorized → fall back to fetching serialized blobs via VCS MCP and packaging them in the dispatch payload.
+3. **Load TASK_DIR artifacts** when `TASK_DIR` is resolvable via `rho-aias` and `task_id` was supplied:
+   - `dod.plan.md`, `technical.plan.md`, `increments.plan.md`, `dor.plan.md`, `specs.design.md` (when present).
+4. **Load project context**:
+   - `RHOAIAS.md` of the repo under review (and nested if discoverable).
+   - `stack-profile.md` (when present).
+5. **Load mode + base rules** so sub-agents see the same governance the host operates under:
+   - `@review` mode rule.
+   - Base rule (`aias-config/rules/base.mdc` or equivalent).
+6. **Assemble the dispatch payload** per the contract schema (`readme-multi-agent-review.md` § Host Context Resolution § Dispatch payload contract).
+
+#### Gate: VCS Permission Recovery (Type: Decision)
+
+If any step above returns `unauthorized` (PR diff fetch, blob fetch, `gh pr checkout`), MUST emit this Decision gate:
+
+| Option | Behavior |
+|---|---|
+| `grant` | Pause for the user to resolve authorization (e.g., refresh OAuth, grant tool permission); retry the failed step. |
+| `manual` | User supplies the missing context out-of-band (paste diff and/or blobs into chat); host proceeds with what was provided and notes the limitation in the review output. |
+| `abort` | Halt with `[STATE: inconclusive]` and report the missing context. |
+
+Silent partial review is FORBIDDEN. The host MUST NOT proceed with a degraded payload unless the user explicitly chooses `manual` and acknowledges the limitation.
+
 ### Multi-agent dispatch (always)
 
 Multi-agent review is unconditional — dispatch regardless of Plan Classification:
 
 1. Load `review-rubric` skill.
-2. Dispatch `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-architecture-reviewer`, `aias-test-auditor`, `aias-security-auditor` in parallel.
-3. After all 5 complete, dispatch `aias-reflector`.
-4. Emit reflector consolidated output, then append VCS-ready comments and general review comment below.
-5. If reflector emits `BLOCKED` → `/peer-review` MUST emit `[STATE: inconclusive]`.
+2. Dispatch `aias-correctness-reviewer`, `aias-quality-reviewer`, `aias-architecture-reviewer`, `aias-test-auditor`, `aias-security-auditor` in parallel with the Phase 0 dispatch payload.
+3. Sub-agents return findings only — they MUST NOT call any tool (see § Non-Goals and `readme-multi-agent-review.md` § Sub-Agent Tool Boundary).
+4. After all 5 complete, dispatch `aias-reflector` with the consolidated findings + the same Phase 0 payload.
+5. Emit reflector consolidated output, then append VCS-ready comments and general review comment below.
+6. If reflector emits `BLOCKED` → `/peer-review` MUST emit `[STATE: inconclusive]`.
+7. If reflector emits a `## Context Gaps` section, surface it in the chat output verbatim. The human decides whether to re-run with expanded context or accept the review as-is.
 
 ```markdown
 # Peer Review
@@ -150,6 +184,9 @@ This command must **NOT**:
 - Publish to knowledge provider
 - Post comments or approvals unless the user explicitly requests a separate action
 - Pretend that a VCS-ready snippet was anchored when no diff context exists
+- Dispatch sub-agents without a complete Phase 0 payload (silent partial dispatch is FORBIDDEN)
+- Allow sub-agents to invoke any tool (MCP, shell, git, web fetch, file write) — sub-agents are pure inspection engines per `readme-multi-agent-review.md` § Sub-Agent Tool Boundary
+- Write telemetry to `status.md` (this is `/self-review`'s responsibility when `TASK_DIR` exists; `/peer-review` reviews other developers' work and never assumes local `TASK_DIR`)
 
 ---
 
