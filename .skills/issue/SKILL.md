@@ -3,7 +3,7 @@ name: issue
 description: "Produces a structured issue report (report.issue.md) capturing a bug, gap, or risk discovered during review or implementation. Trigger terms: /issue, create issue, issue report, bug report."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Issue (Bug Report) — v3
@@ -104,6 +104,10 @@ END-OF-RESPONSE CONFIRMATION (must follow)
 - Do **NOT** speculate about root cause unless explicitly supported by evidence.
 - **MUST NOT** propose architectural changes or fixes.
 - Focus on **observability, clarity, and reproducibility**.
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading names defined in the § 6 Output Structure (Template) verbatim. The agent MUST NOT introduce enumerated prefixes (`Category N:`, `Phase N —`, `Step N:`) into the produced `report.issue.md`.
 
 ---
 
