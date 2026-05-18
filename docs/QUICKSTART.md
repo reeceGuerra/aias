@@ -48,6 +48,46 @@ Key changes in v9.0: Custom commands migrated to command-shaped skills — new c
 
 **Upgrading to v9.2:** Canonical sources reorganized into `aias/.canonical/rules/`, `aias/.canonical/modes/`, and `aias/.canonical/subagents/`. Sub-agents are now a project-owned generated surface at `aias-config/subagents/`. Run `aias generate --shortcuts` to regenerate sub-agent copies and refresh `.cursor/agents/` symlinks. Review `git diff aias-config/subagents/` before committing.
 
+**Upgrading to v9.3:** Three additive hardening items, no migration required for in-flight tasks. `/handoff` now uses lstat-based path resolution (no symlink-follow); fallbacks to `aias-config/` are explicitly annotated with `[fallback reason: …]`. `readme-knowledge-publishing-config.md` v1.1 adds a Title Canonicity invariant — Confluence artifact titles MUST stay as `<TASK_ID>: <filename>` (e.g., `ABC-12345: dod.plan.md`); humanized titles (`ABC-12345: Definition of Done`) are now FORBIDDEN. Existing Confluence pages with humanized titles are not auto-rewritten; the next publish creates the canonical title and may produce a duplicate that must be manually deduplicated. `review-rubric` v1.1 makes Scope discipline always-on (diff-only findings; legacy posture applied automatically); no flag changes.
+
+**Upgrading to v9.4:** Six items shipped as a cohort; no schema-breaking migration. Key changes: (1) `/self-review` now writes `dispatches[]` telemetry into `status.md` `command_log` when multi-agent review fires — legacy `command_log` entries without `dispatches[]` remain valid (backward compatible). (2) Sub-Agent Tool Boundary: sub-agents MUST NOT invoke any tool runtime (MCP, shell, git, file writes, etc.). If you maintain custom sub-agents under `aias-config/subagents/`, ensure they do not include tool-call instructions; run `aias generate --shortcuts` to refresh canonical sub-agents (review `git diff aias-config/subagents/` before committing). (3) `/peer-review` gains Phase 0 — Pre-Resolve Sub-Agent Context with a Gate: VCS Permission Recovery for tool-permission failures during PR diff retrieval. (4) `/enrich` and `/report` now use exhaustive tracker read (`fields=['*all']` + `expand=['renderedFields', 'names', 'schema']`); custom fields you previously missed will now surface. (5) `/enrich --brief` posts in English (regardless of chat language) as a collaborative refinement note (`## Refinement Notes — <TASK_ID>`) — re-run `/enrich --brief` if you want existing brief comments updated. (6) Producer skills emit canonical heading shapes — no `## Category N: <Title>` bleed-through into Confluence. (7) `/blueprint` Category 6 now fires when DoR declares `orientation: user_facing` even without a design URL, producing a minimal `specs.design.md` with a "Design provider was not consulted" disclosure note.
+
+**Upgrading from v9.4 to v9.5:** One architectural redesign — the DoR/DoD amendment flow moves to a unified TODO model. **Schema-breaking for in-flight tasks that contain a legacy `## Proposed DoR/DoD Amendments` combined block in `technical.plan.md`** (no auto-split is performed; `/validate-plan` v2.0.0 will hard-fail with `[STATE: blocked]`).
+
+What changed in v9.5 (no action required for tasks that have not yet passed `/blueprint`):
+
+1. `/blueprint` v5.3.0 — Phase 1 stages DoR/DoD gaps into two separate sections (`## Proposed DoR Amendments` and `## Proposed DoD Amendments`); the combined `## Proposed DoR/DoD Amendments` section is FORBIDDEN.
+2. `/validate-plan` v2.0.0 (**MAJOR**) eliminates the Amendment Approval gate and registers each Proposed entry as a TODO in `technical.plan.md` frontmatter with `kind: amendment_dor` or `kind: amendment_dod` (`kind: validation` remains for plan-gap TODOs). The `## Proposed` sections stay in the body as documentation until resolution.
+3. `/consolidate-plan` v2.0.0 (**MAJOR**) becomes the sole resolver across all `kind` values. A single "Update Approval" gate fires per todo; on approval, `validation` writes to the named artifact, `amendment_dor` writes to `dor.plan.md` and removes the bullet from `## Proposed DoR Amendments`, `amendment_dod` writes to `dod.plan.md` and removes the bullet from `## Proposed DoD Amendments`. When a Proposed section becomes empty, the heading is removed.
+4. The legacy `apply_local` Phase 5c exclusion is retired; `dor.plan.md` / `dod.plan.md` modifications participate in Phase 5c as normal `modified` artifacts.
+
+> Historical note (v9.5 only): `/blueprint` v5.3.0 originally shipped with a "Path A" that applied inline answers directly to `dor.plan.md` / `dod.plan.md` and logged them in `## Resolution Log`. v9.6 removed Path A as an architectural regression (see "Upgrading from v9.5 to v9.6" below). Tasks that wrote a `## Resolution Log` under v9.5 MAY keep it; new emissions are FORBIDDEN.
+
+Migration steps for in-flight tasks that already wrote `## Proposed DoR/DoD Amendments` under `/validate-plan` v1.x:
+
+1. Open `technical.plan.md` and rename `## Proposed DoR/DoD Amendments` to two separate headings: `## Proposed DoR Amendments` and `## Proposed DoD Amendments`.
+2. Move each bullet to whichever section matches its target artifact (DoR-vs-DoD is usually unambiguous from the bullet text). When in doubt, ask the planner; do NOT guess.
+3. Save the file and re-run `/validate-plan` — it will register the moved bullets as TODOs (`kind: amendment_dor` / `kind: amendment_dod`) and continue normally.
+4. Run `/consolidate-plan` to resolve the registered TODOs one by one. There is no Amendment Approval gate to acknowledge.
+
+If `/validate-plan` reports `[STATE: blocked] legacy '## Proposed DoR/DoD Amendments' block detected`, the manual split above is required before progress can resume; the hard-fail is intentional — auto-split was rejected to avoid silent mis-routing of DoR-vs-DoD intent. See `aias/CHANGELOG.md` § v9.5 and `BACKLOG.md` § Wave 3 (BL-S79) for the full architectural rationale.
+
+**Upgrading from v9.5 to v9.6:** Refinement Contract Hardening — repairs the v9.5 architectural regression where `/blueprint`'s Path A allowed direct modification of `dor.plan.md` / `dod.plan.md` with a fragmented audit trail. **No schema migration required for in-flight tasks** — v9.6 changes are behavioral, additive on `status.md`, and backward compatible on bullet shape.
+
+What changed in v9.6 (in-flight tasks continue to work without manual intervention):
+
+1. **Refinement Artifact Mutation Invariant** (`aias/contracts/readme-artifact.md` v2.3) — CREATE for `dor.plan.md` / `dod.plan.md` is restricted to `/enrich` (primary) and `/blueprint` (bug exception only: `profile: bugfix` + `feasibility.assessment.md` + DoR/DoD missing). MODIFY is restricted to `/enrich --refresh` and `/consolidate-plan`. All other commands are FORBIDDEN to mutate DoR/DoD, even with explicit user confirmation in chat.
+2. **`/blueprint` v5.4.0** — Path A removed. When the user answers a DoR/DoD gap inline, the answer is captured as a `**Inline confirmation**: <value> (YYYY-MM-DD)` sub-field marker inside the Proposed Amendment bullet — never applied directly to the source artifact. The marker becomes the default value for `/consolidate-plan`'s Update Approval gate. A new precondition gate aborts non-bugfix profiles when `dor.plan.md` / `dod.plan.md` are missing.
+3. **`/enrich` v1.3.0 — `--refresh` flag** — re-reads the tracker exhaustively (description + custom fields + comment thread), re-derives DoR/DoD, diffs against on-disk artifacts, and fires `Gate: Refresh Approval` + `Sub-Gate: Amendment Reconciliation` per bullet. Use whenever PM/QA/design update the ticket after the original refinement. Sets `status.md last_refreshed_at: <UTC>` on success; does NOT modify `refinement_validated`. Incompatible with `--brief` / `--fields`.
+4. **`/validate-plan` v2.1.0** — multi-line bullet parsing (parent line + sub-fields including `**Inline confirmation**:`); backward compatible with v9.5 single-line bullets via parent-line fallback. Does NOT remove or modify the `**Inline confirmation**:` sub-field.
+5. **`/consolidate-plan` v2.1.0** — parses the `**Inline confirmation**:` marker and uses its value as the Update Approval gate default; on apply, removes the entire multi-line bullet (parent + sub-bullets). Explicit clarifications added: team notification is dev discretion, tracker freshness is dev discretion, automatic tracker writes are FORBIDDEN.
+6. **`status.md last_refreshed_at`** — new optional field (absent ≡ `null`); set by `/enrich --refresh` on successful apply.
+7. **TODO lifecycle** — clarified as `pending → completed | deleted-from-frontmatter` (no `cancelled` terminal state). Deletion occurs when `/enrich --refresh` Amendment Reconciliation supersedes a TODO; audit lives in `command_log` + git history + knowledge provider page versions.
+8. **`## Resolution Log` deprecated** — pre-existing logs in legacy artifacts MAY remain; new emissions are FORBIDDEN. Audit trail now lives entirely in `command_log` + git + knowledge provider page versions.
+9. **`expand` parameter fix (BL-S83)** — pre-existing bug since v9.4: `getJiraIssue` `expand` parameter is a comma-separated string, not an array. Fixed in `enrich`, `report`, and `atlassian-mcp` skills. If you maintain custom skills that call `getJiraIssue` with `expand=[…]`, switch to `expand='…,…'`.
+
+No migration steps required. If your in-flight task contains a v9.5 `## Resolution Log`, leave it as-is — historical artifacts are preserved.
+
 ---
 
 ### Upgrading from v7.5
@@ -101,7 +141,7 @@ Commands define **how to execute** and format output. They structure data from m
 - `/fix` — Structure debug data into fix analysis (writes to task directory)
 - `/report` — Generate validated bug RCA report and publish RCA fields when requested
 - `/pr` — Generate PR description
-- `/enrich` — Analyze and refine a tracker ticket; produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md`; publishes to knowledge provider. Optional flags: `--brief` (post enrichment brief as Jira comment), `--fields` (write structured fields to tracker)
+- `/enrich` — Analyze and refine a tracker ticket; produces `analysis.product.md`, `dor.plan.md`, `dod.plan.md`; publishes to knowledge provider. Optional flags: `--brief` (post enrichment brief as Jira comment), `--fields` (write structured fields to tracker), `--refresh` (v9.6+: re-read tracker drift and reconcile into local DoR/DoD via `Refresh Approval` + per-bullet `Amendment Reconciliation` gates; incompatible with `--brief` / `--fields`)
 - `/explain` — Concept-focused learning response (use in any mode, natural in `@product`)
 - `/trace` — Generate log instrumentation plan; writes to task directory (use with `@qa` or `@debug`)
 - `/assessment` — Evaluate fix feasibility; bridges `/fix` to `/blueprint` in bugfix flows (use with `@dev`)
