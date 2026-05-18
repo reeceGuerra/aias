@@ -3,7 +3,7 @@ name: trace
 description: "Instruments a debugging trace plan into instrumentation.trace.md capturing investigation approach, hypotheses, and evidence. Use when diagnosing a complex or elusive bug. Trigger terms: /trace, trace debugging, instrumentation plan, debug trace."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Trace (Log Instrumentation Plan) — v3
@@ -135,6 +135,10 @@ The project uses a custom `Log` enum with four levels:
 - Mutation before: `"∆ propertyName will change: \(currentValue) → \(newValue)"` (when newValue is known) or `"∆ propertyName current: \(currentValue)"` (when newValue is computed)
 - Mutation after: `"∆ propertyName did change → \(newValue)"`
 - Error: `"✖ methodName failed: \(error)"` or `"✖ guard failed: conditionDescription"`
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading names defined in the § 6 Output Structure (Template) verbatim. The agent MUST NOT introduce enumerated prefixes (`Category N:`, `Phase N —`, `Step N:`) into the produced `instrumentation.trace.md`.
 
 ---
 
