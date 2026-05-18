@@ -3,10 +3,10 @@ name: report
 description: "Produces a structured report (RCA, status update, incident summary) in chat, with optional tracker publication through gated flow. Use when a structured report output is needed from task evidence. Trigger terms: /report, generate report, status report, RCA, incident report."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.2.0
 ---
 
-# Bug RCA Report (Structured Tracker Publication) — v3
+# Bug RCA Report (Structured Tracker Publication) — v3.1
 
 ## 1. Identity
 
@@ -46,6 +46,7 @@ This command may use **only** the following inputs:
   - current RCA field values
   - editable RCA fields
   - option catalogs for categorical RCA fields
+  - **Exhaustive read (v9.4+)**: `/report` MUST use the broadest read pattern available so all custom RCA-adjacent fields are visible regardless of whitelist. For Atlassian MCP, call `getJiraIssue(cloudId, issueIdOrKey, fields=['*all'], expand='renderedFields,names,schema')`. The `expand` parameter is a **comma-separated string**, not an array (corrected in v9.6+; previously documented as an array which was incorrect per the MCP descriptor). Whitelist-based reads are FORBIDDEN for the input phase because they silently hide categorical RCA option catalogs and runtime field metadata that govern format resolution. Targeted writes via `editJiraIssue` remain unchanged — only the input read becomes exhaustive.
 - Artifacts from TASK_DIR loaded via **rho-aias** skill (Phases 0–3) if TASK_DIR is set:
   - `report.issue.md`
   - `analysis.fix.md`
@@ -182,6 +183,10 @@ resolveTrackerProvider():
 - Do **NOT** include large code blocks unless explicitly provided in the input.
 - Treat tracker field metadata as authoritative for what can be written remotely.
 - If tracker runtime metadata and the documented project mapping diverge, use runtime metadata for the remote write and surface the mapping drift as a maintenance issue.
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading names defined in the § 6 Output Structure (Template) verbatim. The agent MUST NOT introduce enumerated prefixes (`Category N:`, `Phase N —`, `Step N:`) into any artifact written by `/report`.
 
 ---
 
