@@ -44,12 +44,12 @@ When a contract has no prior version history, it SHOULD be initialized at **v1.0
 
 | Contract | Current Version |
 |---|---|
-| `readme-artifact.md` | v2.0 |
+| `readme-artifact.md` | v2.3 |
 | `readme-base-rule.md` | v1.0 |
 | `readme-commands.md` | v6.3 |
-| `readme-knowledge-publishing-config.md` | v1.0 |
+| `readme-knowledge-publishing-config.md` | v1.1 |
 | `readme-mode-rule.md` | v1.1 |
-| `readme-multi-agent-review.md` | v1.1 |
+| `readme-multi-agent-review.md` | v1.2 |
 | `readme-output-contract.md` | v1.0 |
 | `readme-project-context.md` | v1.1 |
 | `readme-provider-config.md` | v2.1 |
