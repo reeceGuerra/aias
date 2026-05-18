@@ -3,7 +3,7 @@ name: assessment
 description: "Evaluates fix feasibility by filtering error mechanisms and solutions against codebase evidence. Use after /fix to assess a bug fix approach before planning. Produces feasibility.assessment.md. Trigger terms: assess feasibility, evaluate fix, feasibility report, /assessment."
 category: operative
 disable-model-invocation: true
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Assessment (Fix Feasibility Evaluation) — v2
@@ -101,6 +101,10 @@ END-OF-RESPONSE CONFIRMATION (must follow)
 - Do **NOT** skip mechanisms or solutions — evaluate every one explicitly.
 - Validate mechanisms and solutions against the **actual codebase**, not just the fix analysis text.
 - If the fix analysis is insufficient, the assessment must say so clearly and recommend further investigation.
+
+### Canonical Section Titles (v9.4+)
+
+Per `aias/contracts/readme-artifact.md` § Canonical Section Titles, artifact section headings MUST use the canonical heading names defined in the § 6 Output Structure (Template) verbatim. The agent MUST NOT introduce enumerated prefixes (`Category N:`, `Phase N —`, `Step N:`) into the produced `feasibility.assessment.md`.
 
 ---
 
